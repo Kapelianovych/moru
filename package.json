@@ -1,0 +1,17 @@
+{
+  "name": "moru",
+  "version": "0.0.1",
+  "description": "Simple reactive JSX implementation.",
+  "license": "MIT",
+  "keywords": [
+    "jsx"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kapelianovych/moru.git"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./jsx-runtime": "./jsx-runtime.js"
+  }
+}
