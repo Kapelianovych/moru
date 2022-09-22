@@ -1,5 +1,9 @@
 import { context } from "./state.js";
-import { SVG_ELEMENTS, SVG_NAMESPACE } from "./constants.js";
+import {
+  SVG_ELEMENTS,
+  SVG_NAMESPACE,
+  AttributesToProperties,
+} from "./constants.js";
 
 const createNodeInjector = (to, holder) => (child) => {
   if (typeof child === "function") {
@@ -39,7 +43,7 @@ const endsAt = (once, capture, passive, noPassive) =>
 const objectWith = (property, value) =>
   value === null ? {} : { [property]: value };
 
-const assignProperty = (element, key, value) => {
+const assignProperty = (element, key, value, toProperties = []) => {
   if (key.startsWith("on")) {
     const name = key.toLowerCase();
 
@@ -75,6 +79,10 @@ const assignProperty = (element, key, value) => {
             context(() => element.classList[get() ? "add" : "remove"](key));
           })
     );
+  } else if (toProperties.includes(key)) {
+    const get = ensureFunction(value);
+
+    context(() => (element[key] = get()));
   } else {
     const get = ensureFunction(value);
 
@@ -101,7 +109,7 @@ export const element = (tag, properties, ...children) => {
       : document.createElement(tag);
 
     Object.entries(elementProperties).forEach(([key, value]) =>
-      assignProperty(node, key, value)
+      assignProperty(node, key, value, AttributesToProperties[tag])
     );
 
     children.forEach(createNodeInjector(node));

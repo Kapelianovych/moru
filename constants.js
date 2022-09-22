@@ -68,3 +68,7 @@ export const SVG_ELEMENTS = new Set([
   "use",
   "view",
 ]);
+
+export const AttributesToProperties = {
+  input: ["value"],
+};
