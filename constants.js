@@ -71,4 +71,5 @@ export const SVG_ELEMENTS = new Set([
 
 export const AttributesToProperties = {
   input: ["value"],
+  textarea: ["value"],
 };
