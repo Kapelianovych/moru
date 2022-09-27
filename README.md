@@ -204,7 +204,7 @@ If you will use any reactive value inside it, then that context will be reexecut
 
 > Only that hook and any function inside the JSX create a reactive context (except event listeners).
 
-The context autodetects all states (reactive values) that are executed inside it. It's an important tthing that it cannot detect declared, but _not invoked_, values.
+The context autodetects all states (reactive values) that are executed inside it. It's an important thing that it cannot detect declared, but _not invoked_, values.
 
 ```JavaScript
 useEffect(() => {
@@ -213,6 +213,18 @@ useEffect(() => {
     if (shouldBeExecuted()) {
         console.log(count());
     }
+});
+```
+
+You may want to opt out of autotracking for some reactive values. To achieve this becaviour instead of calling getter function use its `raw` property.
+
+```JavaScript
+const [count, setCount] = useState(0);
+
+useEffect(() => {
+  // This effect will be executed only once and will ignore subsequent
+  // setCount calls.
+  console.log(count.raw);
 });
 ```
 
