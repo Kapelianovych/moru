@@ -263,7 +263,7 @@ declare global {
       readonly crossorigin: AttributeValue<Crossorigin>;
       readonly decoding: AttributeValue<"sync" | "async" | "auto">;
       readonly fetchpriority: AttributeValue<"high" | "low" | "auto">;
-      readonly hight: AttributeValue<number>;
+      readonly height: AttributeValue<number>;
       readonly ismap: AttributeValue<boolean>;
       readonly loading: AttributeValue<"eager" | "lazy">;
       readonly referrerpolicy: AttributeValue<ReferrerPolicy>;
@@ -491,7 +491,7 @@ declare global {
   }
 }
 
-export type Component<Properties = {}> = (
+export type Component<Properties = void> = (
   properties: Properties
 ) => JSX.Element;
 
