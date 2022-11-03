@@ -33,9 +33,7 @@ export const context = (callback) => {
 export const useEffect = (callback) => {
   const cleanup = context(callback);
 
-  if (typeof cleanup === "function") {
-    callback.__cleanup = cleanup;
-  }
+  if (typeof cleanup === "function") callback.__cleanup = cleanup;
 };
 
 export const useState = (value) => {
@@ -62,9 +60,8 @@ export const useState = (value) => {
         value = nextValue;
 
         listeners.forEach((fn) => {
-          if (fn.__disposed) {
-            listeners.delete(fn);
-          } else {
+          if (fn.__disposed) listeners.delete(fn);
+          else {
             clean(fn);
             execute(fn);
           }

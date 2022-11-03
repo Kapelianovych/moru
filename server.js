@@ -18,7 +18,7 @@ export const element = (tag, properties, ...children) => {
       .map(([key, value]) => {
         let attributeValue = "";
 
-        if (key === "class" && Array.isArray(value)) {
+        if (key === "class" && Array.isArray(value))
           attributeValue = value
             .map((name) =>
               typeof name === "string"
@@ -29,14 +29,12 @@ export const element = (tag, properties, ...children) => {
                     .join(" ")
             )
             .join(" ");
-        } else if (key === "style" && typeof value === "object") {
+        else if (key === "style" && typeof value === "object")
           attributeValue = Object.entries(value ?? {}).map(
             ([key, value]) =>
               camelCaseToKebabCase(key) + ":" + ensureFunction(value)() + ";"
           );
-        } else {
-          attributeValue = String(ensureFunction(value)());
-        }
+        else attributeValue = String(ensureFunction(value)());
 
         return `${key}="${attributeValue}"`;
       })

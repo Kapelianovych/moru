@@ -7,13 +7,13 @@ import {
 } from "./constants.js";
 
 const createNodeInjector = (to, holder) => (child) => {
-  if (typeof child === "function") {
+  if (typeof child === "function")
     context(function _self() {
       createNodeInjector(to, _self)(child());
     });
-  } else if (Array.isArray(child)) {
+  else if (Array.isArray(child))
     createNodeInjector(to, holder)(Fragment({ children: child }));
-  } else {
+  else {
     const next =
       child instanceof Node ? child : document.createTextNode(child ?? "");
 
@@ -24,13 +24,9 @@ const createNodeInjector = (to, holder) => (child) => {
       }
 
       holder.__old.replaceWith(next);
-    } else {
-      to.append(next);
-    }
+    } else to.append(next);
 
-    if (to instanceof DocumentFragment) {
-      to.__nodes?.push(next);
-    }
+    if (to instanceof DocumentFragment) to.__nodes?.push(next);
 
     holder && (holder.__old = next);
   }
@@ -63,7 +59,7 @@ const assignProperty = (element, key, value, toProperties = []) => {
         ...objectWith("passive", noPassive ? false : passive || null),
       }
     );
-  } else if (key === "style" && typeof value === "object") {
+  } else if (key === "style" && typeof value === "object")
     Object.entries(value ?? {}).forEach(([key, value]) => {
       if (key in element.style) {
         const get = ensureFunction(value);
@@ -71,7 +67,7 @@ const assignProperty = (element, key, value, toProperties = []) => {
         context(() => (element.style[key] = get()));
       }
     });
-  } else if (key === "class" && Array.isArray(value)) {
+  else if (key === "class" && Array.isArray(value))
     value.forEach((name) =>
       typeof name === "string"
         ? element.classList.add(name)
@@ -81,7 +77,7 @@ const assignProperty = (element, key, value, toProperties = []) => {
             context(() => element.classList[get() ? "add" : "remove"](key));
           })
     );
-  } else if (toProperties.includes(key)) {
+  else if (toProperties.includes(key)) {
     const get = ensureFunction(value);
 
     context(() => (element[key] = get()));
