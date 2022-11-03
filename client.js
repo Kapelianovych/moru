@@ -1,4 +1,5 @@
 import { context } from "./state.js";
+import { ensureFunction } from "./utils.js";
 import {
   SVG_ELEMENTS,
   SVG_NAMESPACE,
@@ -8,7 +9,7 @@ import {
 const createNodeInjector = (to, holder) => (child) => {
   if (typeof child === "function") {
     context(function _self() {
-      return createNodeInjector(to, _self)(child());
+      createNodeInjector(to, _self)(child());
     });
   } else if (Array.isArray(child)) {
     createNodeInjector(to, holder)(Fragment({ children: child }));
@@ -27,12 +28,13 @@ const createNodeInjector = (to, holder) => (child) => {
       to.append(next);
     }
 
+    if (to instanceof DocumentFragment) {
+      to.__nodes?.push(next);
+    }
+
     holder && (holder.__old = next);
   }
 };
-
-const ensureFunction = (value) =>
-  typeof value === "function" ? value : () => value;
 
 const endsAt = (once, capture, passive, noPassive) =>
   0 +

@@ -73,3 +73,20 @@ export const AttributesToProperties = {
   input: ["value"],
   textarea: ["value"],
 };
+
+export const SelfClosedElements = new Set([
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "meta",
+  "param",
+  "source",
+  "track",
+  "wbr",
+  "img",
+  "link",
+  "input",
+]);
