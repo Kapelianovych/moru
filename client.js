@@ -1,4 +1,4 @@
-import { context } from "./state.js";
+import { runInContext } from "./state.js";
 import { ensureFunction } from "./utils.js";
 import {
   SVG_ELEMENTS,
@@ -8,7 +8,7 @@ import {
 
 const createNodeInjector = (to, holder) => (child) => {
   if (typeof child === "function")
-    context(function _self() {
+    runInContext(function _self() {
       createNodeInjector(to, _self)(child());
     });
   else if (Array.isArray(child))
@@ -64,7 +64,7 @@ const assignProperty = (element, key, value, toProperties = []) => {
       if (key in element.style) {
         const get = ensureFunction(value);
 
-        context(() => (element.style[key] = get()));
+        runInContext(() => (element.style[key] = get()));
       }
     });
   else if (key === "class" && Array.isArray(value))
@@ -74,17 +74,19 @@ const assignProperty = (element, key, value, toProperties = []) => {
         : Object.entries(name).forEach(([key, value]) => {
             const get = ensureFunction(value);
 
-            context(() => element.classList[get() ? "add" : "remove"](key));
+            runInContext(() =>
+              element.classList[get() ? "add" : "remove"](key)
+            );
           })
     );
   else if (toProperties.includes(key)) {
     const get = ensureFunction(value);
 
-    context(() => (element[key] = get()));
+    runInContext(() => (element[key] = get()));
   } else {
     const get = ensureFunction(value);
 
-    context(() => {
+    runInContext(() => {
       const result = get();
 
       typeof result === "boolean"

@@ -1,39 +1,47 @@
-const effects = [];
+import { ensureFunction } from "./utils.js";
 
-const execute = (callback) => {
-  effects.push(callback);
+let currentRunningEffect = null;
+
+const run = (callback) => {
+  currentRunningEffect = callback;
   const result = callback();
-  effects.pop();
+  currentRunningEffect = callback.__parent;
 
   return result;
 };
 
-const clean = (fn) => {
-  fn.__children.forEach((child) => {
-    clean(child);
-    child.__disposed = true;
-  });
-  fn.__children.clear();
-
-  fn.__cleanup?.();
-  fn.__cleanup = null;
-};
-
-export const context = (callback) => {
-  callback.__refs = {};
+const setup = (callback) => {
+  callback.__parent = currentRunningEffect;
   callback.__cleanup = null;
   callback.__children = new Set();
   callback.__disposed = false;
 
-  effects.at(-1)?.__children.add(callback);
+  callback.__parent?.__children.add(callback);
 
-  return execute(callback);
+  return callback;
+};
+
+export const runInContext = (callback) => run(setup(callback));
+
+const clean = (effect) => {
+  effect.__children.forEach((child) => {
+    clean(child);
+    child.__parent = null;
+    child.__disposed = true;
+  });
+  effect.__children.clear();
+
+  effect.__cleanup?.();
+  effect.__cleanup = null;
 };
 
 export const useEffect = (callback) => {
-  const cleanup = context(callback);
+  const effect = setup(async () => {
+    const result = await callback();
+    if (typeof result === "function") effect.__cleanup = result;
+  });
 
-  if (typeof cleanup === "function") callback.__cleanup = cleanup;
+  queueMicrotask(() => run(effect));
 };
 
 export const useState = (value) => {
@@ -42,9 +50,7 @@ export const useState = (value) => {
   return [
     Object.defineProperty(
       () => {
-        const effect = effects.at(-1);
-
-        effect && listeners.add(effect);
+        currentRunningEffect && listeners.add(currentRunningEffect);
 
         return value;
       },
@@ -53,20 +59,34 @@ export const useState = (value) => {
         get: () => value,
       }
     ),
-    (next) => {
-      const nextValue = typeof next === "function" ? next(value) : next;
+    (next, { immediate = false } = {}) => {
+      const nextValue = ensureFunction(next)(value);
 
-      if (nextValue !== value) {
+      if (value !== nextValue) {
         value = nextValue;
 
-        listeners.forEach((fn) => {
-          if (fn.__disposed) listeners.delete(fn);
+        listeners.forEach((effect) => {
+          if (effect.__disposed) listeners.delete(effect);
           else {
-            clean(fn);
-            execute(fn);
+            if (immediate) {
+              clean(effect);
+              run(effect);
+            } else
+              queueMicrotask(() => {
+                clean(effect);
+                run(effect);
+              });
           }
         });
       }
     },
   ];
+};
+
+export const useMemo = (callback, initial) => {
+  const [value, setValue] = useState(initial);
+
+  runInContext(() => setValue(callback));
+
+  return value;
 };

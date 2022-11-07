@@ -1,2 +1,2 @@
 export { element, Fragment } from "./server.js";
-export { useState, useEffect } from "./state.js";
+export { useMemo, useState, useEffect } from "./state.js";

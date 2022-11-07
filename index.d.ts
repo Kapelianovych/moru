@@ -512,13 +512,30 @@ export type StateGetter<T> = {
   readonly raw: T;
 };
 
+export type StateSetterOptions = {
+  readonly immediate?: boolean;
+};
+
 export type StateSetter<T> = {
-  (value: T): void;
-  (fn: (old: T) => T): void;
+  (value: T, options?: StateSetterOptions): void;
+  (fn: (old: T) => T, options?: StateSetterOptions): void;
 };
 
 export function useState<T>(
   value: T
 ): readonly [StateGetter<T>, StateSetter<T>];
 
-export function useEffect(callback: () => VoidFunction | void): void;
+export function useEffect(
+  callback: () =>
+    | void
+    | VoidFunction
+    | Promise<void | VoidFunction | (() => Promise<void>)>
+): void;
+
+export function useMemo<T>(
+  callback: (previous: T | undefined) => T
+): StateGetter<T>;
+export function useMemo<T>(
+  callback: (previous: T) => T,
+  initial: T
+): StateGetter<T>;
