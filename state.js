@@ -44,6 +44,11 @@ export const useEffect = (callback) => {
   queueMicrotask(() => run(effect));
 };
 
+const rerun = (effect) => {
+  clean(effect);
+  run(effect);
+};
+
 export const useState = (value) => {
   const listeners = new Set();
 
@@ -65,19 +70,13 @@ export const useState = (value) => {
       if (value !== nextValue) {
         value = nextValue;
 
-        listeners.forEach((effect) => {
-          if (effect.__disposed) listeners.delete(effect);
-          else {
-            if (immediate) {
-              clean(effect);
-              run(effect);
-            } else
-              queueMicrotask(() => {
-                clean(effect);
-                run(effect);
-              });
-          }
-        });
+        listeners.forEach((effect) =>
+          effect.__disposed
+            ? listeners.delete(effect)
+            : immediate
+            ? rerun(effect)
+            : queueMicrotask(() => rerun(effect))
+        );
       }
     },
   ];
