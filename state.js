@@ -87,10 +87,15 @@ export const useState = (value) => {
   ];
 };
 
-export const useMemo = (callback) => {
+export const useMemo = (callback, { equals = Object.is } = {}) => {
   const [value, setValue] = useState();
 
-  runInContext(() => setValue(callback));
+  runInContext(() =>
+    setValue((old) => {
+      const newest = callback(old);
+      return equals(old, newest) ? old : newest;
+    })
+  );
 
   return value;
 };

@@ -533,6 +533,11 @@ export function useEffect(
     | Promise<void | VoidFunction | (() => Promise<void>)>
 ): void;
 
+export type UseMemoOptions<T> = {
+  readonly equals?: (previous: T | undefined, next: T) => boolean;
+};
+
 export function useMemo<T>(
-  callback: (previous: T | undefined) => T
+  callback: (previous: T | undefined) => T,
+  options?: UseMemoOptions<T>
 ): StateGetter<T>;
