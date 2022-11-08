@@ -5,7 +5,13 @@ let currentRunningEffect = null;
 const run = (callback) => {
   currentRunningEffect = callback;
   const result = callback();
-  currentRunningEffect = callback.__parent;
+
+  if (result instanceof Promise)
+    return result.then((value) => {
+      currentRunningEffect = callback.__parent;
+      return value;
+    });
+  else currentRunningEffect = callback.__parent;
 
   return result;
 };
@@ -56,7 +62,6 @@ export const useState = (value) => {
     Object.defineProperty(
       () => {
         currentRunningEffect && listeners.add(currentRunningEffect);
-
         return value;
       },
       "raw",
@@ -82,8 +87,8 @@ export const useState = (value) => {
   ];
 };
 
-export const useMemo = (callback, initial) => {
-  const [value, setValue] = useState(initial);
+export const useMemo = (callback) => {
+  const [value, setValue] = useState();
 
   runInContext(() => setValue(callback));
 

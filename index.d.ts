@@ -529,13 +529,10 @@ export function useEffect(
   callback: () =>
     | void
     | VoidFunction
+    | (() => Promise<void>)
     | Promise<void | VoidFunction | (() => Promise<void>)>
 ): void;
 
 export function useMemo<T>(
   callback: (previous: T | undefined) => T
-): StateGetter<T>;
-export function useMemo<T>(
-  callback: (previous: T) => T,
-  initial: T
 ): StateGetter<T>;
