@@ -5,13 +5,7 @@ let currentRunningEffect = null;
 const run = (callback) => {
   currentRunningEffect = callback;
   const result = callback();
-
-  if (result instanceof Promise)
-    return result.then((value) => {
-      currentRunningEffect = callback.__parent;
-      return value;
-    });
-  else currentRunningEffect = callback.__parent;
+  currentRunningEffect = callback.__parent;
 
   return result;
 };
@@ -42,8 +36,8 @@ const clean = (effect) => {
 };
 
 export const useEffect = (callback) => {
-  const effect = setup(async () => {
-    const result = await callback();
+  const effect = setup(() => {
+    const result = callback();
     if (typeof result === "function") effect.__cleanup = result;
   });
 
@@ -55,7 +49,7 @@ const rerun = (effect) => {
   run(effect);
 };
 
-export const useState = (value) => {
+export const useState = (value, { equals = Object.is } = {}) => {
   const listeners = new Set();
 
   return [
@@ -72,7 +66,7 @@ export const useState = (value) => {
     (next, { immediate = false } = {}) => {
       const nextValue = ensureFunction(next)(value);
 
-      if (value !== nextValue) {
+      if (!equals(value, nextValue)) {
         value = nextValue;
 
         listeners.forEach((effect) =>
@@ -87,15 +81,10 @@ export const useState = (value) => {
   ];
 };
 
-export const useMemo = (callback, { equals = Object.is } = {}) => {
-  const [value, setValue] = useState();
+export const useMemo = (callback, options) => {
+  const [value, setValue] = useState(undefined, options);
 
-  runInContext(() =>
-    setValue((old) => {
-      const newest = callback(old);
-      return equals(old, newest) ? old : newest;
-    })
-  );
+  runInContext(() => setValue(callback));
 
   return value;
 };
