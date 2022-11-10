@@ -171,26 +171,48 @@ All other attributes are the same as in HTML. You are free to pass all `aria-*` 
 
 ## Reactivity
 
-There are two hooks available: `useState` and `useEffect`. You can use them without any restrictions unlike React's hooks.
+There are three hooks available:
+
+1. `useState`
+2. `useEffect`
+3. `useMemo`
+
+You can use them without any restrictions unlike React's hooks.
 
 ### useState
 
-It creates a reactive variable that may be used in the reactive context (function) and that context will be able to track value's changes and reexecute itself. It accepts the default value and returns a tuple with value getter and value setter (both functions).
+It creates a reactive variable that may be used in the reactive context (function) and that context will be able to track value's changes and reexecute itself. It accepts the default value and returns a tuple with value's getter and value's setter (both functions).
 
 ```JavaScript
 const [valueGetter, valueSetter] = useState(0);
 ```
 
-The getter returns a internal value. The setter updates the value. The latter can take either the new value of the function that takes the old value and have to return a new one.
+The getter returns an internal value. The setter updates the value. The latter can take either the new value or the function that takes the old value and have to return a new one.
 
 ```JavaScript
+const value = valueGetter();
 valueSetter(1);
 valueSetter((old) => old + 1);
 ```
 
+Setter does not trigger an update of the state immediately. Instead, it queues the update after the current task is complete (UI update or some other important operation). If you know that updating have to be done as soon as possible, you can pass an _options_ object to the setter with an _immediate_ property set to `true`.
+
+```JavaScript
+valueSetter(3, { immediate: true });
+```
+
+By default, before updating a value of the `useState` a new one is compared to the old by using the strict equality operator (`===`). Only distinct values cause an update. You can pass your own function to compare values:
+
+```JavaScript
+// Only changes of the _a_ property will cause an update of the state.
+const [value, setValue] = useState({ a: 0, b: '' }, { equals: (previous, next) => previous.a === next.a });
+```
+
+> You can disable comparing values by providing the `equals` function that always returns `false`. Then every execution of the setter will cause an update and reexecution of dependent reactive contexts.
+
 ### useEffect
 
-It creates a context which you can use to register some job that should be done after the reactive value updates. It accepts a synchronous function which may return another function. The returned function clears the artifacts after the context is destroyed.
+It creates a context that you can use to register some job that should be done each time the reactive value which is used inside the context is updated. It accepts a synchronous function which may return another function. The returned function clears the artifacts after the context is destroyed.
 
 ```JavaScript
 useEffect(() => {
@@ -200,11 +222,7 @@ useEffect(() => {
 });
 ```
 
-If you will use any reactive value inside it, then that context will be reexecuted after value's update.
-
-> Only that hook and any function inside the JSX create a reactive context (except event listeners).
-
-The context autodetects all states (reactive values) that are executed inside it. It's an important thing that it cannot detect declared, but _not invoked_, values.
+It's an important thing that a context cannot detect declared, but _not invoked_, values.
 
 ```JavaScript
 useEffect(() => {
@@ -216,7 +234,7 @@ useEffect(() => {
 });
 ```
 
-You may want to opt out of autotracking for some reactive values. To achieve this becaviour instead of calling getter function use its `raw` property.
+You may want to opt out of autotracking for some reactive values. To achieve this behaviour instead of calling getter function use its `raw` property.
 
 ```JavaScript
 const [count, setCount] = useState(0);
@@ -227,6 +245,24 @@ useEffect(() => {
   console.log(count.raw);
 });
 ```
+
+### useMemo
+
+It creates a derived computation that is reexecuted when some dependency (reactive value) used inside it is changed. The hook returns a getter function that returns a result of the computation. The getter is recognized by reactive contexts as a dependency (it is basically the same thing as the first value of the `useState`'s tuple).
+
+```JavaScript
+const [count, setCount] = useState(0);
+
+const sum = useMemo((previousSum = 0) => previousSum + count());
+
+useEffect(() => console.log(sum()));
+```
+
+`useMemo` accepts a callback that receives the previous value (or _undefined_ on the first run) and returns a new one. The hook can accept an _options_ object with the `equals` property which has the same meaning as the _options_ in `useState`.
+
+## SSR
+
+The package has basic support of rendering the JSX to _string_ in non-browser environments.
 
 ## Word from author
 
