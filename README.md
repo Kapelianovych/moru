@@ -8,7 +8,7 @@ Moru is a JavaScript library for building user interfaces.
 
 - **Simple**. The best way to use any library effectively is by understanding how it works. Moru is as small and as simple as possible, so it won't be hard to explore the source code. And maybe you have some ideas to make it even simpler and better 😉
 - **Declarative**. It uses JSX to describe a markup in HTML-like way. You probably already know pros and cons from the pioneer - [React](https://reactjs.org/). But Moru renders every JSX element into the native `Node` objects, so you are closer to the DOM and don't pay the cost of the Virtual DOM and reconsiliation.
-- **Reactive**. Reactivity is the core of the library. It is heavily inspired by the [S](https://github.com/adamhaile/S) library, but aims to be more simpler with the same power.
+- **Reactive**. Reactivity is the core of the library. It is heavily inspired by the [S](https://github.com/adamhaile/S) library, but aims to be simpler with the same power.
 - **Functional**. No classes.
 
 ## Installation
@@ -17,7 +17,7 @@ Moru is a JavaScript library for building user interfaces.
 npm i moru
 ```
 
-The library is distributes as non-minified and non-transpiled source code, so you have to transpile it by yourself in a way that you want. Luckily, you don't have to worry about it as any bundler do it by default.
+The library is distributed as non-minified and non-transpiled source code, so you have to transpile it by yourself in a way you want. Luckily, you don't have to worry about it as any bundler does it by default.
 
 ## Documentation
 
