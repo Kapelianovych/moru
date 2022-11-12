@@ -34,7 +34,15 @@ export const element = (tag, properties, ...children) => {
             ([key, value]) =>
               camelCaseToKebabCase(key) + ":" + ensureFunction(value)() + ";"
           );
-        else attributeValue = String(ensureFunction(value)());
+        else {
+          const result = ensureFunction(value)();
+
+          if (typeof result === "boolean") {
+            return result ? key : "";
+          }
+
+          attributeValue = String(result);
+        }
 
         return `${key}="${attributeValue}"`;
       })
