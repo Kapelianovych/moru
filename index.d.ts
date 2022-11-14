@@ -121,11 +121,7 @@ declare global {
       readonly spellcheck: AttributeValue<boolean | "true" | "false">;
       readonly style:
         | AttributeValue<Exclude<AttributeLiteral, boolean>>
-        | {
-            [K in Exclude<keyof CSSStyleDeclaration, symbol>]?: AttributeValue<
-              Exclude<AttributeLiteral, boolean>
-            >;
-          };
+        | Record<string, AttributeValue<Exclude<AttributeLiteral, boolean>>>;
       readonly tabindex: AttributeValue<number | bigint>;
       readonly title: AttributeValue<Exclude<AttributeLiteral, boolean>>;
       readonly translate: AttributeValue<boolean | "yes" | "no">;

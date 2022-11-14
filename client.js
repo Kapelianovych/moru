@@ -61,11 +61,9 @@ const assignProperty = (element, key, value, toProperties = []) => {
     );
   } else if (key === "style" && typeof value === "object")
     Object.entries(value ?? {}).forEach(([key, value]) => {
-      if (key in element.style) {
-        const get = ensureFunction(value);
+      const get = ensureFunction(value);
 
-        runInContext(() => (element.style[key] = get()));
-      }
+      runInContext(() => element.style.setProperty(key, get()));
     });
   else if (key === "class" && Array.isArray(value))
     value.forEach((name) =>

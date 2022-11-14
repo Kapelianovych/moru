@@ -1,14 +1,6 @@
 import { ensureFunction } from "./utils.js";
 import { SelfClosedElements } from "./constants.js";
 
-const camelCaseToKebabCase = (name) =>
-  name
-    .split("")
-    .map((letter) =>
-      letter === letter.toUpperCase() ? `-${letter.toLowerCase()}` : letter
-    )
-    .join("");
-
 export const element = (tag, properties, ...children) => {
   const { ref, ...elementProperties } = properties ?? {};
 
@@ -31,8 +23,7 @@ export const element = (tag, properties, ...children) => {
             .join(" ");
         else if (key === "style" && typeof value === "object")
           attributeValue = Object.entries(value ?? {}).map(
-            ([key, value]) =>
-              camelCaseToKebabCase(key) + ":" + ensureFunction(value)() + ";"
+            ([key, value]) => key + ":" + ensureFunction(value)() + ";"
           );
         else {
           const result = ensureFunction(value)();
