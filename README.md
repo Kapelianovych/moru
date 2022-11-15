@@ -152,16 +152,19 @@ const [isFullWidth, setFullWidth] = useState(false);
 
 ### Style
 
-Alongside the _strings_ and _function_ that attribute's value may be an object with the same properties and values as the native node's `style`. There is one difference, that here you can define a function as a value.
+Alongside the _strings_ and _function_ that attribute's value may be an object with the same properties and values as the native `style` tag accepts. There is one difference, that here you can define a function as a value.
 
 ```JSX
-const [translateX, setTranslateX] = useState(false);
+const [translateX, setTranslateX] = useState(0);
 
 <div style={{
-  opacity: '0',
-  transform: () => `translateX(${translateX()}%)`
+  opacity: 1,
+  transform: () => `translateX(${translateX()}%)`,
+  'background-color': 'tomato'
 }}></div>
 ```
+
+> `moru` uses the _element.style.setProperty_ method to set style's value, so you are able to define custom properties in there.
 
 All other attributes are the same as in HTML. You are free to pass all `aria-*` and `data-*` attibutes as it is.
 

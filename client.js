@@ -41,7 +41,7 @@ const endsAt = (once, capture, passive, noPassive) =>
 const objectWith = (property, value) =>
   value === null ? {} : { [property]: value };
 
-const assignProperty = (element, key, value, toProperties = []) => {
+const assignProperty = (element, key, value, asProperties = []) => {
   if (key.startsWith("on")) {
     const name = key.toLowerCase();
 
@@ -77,7 +77,7 @@ const assignProperty = (element, key, value, toProperties = []) => {
             );
           })
     );
-  else if (toProperties.includes(key)) {
+  else if (asProperties.includes(key)) {
     const get = ensureFunction(value);
 
     runInContext(() => (element[key] = get()));
