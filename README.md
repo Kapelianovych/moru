@@ -6,8 +6,8 @@
 
 Moru is a JavaScript library for building user interfaces.
 
-- **Simple**. The best way to use any library effectively is by understanding how it works. Moru is as small and as simple as possible, so it won't be hard to explore the source code. And maybe you have some ideas to make it even simpler and better 😉
-- **Declarative**. It uses JSX to describe a markup in HTML-like way. You probably already know pros and cons from the pioneer - [React](https://reactjs.org/). But Moru renders every JSX element into the native `Node` objects, so you are closer to the DOM and don't pay the cost of the Virtual DOM and reconsiliation.
+- **Simple**. The best way to use any library effectively is by understanding how it works. Moru is as small and as simple as possible, so it won't be too hard to explore the source code. And maybe you have some ideas to make it even simpler and better 😉
+- **Declarative**. It uses JSX to describe a markup in an HTML-like way. You probably already know pros and cons from the pioneer - [React](https://reactjs.org/). But Moru renders every JSX element into the native `Node` objects, so you are closer to the DOM and don't pay the cost of the Virtual DOM and reconsiliation.
 - **Reactive**. Reactivity is the core of the library. It is heavily inspired by the [S](https://github.com/adamhaile/S) library, but aims to be simpler with the same power.
 - **Functional**. No classes.
 
@@ -107,17 +107,17 @@ All props to the native elements are treated as attributes. All attribute names 
 
 1. `boolean`. If the value is `false`, then the attribute is omitted from the DOM. Otherwise, it will be retained.
 
-   ```JSX
-   <input readonly={false}/>
-   ```
+```JSX
+<input readonly={false}/>
+```
 
 2. `function that returns a value`. In that case, if you use a reactive value inside the function, than any change of the value will update the attribute's value in the DOM.
 
-   ```JSX
-   const [counter, setCounter] = useState(0);
+```JSX
+const [counter, setCounter] = useState(0);
 
-   <div class={() => counter()}></div>
-   ```
+<div class={() => counter()}></div>
+```
 
 ### Event listeners
 
@@ -152,7 +152,7 @@ const [isFullWidth, setFullWidth] = useState(false);
 
 ### Style
 
-Alongside the _strings_ and _function_ that attribute's value may be an object with the same properties and values as the native `style` tag accepts. There is one difference, that here you can define a function as a value.
+Alongside the _strings_ and _function_ attribute's value may be an object with the same properties and values as the native `style` tag accepts. There is one difference, that here you can define a function as a value.
 
 ```JSX
 const [translateX, setTranslateX] = useState(0);
@@ -166,11 +166,13 @@ const [translateX, setTranslateX] = useState(0);
 
 > `moru` uses the _element.style.setProperty_ method to set style's value, so you are able to define custom properties in there.
 
-All other attributes are the same as in HTML. You are free to pass all `aria-*` and `data-*` attibutes as it is.
+All other attributes are the same as in HTML. You are free to pass all `aria-*` and `data-*` attibutes as they are.
 
 ```JSX
 <div data-id="foo"></div>
 ```
+
+> `moru` partially supports [the automatic runtime feature](https://reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html) so you can omit imports of the `element` and `Fragment` entities. There is no `jsx-dev-runtime` for now though, because there is no need for that.
 
 ## Reactivity
 
@@ -237,7 +239,7 @@ useEffect(() => {
 });
 ```
 
-You may want to opt out of autotracking for some reactive values. To achieve this behaviour instead of calling getter function use its `raw` property.
+You may want to opt out of autotracking for some reactive values. To achieve this behaviour instead of calling a getter function use its `raw` property.
 
 ```JavaScript
 const [count, setCount] = useState(0);
@@ -261,7 +263,7 @@ const sum = useMemo((previousSum = 0) => previousSum + count());
 useEffect(() => console.log(sum()));
 ```
 
-`useMemo` accepts a callback that receives the previous value (or _undefined_ on the first run) and returns a new one. The hook can accept an _options_ object with the `equals` property which has the same meaning as the _options_ in `useState`.
+`useMemo` accepts a callback that receives the previous value (or _undefined_ on the first run) and returns a new one. The hook can accept an _options_ object with the `equals` property which has the same meaning as the _options_ in the `useState`.
 
 ## SSR
 
