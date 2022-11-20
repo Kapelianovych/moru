@@ -12,13 +12,12 @@ export const element = (tag, properties, ...children) => {
 
         if (key === "class" && Array.isArray(value))
           attributeValue = value
-            .map((name) =>
+            .flatMap((name) =>
               typeof name === "string"
                 ? name
                 : Object.entries(name)
                     .map(([key, value]) => (ensureFunction(value)() ? key : ""))
                     .filter(Boolean)
-                    .join(" ")
             )
             .join(" ");
         else if (key === "style" && typeof value === "object")
@@ -32,7 +31,7 @@ export const element = (tag, properties, ...children) => {
             return result ? key : "";
           }
 
-          attributeValue = String(result);
+          attributeValue = result;
         }
 
         return `${key}="${attributeValue}"`;

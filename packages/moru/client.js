@@ -38,8 +38,7 @@ const endsAt = (once, capture, passive, noPassive) =>
   (capture ? -7 : 0) +
   (noPassive ? -9 : passive ? -7 : 0);
 
-const objectWith = (property, value) =>
-  value === null ? {} : { [property]: value };
+const objectWith = (property, value) => (value ? { [property]: value } : {});
 
 const assignProperty = (element, key, value, asProperties = []) => {
   if (key.startsWith("on")) {
@@ -54,9 +53,9 @@ const assignProperty = (element, key, value, asProperties = []) => {
       name.slice(2, endsAt(once, capture, passive, noPassive) || name.length),
       value,
       {
-        ...objectWith("once", once || null),
-        ...objectWith("capture", capture || null),
-        ...objectWith("passive", noPassive ? false : passive || null),
+        ...objectWith("once", once),
+        ...objectWith("capture", capture),
+        ...objectWith("passive", noPassive ? false : passive),
       }
     );
   } else if (key === "style" && typeof value === "object")
@@ -100,9 +99,7 @@ export const element = (tag, properties, ...children) => {
   const { ref, ...elementProperties } = properties ?? {};
 
   if (typeof tag === "string") {
-    const isSVG = SVG_ELEMENTS.has(tag);
-
-    const node = isSVG
+    const node = SVG_ELEMENTS.has(tag)
       ? document.createElementNS(SVG_NAMESPACE, tag)
       : document.createElement(tag);
 
