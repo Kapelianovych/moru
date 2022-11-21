@@ -2,7 +2,7 @@
   "name": "moru-tests",
   "private": true,
   "scripts": {
-    "test:browser": "vitest run --config ./vitest.browser.config.js"
+    "test:browser": "vitest run --config ./vite.browser.config.js"
   },
   "dependencies": {
     "moru": "*"

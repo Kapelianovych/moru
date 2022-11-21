@@ -14,15 +14,15 @@
     "type": "git",
     "url": "https://github.com/Kapelianovych/moru.git"
   },
-  "types": "./index.d.ts",
   "exports": {
     ".": {
-      "node": "./index.server.js",
-      "default": "./index.browser.js"
+      "types": "./index.d.ts",
+      "browser": "./index.browser.js",
+      "default": "./index.server.js"
     },
     "./jsx-runtime": {
-      "node": "./jsx-runtime.server.js",
-      "default": "./jsx-runtime.browser.js"
+      "browser": "./jsx-runtime.browser.js",
+      "default": "./jsx-runtime.server.js"
     }
   }
 }
