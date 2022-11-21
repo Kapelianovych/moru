@@ -18,11 +18,11 @@
   "exports": {
     ".": {
       "node": "./index.server.js",
-      "default": "./index.client.js"
+      "default": "./index.browser.js"
     },
     "./jsx-runtime": {
       "node": "./jsx-runtime.server.js",
-      "default": "./jsx-runtime.client.js"
+      "default": "./jsx-runtime.browser.js"
     }
   }
 }

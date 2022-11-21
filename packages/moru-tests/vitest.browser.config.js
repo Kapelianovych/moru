@@ -1,4 +1,4 @@
 export default {
-  include: ["**/*.client.test.{js,jsx}"],
+  include: ["**/*.browser.test.{js,jsx}"],
   environment: "happy-dom",
 };

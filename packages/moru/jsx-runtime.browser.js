@@ -1,5 +1,5 @@
 import createRuntime from "./runtime.js";
-import { element, Fragment } from "./index.client.js";
+import { element, Fragment } from "./index.browser.js";
 
 const runtime = createRuntime(element);
 
