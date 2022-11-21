@@ -59,6 +59,22 @@ test("useEffect has to track a state's getter call and rerun the callback when t
 
   useEffect(callback);
 
+  await runInMictotask(() => expect(callback).toBeCalledTimes(1));
+
+  await runInMictotask(() => setValue(2));
+
+  await runInMictotask(() => expect(callback).toBeCalledTimes(2));
+});
+
+test("a state setter has to defer updating dependent effects by default", async () => {
+  const [value, setValue] = useState(1);
+
+  const callback = vi.fn(() => {
+    value();
+  });
+
+  useEffect(callback);
+
   await runInMictotask(() => {
     setValue(2);
     expect(callback).toBeCalledTimes(1);
