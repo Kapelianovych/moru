@@ -1,5 +1,5 @@
 import { runInContext } from "./state.js";
-import { ensureFunction } from "./utils.js";
+import { ensureArray, ensureFunction } from "./utils.js";
 import {
   SVG_ELEMENTS,
   SVG_NAMESPACE,
@@ -40,7 +40,7 @@ const endsAt = (once, capture, passive, noPassive) =>
 
 const objectWith = (property, value) => (value ? { [property]: value } : {});
 
-const assignProperty = (element, key, value, asProperties = []) => {
+const assignAttribute = (element, key, value, asProperties = []) => {
   if (key.startsWith("on")) {
     const name = key.toLowerCase();
 
@@ -95,32 +95,32 @@ const assignProperty = (element, key, value, asProperties = []) => {
   }
 };
 
-export const element = (tag, properties, ...children) => {
-  const { ref, ...elementProperties } = properties ?? {};
-
+export const element = (tag, { ref, children, ...attributes } = {}) => {
   if (typeof tag === "string") {
     const node = SVG_ELEMENTS.has(tag)
       ? document.createElementNS(SVG_NAMESPACE, tag)
       : document.createElement(tag);
 
-    Object.entries(elementProperties).forEach(([key, value]) =>
-      assignProperty(node, key, value, AttributesToProperties[tag])
+    Object.entries(attributes).forEach(([key, value]) =>
+      assignAttribute(node, key, value, AttributesToProperties[tag])
     );
 
-    children.forEach(createNodeInjector(node));
+    ensureArray(children).forEach(createNodeInjector(node));
 
     ref && ref(node);
 
     return node;
   }
 
-  return tag({ ref, children, ...elementProperties });
+  return tag({ ref, children, ...attributes });
 };
+
+export { element as jsx, element as jsxs, element as jsxDEV };
 
 export const Fragment = ({ children }) => {
   const fragment = document.createDocumentFragment();
 
-  children.forEach(createNodeInjector(fragment));
+  ensureArray(children).forEach(createNodeInjector(fragment));
 
   const __nodes = Array.from(fragment.childNodes);
 

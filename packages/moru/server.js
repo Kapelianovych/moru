@@ -8,11 +8,9 @@ const renderChildren = (elements) => {
   return elements ?? "";
 };
 
-export const element = (tag, properties, ...children) => {
-  const { ref, ...elementProperties } = properties ?? {};
-
+export const element = (tag, { ref, children, ...attributes } = {}) => {
   if (typeof tag === "string") {
-    const attributes = Object.entries(elementProperties)
+    const tagsAttributes = Object.entries(attributes)
       .filter(([key]) => !key.startsWith("on"))
       .map(([key, value]) => {
         let attributeValue = "";
@@ -46,11 +44,13 @@ export const element = (tag, properties, ...children) => {
       .join(" ");
 
     return SelfClosedElements.has(tag)
-      ? `<${tag} ${attributes}>`
-      : `<${tag} ${attributes}>${renderChildren(children)}</${tag}>`;
+      ? `<${tag} ${tagsAttributes}>`
+      : `<${tag} ${tagsAttributes}>${renderChildren(children)}</${tag}>`;
   }
 
-  return tag({ ref, children, ...elementProperties });
+  return tag({ ref, children, ...attributes });
 };
+
+export { element as jsx, element as jsxs, element as jsxDEV };
 
 export const Fragment = ({ children }) => renderChildren(children);

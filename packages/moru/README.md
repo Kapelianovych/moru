@@ -166,13 +166,13 @@ const [translateX, setTranslateX] = useState(0);
 
 > `moru` uses the _element.style.setProperty_ method to set style's value, so you are able to define custom properties in there.
 
-All other attributes are the same as in HTML. You are free to pass all `aria-*` and `data-*` attibutes as they are.
+All other attributes are the same as in HTML. You are free to pass all `aria-*` and `data-*` attributes as they are.
 
 ```JSX
 <div data-id="foo"></div>
 ```
 
-> `moru` partially supports [the automatic runtime feature](https://reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html) so you can omit imports of the `element` and `Fragment` entities. There is no `jsx-dev-runtime` for now though, because there is no need for that.
+> `moru` supports [the automatic runtime feature](https://reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html) so you can omit imports of the `element` and `Fragment` entities.
 
 ### Children
 

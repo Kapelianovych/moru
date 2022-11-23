@@ -21,8 +21,12 @@
       "default": "./index.server.js"
     },
     "./jsx-runtime": {
-      "browser": "./jsx-runtime.browser.js",
-      "default": "./jsx-runtime.server.js"
+      "browser": "./browser.js",
+      "default": "./server.js"
+    },
+    "./jsx-dev-runtime": {
+      "browser": "./browser.js",
+      "default": "./server.js"
     }
   }
 }
