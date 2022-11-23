@@ -4,10 +4,8 @@ let currentRunningEffect = null;
 
 const run = (callback) => {
   currentRunningEffect = callback;
-  const result = callback();
+  callback();
   currentRunningEffect = callback.__parent;
-
-  return result;
 };
 
 const setup = (callback) => {
