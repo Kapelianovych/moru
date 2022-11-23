@@ -28,6 +28,18 @@ test("a boolean value passed to the attribute either include the attribute or re
   expect(div.hasAttribute("disabled")).toBe(false);
 });
 
+test("a function that returns a boolean value causes an attribute to be toggled depending of the boolean value", () => {
+  const [toggle, setToggle] = useState(false);
+
+  const div = <div readonly={toggle}></div>;
+
+  expect(div.hasAttribute("readonly")).toBe(false);
+
+  setToggle(true, { immediate: true });
+
+  expect(div.hasAttribute("readonly")).toBe(true);
+});
+
 test("function passed to an attribute causes an update of the attribute's value if any state used inside is updated", () => {
   const [a, setA] = useState(1);
 
@@ -145,4 +157,130 @@ test.todo("capture suffix registers a listener for the capturing phase", () => {
   child.dispatchEvent(new MouseEvent("click"));
 
   expect(time2 > time1).toBe(true);
+});
+
+test("JSX elements can contain other elements and components", () => {
+  const P = () => <p class="p"></p>;
+
+  const div = (
+    <div class="parent">
+      <span class="span"></span>
+      <P />
+    </div>
+  );
+
+  expect(div.querySelector(".p")).toBeInstanceOf(HTMLParagraphElement);
+  expect(div.querySelector(".span")).toBeInstanceOf(HTMLSpanElement);
+});
+
+test("null and undefined are rendered as empty Text nodes", () => {
+  const div = (
+    <div>
+      {null}
+      {undefined}
+    </div>
+  );
+
+  const children = Array.from(div.childNodes);
+
+  expect(children.length).toBe(2);
+  children.forEach((node) => expect(node).toBeInstanceOf(Text));
+  expect(div.innerHTML).toBe("");
+});
+
+test("0, empty string, false are rendered as is", () => {
+  const div = (
+    <div>
+      <p>{0}</p>
+      {""}
+      <div>{false}</div>
+    </div>
+  );
+
+  expect(Array.from(div.childNodes).length).toBe(3);
+  expect(div.innerHTML).toMatch("<p>0</p><div>false</div>");
+});
+
+test("array passed as a child has to be flattened and all items rendered as children", () => {
+  const div = <div>{["foo", <div>baz</div>]}</div>;
+
+  expect(div.innerHTML).toMatch("foo<div>baz</div>");
+});
+
+test("inline component has to be executed and the result is inserted into the DOM", () => {
+  const div = <div>{() => "8"}</div>;
+
+  expect(div.innerHTML).toMatch("8");
+});
+
+test("inline component is rendered in a reactive context", () => {
+  const [value, setValue] = useState("initial");
+
+  const div = <div>{() => value()}</div>;
+
+  expect(div.innerHTML).toMatch("initial");
+
+  setValue("second", { immediate: true });
+
+  expect(div.innerHTML).toMatch("second");
+});
+
+test("inline component in a fragment has to correctly update nodes in its position", () => {
+  const [value, setValue] = useState("initial");
+
+  const div = (
+    <div>
+      {() => (
+        <>
+          foo
+          {() => value()}
+        </>
+      )}
+    </div>
+  );
+
+  expect(div.innerHTML).toMatch("fooinitial");
+
+  setValue("second", { immediate: true });
+
+  expect(div.innerHTML).toMatch("foosecond");
+});
+
+test("inline component has to remove all nodes that it produced after unmounting or rerendering", () => {
+  const [a, setA] = useState(8);
+
+  const div = (
+    <div>
+      {() =>
+        a() > 1 ? (
+          <p>baz</p>
+        ) : (
+          <>
+            <div></div>
+            <span>foo</span>
+            {() => <div></div>}
+          </>
+        )
+      }
+    </div>
+  );
+
+  expect(div.innerHTML).toMatch("<p>baz</p>");
+
+  setA(0, { immediate: true });
+
+  expect(div.innerHTML).toMatch("<div></div><span>foo</span><div></div>");
+  expect(div.innerHTML).not.toMatch("<p>baz</p>");
+});
+
+test("component can return inline component", () => {
+  const P = () => () => <p>paragraph</p>;
+
+  const div = (
+    <div>
+      <P />
+    </div>
+  );
+
+  expect(div.innerHTML).toMatch("<p>paragraph</p>");
 });
