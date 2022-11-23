@@ -1,6 +1,13 @@
 import { ensureFunction } from "./utils.js";
 import { SelfClosedElements } from "./constants.js";
 
+const renderChildren = (elements) => {
+  if (typeof elements === "function") return renderChildren(elements());
+  else if (Array.isArray(elements))
+    return elements.map(renderChildren).join("");
+  return elements ?? "";
+};
+
 export const element = (tag, properties, ...children) => {
   const { ref, ...elementProperties } = properties ?? {};
 
@@ -40,10 +47,10 @@ export const element = (tag, properties, ...children) => {
 
     return SelfClosedElements.has(tag)
       ? `<${tag} ${attributes}>`
-      : `<${tag} ${attributes}>${children.join("")}</${tag}>`;
+      : `<${tag} ${attributes}>${renderChildren(children)}</${tag}>`;
   }
 
   return tag({ ref, children, ...elementProperties });
 };
 
-export const Fragment = ({ children }) => children.join("");
+export const Fragment = ({ children }) => renderChildren(children);

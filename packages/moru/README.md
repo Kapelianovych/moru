@@ -174,6 +174,59 @@ All other attributes are the same as in HTML. You are free to pass all `aria-*` 
 
 > `moru` partially supports [the automatic runtime feature](https://reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html) so you can omit imports of the `element` and `Fragment` entities. There is no `jsx-dev-runtime` for now though, because there is no need for that.
 
+### Children
+
+You can nest JSX elements inside each other.
+
+```JavaScript
+// component
+const Header = () => (
+  <header></header>
+);
+
+<div>
+  <Header />
+  <p>Moru</p>
+</div>
+```
+
+Besides JSX elements, a child can be any primitive (`null` and `undefined` are rendered as empty text nodes), an array (in that case every item will be rendered as a child) or function which is interpreted as `inline component` in a reactive context.
+
+```JavaScript
+const [value] = useState('value');
+
+<div>
+ {null}
+ {0}
+ {[<p>Child</p>]}
+ {() => value()}
+</div>
+
+// <div>
+//   0
+//   <p>Child</p>
+//   value
+// </div>
+```
+
+> Actually, all values that are assignable to the `JSX.Element` type are considered as valid children. The type consist of:
+>
+> 1. `null`
+> 2. `undefined`
+> 3. `string`
+> 4. `number`
+> 5. `bigint`
+> 6. `boolean`
+> 7. `Node`
+> 8. `readonly JSX.Element[]`
+> 9. `() => JSX.Element` (inline component)
+
+JSX tags create native DOM nodes, so you can pass it to every DOM API.
+
+```JavaScript
+document.body.prepend(<div></div>);
+```
+
 ## Reactivity
 
 There are three hooks available:

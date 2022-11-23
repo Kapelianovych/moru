@@ -499,8 +499,8 @@ export function element(
 
 export function Fragment(properties: WithChildren<{}>): DocumentFragment;
 
-export type WithChildren<Properties> = Properties & {
-  readonly children: JSX.Element;
+export type WithChildren<Properties, As = JSX.Element> = Properties & {
+  readonly children: As;
 };
 
 export type StateGetter<T> = {
