@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { useEffect, useMemo, useState } from "moru";
 
-import runInMictotask from "./runInMicrotask.js";
+import runInMicrotask from "./runInMicrotask.js";
 
 test("useState has to return a tuple with a getter and a setter function", () => {
   const result = useState();
@@ -47,7 +47,7 @@ test("useEffect has to defer calling a callback to a microtask", async () => {
 
   expect(callback).not.toBeCalled();
 
-  await runInMictotask(() => expect(callback).toBeCalled());
+  await runInMicrotask(() => expect(callback).toBeCalled());
 });
 
 test("useEffect has to track a state's getter call and rerun the callback when the state is changed", async () => {
@@ -59,11 +59,11 @@ test("useEffect has to track a state's getter call and rerun the callback when t
 
   useEffect(callback);
 
-  await runInMictotask(() => expect(callback).toBeCalledTimes(1));
+  await runInMicrotask(() => expect(callback).toBeCalledTimes(1));
 
-  await runInMictotask(() => setValue(2));
+  await runInMicrotask(() => setValue(2));
 
-  await runInMictotask(() => expect(callback).toBeCalledTimes(2));
+  await runInMicrotask(() => expect(callback).toBeCalledTimes(2));
 });
 
 test("a state setter has to defer updating dependent effects by default", async () => {
@@ -75,12 +75,12 @@ test("a state setter has to defer updating dependent effects by default", async 
 
   useEffect(callback);
 
-  await runInMictotask(() => {
+  await runInMicrotask(() => {
     setValue(2);
     expect(callback).toBeCalledTimes(1);
   });
 
-  await runInMictotask(() => expect(callback).toBeCalledTimes(2));
+  await runInMicrotask(() => expect(callback).toBeCalledTimes(2));
 });
 
 test("useState's setter function can issue immediate rerun of dependent effects", async () => {
@@ -92,7 +92,7 @@ test("useState's setter function can issue immediate rerun of dependent effects"
 
   useEffect(callback);
 
-  await runInMictotask(() => {
+  await runInMicrotask(() => {
     setValue(2, { immediate: true });
     expect(callback).toBeCalledTimes(2);
   });
@@ -111,7 +111,7 @@ test("useEffect has to register and call a cleanup function when it reexecutes t
 
   useEffect(callback);
 
-  await runInMictotask(() => {
+  await runInMicrotask(() => {
     setValue(1, { immediate: true });
 
     expect(cleanup).toBeCalled();
@@ -130,13 +130,13 @@ test("useEffect has to register a state usage from an executed code part", async
 
   useEffect(callback);
 
-  await runInMictotask(() => setA(2));
+  await runInMicrotask(() => setA(2));
 
-  await runInMictotask(() => expect(callback).toBeCalledTimes(2));
+  await runInMicrotask(() => expect(callback).toBeCalledTimes(2));
 
-  await runInMictotask(() => setB(2));
+  await runInMicrotask(() => setB(2));
 
-  await runInMictotask(() => expect(callback).toBeCalledTimes(2));
+  await runInMicrotask(() => expect(callback).toBeCalledTimes(2));
 });
 
 test("useMemo has to return a single getter function which returns a result of a callback", () => {
