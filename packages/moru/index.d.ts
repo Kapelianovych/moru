@@ -536,3 +536,5 @@ export function useMemo<T>(
   callback: (previous: T | undefined) => T,
   options?: UseMemoOptions<T>
 ): StateGetter<T>;
+
+export function useBatch(callback: VoidFunction): void;

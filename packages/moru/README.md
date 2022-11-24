@@ -229,11 +229,12 @@ document.body.prepend(<div></div>);
 
 ## Reactivity
 
-There are three hooks available:
+There are four hooks available:
 
 1. `useState`
 2. `useEffect`
 3. `useMemo`
+4. `useBatch`
 
 You can use them without any restrictions unlike React's hooks.
 
@@ -317,6 +318,28 @@ useEffect(() => console.log(sum()));
 ```
 
 `useMemo` accepts a callback that receives the previous value (or _undefined_ on the first run) and returns a new one. The hook can accept an _options_ object with the `equals` property which has the same meaning as the _options_ in the `useState`.
+
+### useBatch
+
+Postpones rerunning all depending effects until the end of the callback. If inside the callback different state setters are executed, all dependent reactive scopes are executed at most once. State setters with `immediate: true` will mark that their dependent scopes as such that must be executed _before_ others.
+
+```JavaScript
+const [a, setA] = useState(0);
+const [b, setB] = useState('');
+
+useEffect(() => {
+  console.log(a());
+  console.log(b());
+});
+
+// effect above will be executed only once on update of two states.
+useBatch(() => {
+  setA(3);
+  setB('hello');
+});
+```
+
+> Effects, reactive contexts in JSX and memos are always executed in a batch.
 
 ## SSR
 

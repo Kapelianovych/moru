@@ -1,15 +1,32 @@
 import { ensureFunction } from "./utils.js";
 
-let currentRunningEffect = null;
+let runningEffect, batchedEffects;
+
+export const useBatch = (callback) => {
+  const previousBatchedEffects = batchedEffects;
+  batchedEffects = new Set();
+
+  callback();
+
+  batchedEffects.forEach((effect) => {
+    if (!previousBatchedEffects || !previousBatchedEffects.has(effect)) {
+      rerun(effect, effect.__immediate);
+      effect.__immediate && batchedEffects.delete(effect);
+      delete effect.__immediate;
+    }
+  });
+
+  batchedEffects = previousBatchedEffects;
+};
 
 const run = (callback) => {
-  currentRunningEffect = callback;
-  callback();
-  currentRunningEffect = callback.__parent;
+  runningEffect = callback;
+  useBatch(callback);
+  runningEffect = callback.__parent;
 };
 
 const setup = (callback) => {
-  callback.__parent = currentRunningEffect;
+  callback.__parent = runningEffect;
   callback.__cleanup = null;
   callback.__children = new Set();
   callback.__disposed = false;
@@ -42,9 +59,11 @@ export const useEffect = (callback) => {
   queueMicrotask(() => run(effect));
 };
 
-const rerun = (effect) => {
-  clean(effect);
-  run(effect);
+const rerun = (effect, immediate) => {
+  if (immediate) {
+    clean(effect);
+    run(effect);
+  } else queueMicrotask(() => rerun(effect, true));
 };
 
 export const useState = (value, { equals = Object.is } = {}) => {
@@ -53,7 +72,7 @@ export const useState = (value, { equals = Object.is } = {}) => {
   return [
     Object.defineProperty(
       () => {
-        currentRunningEffect && listeners.add(currentRunningEffect);
+        runningEffect && listeners.add(runningEffect);
         return value;
       },
       "raw",
@@ -70,9 +89,11 @@ export const useState = (value, { equals = Object.is } = {}) => {
         listeners.forEach((effect) =>
           effect.__disposed
             ? listeners.delete(effect)
-            : immediate
-            ? rerun(effect)
-            : queueMicrotask(() => rerun(effect))
+            : batchedEffects?.add(
+                Object.assign(effect, {
+                  __immediate: effect.__immediate || immediate,
+                })
+              ) ?? rerun(effect, immediate)
         );
       }
     },

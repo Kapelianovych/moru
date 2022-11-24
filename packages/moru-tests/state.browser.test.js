@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { useEffect, useMemo, useState } from "moru";
+import { useBatch, useEffect, useMemo, useState } from "moru";
 
 import runInMicrotask from "./runInMicrotask.js";
 
@@ -190,4 +190,69 @@ test("useMemo receives an equals function that updates the internal value only i
   setA(3, { immediate: true });
 
   expect(b()).toBe(4);
+});
+
+test("useBatch postpones execution of dependent reactive scopes until the end of the callback", async () => {
+  const [a, setA] = useState(8);
+
+  const callback = vi.fn(() => a());
+
+  useEffect(callback);
+
+  await runInMicrotask(() => {
+    useBatch(() => {
+      setA(0, { immediate: true });
+      expect(callback).toBeCalledTimes(1);
+    });
+
+    expect(callback).toBeCalledTimes(2);
+  });
+});
+
+test("an update of two different states in a batch has to cause rerunning dependent effect only once", async () => {
+  const [a, setA] = useState(8);
+  const [b, setB] = useState(8);
+
+  const callback = vi.fn(() => {
+    a();
+    b();
+  });
+
+  useEffect(callback);
+
+  await runInMicrotask(() => {
+    useBatch(() => {
+      setA(0);
+      setB(2);
+    });
+  });
+
+  await runInMicrotask(() => expect(callback).toBeCalledTimes(2));
+});
+
+test("when two or more batch updates are overlapping and some state setters request to update the same effect, those effects has to be updated only once with newest values from all states", async () => {
+  const [a, setA] = useState(8);
+  const [b, setB] = useState(8);
+  const [c, setC] = useState(0);
+
+  const callback = vi.fn(() => {
+    a();
+    b();
+  });
+
+  useEffect(callback);
+
+  useEffect(() => {
+    c();
+    setA(4);
+  });
+
+  await runInMicrotask(() =>
+    useBatch(() => {
+      setC(Math.random(), { immediate: true });
+      setB(Math.random());
+    })
+  );
+
+  await runInMicrotask(() => expect(callback).toBeCalledTimes(3));
 });

@@ -1,2 +1,2 @@
 export { element, Fragment } from "./browser.js";
-export { useMemo, useState, useEffect } from "./state.js";
+export { useMemo, useState, useEffect, useBatch } from "./state.js";
