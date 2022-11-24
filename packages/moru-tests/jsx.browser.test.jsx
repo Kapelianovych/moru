@@ -7,6 +7,12 @@ test("native tags has to be rendered into native DOM elements", () => {
   expect(paragraph).toBeInstanceOf(HTMLParagraphElement);
 });
 
+test("a fragment has to be rendered into the DocumentFragment", () => {
+  const fragment = <></>;
+
+  expect(fragment).toBeInstanceOf(DocumentFragment);
+});
+
 test("jsx has to attach attributes", () => {
   const div = <div id="root"></div>;
 
