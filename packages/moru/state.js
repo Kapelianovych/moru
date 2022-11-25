@@ -78,7 +78,7 @@ export const useState = (value, { equals = Object.is } = {}) => {
         get: () => value,
       }
     ),
-    (next, { immediate = false } = {}) => {
+    (next, { immediate } = {}) => {
       const nextValue = ensureFunction(next)(value);
 
       if (!equals(value, nextValue)) {
