@@ -1,7 +1,7 @@
 export default {
   test: {
     include: ["**/*.browser.test.{js,jsx}"],
-    environment: "happy-dom",
+    environment: "jsdom",
   },
   esbuild: {
     jsx: "automatic",

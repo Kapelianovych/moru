@@ -75,7 +75,7 @@ test("object's values can be functions which are executed in a reactive context 
 
   const div = <div class={[{ foo: () => yes() }]}></div>;
 
-  expect(div.getAttribute("class")).toMatch("");
+  expect(div.getAttribute("class")).toBe(null);
 
   setYes(true, { immediate: true });
 
