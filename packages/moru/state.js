@@ -27,9 +27,7 @@ const run = (callback) => {
 
 const setup = (callback) => {
   callback.__parent = runningEffect;
-  callback.__cleanup = null;
   callback.__children = new Set();
-  callback.__disposed = false;
 
   callback.__parent?.__children.add(callback);
 
@@ -41,13 +39,13 @@ export const runInContext = (callback) => run(setup(callback));
 const clean = (effect) => {
   effect.__children.forEach((child) => {
     clean(child);
-    child.__parent = null;
+    delete child.__parent;
     child.__disposed = true;
   });
   effect.__children.clear();
 
   effect.__cleanup?.();
-  effect.__cleanup = null;
+  delete effect.__cleanup;
 };
 
 export const useEffect = (callback) => {
