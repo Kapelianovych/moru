@@ -9,7 +9,7 @@ export const useBatch = (callback) => {
   callback();
 
   batchedEffects.forEach((effect) => {
-    if (!previousBatchedEffects || !previousBatchedEffects.has(effect)) {
+    if (!previousBatchedEffects?.has(effect)) {
       rerun(effect, effect.__immediate);
       effect.__immediate && batchedEffects.delete(effect);
       delete effect.__immediate;
