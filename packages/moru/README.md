@@ -9,7 +9,7 @@ Moru is a JavaScript library for building user interfaces.
 - **Simple**. The best way to use any library effectively is by understanding how it works. Moru is as small and as simple as possible, so it won't be too hard to explore the source code. And maybe you have some ideas to make it even simpler and better 😉
 - **Declarative**. It uses JSX to describe a markup in an HTML-like way. You probably already know pros and cons from the pioneer - [React](https://reactjs.org/). But Moru renders every JSX element into the native `Node` objects, so you are closer to the DOM and don't pay the cost of the Virtual DOM and reconsiliation.
 - **Reactive**. Reactivity is the core of the library. It is heavily inspired by the [S](https://github.com/adamhaile/S) library, but aims to be simpler with the same power.
-- **Functional**. No classes.
+- **Functional**. No class components.
 
 ## Installation
 
@@ -91,7 +91,7 @@ const parent = <div>{child}</div>;
 // Becomes HTML: <div><p></p></div>
 ```
 
-At the end, you can use a function as a child. If you use a reactive value (state) in there, then on every change of the reactive value that parts of the DOM will be updated:
+At the end, you can use a function as a child. If you use a reactive value (state) in there, then on every change of the reactive value that part of the DOM will be updated:
 
 ```JSX
 const [counter, setCounter] = useState(0);
@@ -121,7 +121,7 @@ const [counter, setCounter] = useState(0);
 
 ### Event listeners
 
-To attach an event listener to the element you can must write the `on` prefix followed by the name of the event and pass a function as a value to it. Function receives the native event object. You may write: `onclick`, `onClick`, `OnClick`, `OnCliCK` - all of them are the same.
+To attach an event listener to the element you must write the `on` prefix followed by the name of the event and pass a function as a value to it. Function receives the native event object. You may write: `onclick`, `onClick`, `OnClick`, `OnCliCK` - all of them are the same.
 
 ```JSX
 <div onclick={(event) => console.log(event)}></div>
@@ -142,7 +142,7 @@ You can combine them together except `Passive` and `NoPassive`. If you do, then 
 
 ### Class
 
-Alongside the _strings_ and _function_ that attribute accepts an array of strings or objects. If you provide an object inside the array, then all keys with _truthy_ values will be added to the attribute. A function is allowed as a value also.
+Alongside the _string_ and _function_ that attribute accepts an array of strings or objects. If you provide an object inside the array, then all keys with _truthy_ values will be added to the attribute. A function is allowed as a value also.
 
 ```JSX
 const [isFullWidth, setFullWidth] = useState(false);
@@ -152,7 +152,7 @@ const [isFullWidth, setFullWidth] = useState(false);
 
 ### Style
 
-Alongside the _strings_ and _function_ attribute's value may be an object with the same properties and values as the native `style` tag accepts. There is one difference, that here you can define a function as a value.
+Alongside the _string_ and _function_ attribute's value may be an object with the same properties and values as the native `style` tag accepts. There is one difference, that here you can define a function as a value.
 
 ```JSX
 const [translateX, setTranslateX] = useState(0);
@@ -190,25 +190,6 @@ const Header = () => (
 </div>
 ```
 
-Besides JSX elements, a child can be any primitive (`null` and `undefined` are rendered as empty text nodes), an array (in that case every item will be rendered as a child) or function which is interpreted as `inline component` in a reactive context.
-
-```JavaScript
-const [value] = useState('value');
-
-<div>
- {null}
- {0}
- {[<p>Child</p>]}
- {() => value()}
-</div>
-
-// <div>
-//   0
-//   <p>Child</p>
-//   value
-// </div>
-```
-
 > Actually, all values that are assignable to the `JSX.Element` type are considered as valid children. The type consist of:
 >
 > 1. `null`
@@ -220,12 +201,6 @@ const [value] = useState('value');
 > 7. `Node`
 > 8. `readonly JSX.Element[]`
 > 9. `() => JSX.Element` (inline component)
-
-JSX tags create native DOM nodes, so you can pass it to every DOM API.
-
-```JavaScript
-document.body.prepend(<div></div>);
-```
 
 ## Reactivity
 
@@ -321,7 +296,7 @@ useEffect(() => console.log(sum()));
 
 ### useBatch
 
-Postpones rerunning all depending effects until the end of the callback. If inside the callback different state setters are executed, all dependent reactive scopes are executed at most once. State setters with `immediate: true` will mark that their dependent scopes as such that must be executed _before_ others.
+Postpones rerunning all depending effects until the end of the callback. If inside the callback different state setters are executed, all dependent reactive scopes are executed at most once. State setters with `immediate: true` will mark their dependent scopes as such that must be executed _before_ others.
 
 ```JavaScript
 const [a, setA] = useState(0);
