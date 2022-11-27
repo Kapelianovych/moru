@@ -6,6 +6,11 @@ import {
   AttributesToProperties,
 } from "./constants.js";
 
+const flattenFragmentChildren = (node) =>
+  node instanceof DocumentFragment
+    ? [node.__first, ...node.__nodes.flatMap(flattenFragmentChildren)]
+    : node;
+
 const createNodeInjector = (to, holder) => (child) => {
   if (typeof child === "function")
     runInContext(function _self() {
@@ -17,16 +22,24 @@ const createNodeInjector = (to, holder) => (child) => {
     const next =
       child instanceof Node ? child : document.createTextNode(child ?? "");
 
+    if (next instanceof DocumentFragment && !next.__nodes)
+      Object.assign(next, {
+        __first: next.childNodes.item(0),
+        __nodes: Array.from(next.childNodes).slice(1),
+      });
+
+    if (to instanceof DocumentFragment) to.__nodes.push(next);
+
     if (holder?.__old) {
       if (holder.__old instanceof DocumentFragment) {
-        holder.__old.append(...holder.__old.__nodes);
+        holder.__old.append(
+          ...holder.__old.__nodes.flatMap(flattenFragmentChildren)
+        );
         holder.__old = holder.__old.__first;
       }
 
       holder.__old.replaceWith(next);
     } else to.append(next);
-
-    if (to instanceof DocumentFragment) to.__nodes?.push(next);
 
     holder && (holder.__old = next);
   }
@@ -118,18 +131,16 @@ export const element = (tag, { ref, children, ...attributes } = {}) => {
 export { element as jsx, element as jsxs, element as jsxDEV };
 
 export const Fragment = ({ children }) => {
-  const fragment = document.createDocumentFragment();
+  const __first = document.createTextNode("");
+
+  const fragment = Object.assign(document.createDocumentFragment(), {
+    __first,
+    __nodes: [],
+  });
 
   ensureArray(children).forEach(createNodeInjector(fragment));
 
-  const __nodes = Array.from(fragment.childNodes);
-
-  const __first = document.createTextNode("");
-
   fragment.prepend(__first);
 
-  return Object.assign(fragment, {
-    __first,
-    __nodes,
-  });
+  return fragment;
 };

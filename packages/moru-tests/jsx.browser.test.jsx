@@ -290,3 +290,58 @@ test("component can return inline component", () => {
 
   expect(div.innerHTML).toMatch("<p>paragraph</p>");
 });
+
+test("outer fragment has to remove children of inner fragments when it is about to be removed from the DOM", () => {
+  const [t, setT] = useState(true);
+
+  const inline = () =>
+    t() ? (
+      <>
+        <div class="first"></div>
+        {
+          <>
+            <div class="second"></div>
+            {() => (
+              <>
+                <div class="third"></div>
+              </>
+            )}
+          </>
+        }
+      </>
+    ) : null;
+
+  const div = <div>{inline}</div>;
+
+  expect(div.querySelector(".first")).toBeTruthy();
+  expect(div.querySelector(".second")).toBeTruthy();
+  expect(div.querySelector(".third")).toBeTruthy();
+
+  setT(false, { immediate: true });
+
+  expect(div.querySelector(".first")).toBeFalsy();
+  expect(div.querySelector(".second")).toBeFalsy();
+  expect(div.querySelector(".third")).toBeFalsy();
+});
+
+test("outer fragment must remove children of user defined DocumentFragment", () => {
+  const [t, setT] = useState(false);
+
+  const nodes = () => {
+    if (t()) return null;
+
+    const template = document.createDocumentFragment();
+
+    template.append(<div>I am a user defined DocumentFragment</div>);
+
+    return template;
+  };
+
+  const fragment = <>{nodes}</>;
+
+  expect(fragment.querySelector("div")).toBeTruthy();
+
+  setT(true, { immediate: true });
+
+  expect(fragment.querySelector("div")).toBeFalsy();
+});
