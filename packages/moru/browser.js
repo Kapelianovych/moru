@@ -138,9 +138,9 @@ export const Fragment = ({ children }) => {
     __nodes: [],
   });
 
-  ensureArray(children).forEach(createNodeInjector(fragment));
+  fragment.append(__first);
 
-  fragment.prepend(__first);
+  ensureArray(children).forEach(createNodeInjector(fragment));
 
   return fragment;
 };
