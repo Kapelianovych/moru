@@ -1,7 +1,10 @@
 {
   "name": "moru-tests",
+  "type": "module",
   "private": true,
   "scripts": {
+    "test": "npm run test:server && npm run test:browser",
+    "test:server": "vitest run --config ./vite.server.config.js",
     "test:browser": "vitest run --config ./vite.browser.config.js"
   },
   "dependencies": {

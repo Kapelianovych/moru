@@ -58,7 +58,7 @@ test("function passed to an attribute causes an update of the attribute's value 
   expect(div.getAttribute("id")).toBe("2");
 });
 
-test("class attribute can have a strings array value", () => {
+test("class attribute can have an array of strings as a value", () => {
   const div = <div class={["foo", "baz"]}></div>;
 
   expect(div.getAttribute("class")).toMatch("foo baz");

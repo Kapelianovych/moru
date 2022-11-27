@@ -4,6 +4,9 @@
   "author": "Yevhen Kapelianovych",
   "private": true,
   "license": "MIT",
+  "scripts": {
+    "test": "npm test --workspaces --if-present"
+  },
   "workspaces": [
     "packages/moru",
     "packages/moru-tests"

@@ -26,9 +26,9 @@ export const element = (tag, { ref, children, ...attributes } = {}) => {
             )
             .join(" ");
         else if (key === "style" && typeof value === "object")
-          attributeValue = Object.entries(value ?? {}).map(
-            ([key, value]) => key + ":" + ensureFunction(value)() + ";"
-          );
+          attributeValue = Object.entries(value ?? {})
+            .map(([key, value]) => key + ":" + ensureFunction(value)() + ";")
+            .join("");
         else {
           const result = ensureFunction(value)();
 
@@ -41,6 +41,7 @@ export const element = (tag, { ref, children, ...attributes } = {}) => {
 
         return `${key}="${attributeValue}"`;
       })
+      .filter(Boolean)
       .join(" ");
 
     return SelfClosedElements.has(tag)
