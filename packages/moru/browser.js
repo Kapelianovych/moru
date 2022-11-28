@@ -6,10 +6,10 @@ import {
   AttributesToProperties,
 } from "./constants.js";
 
-const flattenFragmentChildren = (node) =>
+const clearNode = (node) =>
   node instanceof DocumentFragment
-    ? [node.__first, ...node.__nodes.flatMap(flattenFragmentChildren)]
-    : node;
+    ? (node.__first.remove(), node.__nodes.forEach(clearNode))
+    : node.remove();
 
 const createNodeInjector = (to, holder) => (child) => {
   if (typeof child === "function")
@@ -32,9 +32,7 @@ const createNodeInjector = (to, holder) => (child) => {
 
     if (holder?.__old) {
       if (holder.__old instanceof DocumentFragment) {
-        holder.__old.append(
-          ...holder.__old.__nodes.flatMap(flattenFragmentChildren)
-        );
+        holder.__old.__nodes.forEach(clearNode);
         holder.__old = holder.__old.__first;
       }
 
