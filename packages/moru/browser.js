@@ -8,38 +8,31 @@ import {
 
 const clearNode = (node) =>
   node instanceof DocumentFragment
-    ? (node.__first.remove(), node.__nodes.forEach(clearNode))
+    ? node.__nodes.forEach(clearNode)
     : node.remove();
 
-const createNodeInjector = (to, holder) => (child) => {
-  if (typeof child === "function")
-    runInContext(function _self() {
-      createNodeInjector(to, _self)(child());
-    });
-  else if (Array.isArray(child))
-    createNodeInjector(to, holder)(Fragment({ children: child }));
+const createNodeInjector = (to, lastChild) => (child) => {
+  if (typeof child === "function") {
+    const emptyNode = document.createTextNode("");
+    to.append(emptyNode);
+
+    runInContext(() => createNodeInjector(to, emptyNode)(child()));
+  } else if (Array.isArray(child))
+    return createNodeInjector(to, lastChild)(Fragment({ children: child }));
   else {
     const next =
       child instanceof Node ? child : document.createTextNode(child ?? "");
 
     if (next instanceof DocumentFragment && !next.__nodes)
       Object.assign(next, {
-        __first: next.childNodes.item(0),
-        __nodes: Array.from(next.childNodes).slice(1),
+        __nodes: Array.from(next.childNodes),
       });
 
     if (to instanceof DocumentFragment) to.__nodes.push(next);
 
-    if (holder?.__old) {
-      if (holder.__old instanceof DocumentFragment) {
-        holder.__old.__nodes.forEach(clearNode);
-        holder.__old = holder.__old.__first;
-      }
+    lastChild ? lastChild.after(next) : to.append(next);
 
-      holder.__old.replaceWith(next);
-    } else to.append(next);
-
-    holder && (holder.__old = next);
+    return () => clearNode(next);
   }
 };
 
@@ -129,14 +122,9 @@ export const element = (tag, { ref, children, ...attributes } = {}) => {
 export { element as jsx, element as jsxs, element as jsxDEV };
 
 export const Fragment = ({ children }) => {
-  const __first = document.createTextNode("");
-
   const fragment = Object.assign(document.createDocumentFragment(), {
-    __first,
     __nodes: [],
   });
-
-  fragment.append(__first);
 
   ensureArray(children).forEach(createNodeInjector(fragment));
 

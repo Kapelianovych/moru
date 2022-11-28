@@ -345,3 +345,28 @@ test("outer fragment must remove children of user defined DocumentFragment", () 
 
   expect(fragment.querySelector("div")).toBeFalsy();
 });
+
+test("outer reactive context must clear inner reactive context that returns DOM nodes when it is reexecuted", () => {
+  const [a, setA] = useState("one");
+
+  const div = (
+    <div class="outer">
+      {() => {
+        const result = a();
+
+        return () => (
+          <div class={result}>
+            <div class="the_most_inner"></div>
+          </div>
+        );
+      }}
+    </div>
+  );
+
+  expect(div.querySelector(".one")).toBeTruthy();
+
+  setA("two", { immediate: true });
+
+  expect(div.querySelector(".one")).toBeFalsy();
+  expect(div.querySelector(".two")).toBeTruthy();
+});

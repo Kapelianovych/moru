@@ -6,7 +6,7 @@ export const useBatch = (callback) => {
   const previousBatchedEffects = batchedEffects;
   batchedEffects = new Set();
 
-  callback();
+  const result = callback();
 
   batchedEffects.forEach((effect) => {
     if (!previousBatchedEffects?.has(effect)) {
@@ -17,11 +17,13 @@ export const useBatch = (callback) => {
   });
 
   batchedEffects = previousBatchedEffects;
+
+  return result;
 };
 
 const run = (callback) => {
   runningEffect = callback;
-  useBatch(callback);
+  callback.__cleanup = ensureFunction(useBatch(callback));
   runningEffect = callback.__parent;
 };
 
@@ -44,15 +46,12 @@ const clean = (effect) => {
   });
   effect.__children.clear();
 
-  effect.__cleanup?.();
+  effect.__cleanup();
   delete effect.__cleanup;
 };
 
 export const useEffect = (callback) => {
-  const effect = setup(() => {
-    const result = callback();
-    if (typeof result === "function") effect.__cleanup = result;
-  });
+  const effect = setup(callback);
 
   queueMicrotask(() => run(effect));
 };
