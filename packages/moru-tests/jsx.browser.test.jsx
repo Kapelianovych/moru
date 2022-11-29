@@ -1,5 +1,7 @@
-import { useState } from "moru";
+import { useEffect, useState } from "moru";
 import { test, expect, vi } from "vitest";
+
+import runInMicrotask from "./runInMicrotask.js";
 
 test("native tags has to be rendered into native DOM elements", () => {
   const paragraph = <p></p>;
@@ -134,7 +136,7 @@ test("attributes with on prefix will attach listeners to the DOM node", () => {
   expect(callback).toBeCalled();
 });
 
-test.todo("once suffix registers one-time executed event listener", () => {
+test("once suffix registers one-time executed event listener", () => {
   const callback = vi.fn();
 
   const div = <div onClickOnce={callback}></div>;
@@ -150,7 +152,7 @@ test.todo("once suffix registers one-time executed event listener", () => {
   expect(callback).toBeCalledTimes(1);
 });
 
-test.todo("capture suffix registers a listener for the capturing phase", () => {
+test("capture suffix registers a listener for the capturing phase", () => {
   let time1;
   let time2;
 
@@ -369,4 +371,37 @@ test("outer reactive context must clear inner reactive context that returns DOM 
 
   expect(div.querySelector(".one")).toBeFalsy();
   expect(div.querySelector(".two")).toBeTruthy();
+});
+
+test("change of the state which is used in some event listeners should not cause reexecuting of the most recently updated effect", async () => {
+  const [a] = useState(0);
+  const [b, setB] = useState(0);
+
+  const innerCallback = vi.fn(() => b());
+
+  const outerCallback = vi.fn(() => {
+    a();
+    useEffect(innerCallback);
+  });
+
+  useEffect(outerCallback);
+
+  const button = <button onclick={() => a()}></button>;
+
+  await runInMicrotask(() => {});
+
+  await runInMicrotask(() => {
+    setB(Math.random(), { immediate: true });
+
+    button.click();
+  });
+
+  await new Promise((resolve) => setTimeout(resolve));
+
+  await runInMicrotask(() => {
+    setB(Math.random(), { immediate: true });
+
+    expect(innerCallback).toBeCalledTimes(3);
+    expect(outerCallback).toBeCalledTimes(1);
+  });
 });

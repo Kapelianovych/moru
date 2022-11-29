@@ -256,3 +256,30 @@ test("when two or more batch updates are overlapping and some state setters requ
 
   await runInMicrotask(() => expect(callback).toBeCalledTimes(3));
 });
+
+test("state setter should reexecute the closest known reactive scopes", async () => {
+  const [a] = useState(0);
+  const [b, setB] = useState(0);
+
+  const innerCallback = vi.fn(() => b());
+
+  const outerCallback = vi.fn(() => {
+    a();
+    useEffect(innerCallback);
+  });
+
+  useEffect(outerCallback);
+
+  // First effect is executed
+  await runInMicrotask(() => {});
+
+  // Second effect is executed
+  await runInMicrotask(() => {
+    setB(1, { immediate: true });
+  });
+
+  await runInMicrotask(() => {
+    expect(innerCallback).toBeCalledTimes(2);
+    expect(outerCallback).toBeCalledTimes(1);
+  });
+});
