@@ -24,7 +24,7 @@ export const useBatch = (callback) => {
 const run = (callback) => {
   runningEffect = callback;
   callback.__cleanup = ensureFunction(useBatch(callback));
-  runningEffect = callback.__parent;
+  runningEffect = null;
 };
 
 const setup = (callback) => {

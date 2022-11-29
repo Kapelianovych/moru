@@ -7,9 +7,7 @@ import {
 } from "./constants.js";
 
 const clearNode = (node) =>
-  node instanceof DocumentFragment
-    ? node.__nodes.forEach(clearNode)
-    : node.remove();
+  node.__nodes ? node.__nodes.forEach(clearNode) : node.remove();
 
 const createNodeInjector = (to, lastChild) => (child) => {
   if (typeof child === "function") {
@@ -28,7 +26,7 @@ const createNodeInjector = (to, lastChild) => (child) => {
         __nodes: Array.from(next.childNodes),
       });
 
-    if (to instanceof DocumentFragment) to.__nodes.push(next);
+    to.__nodes?.push(next);
 
     lastChild ? lastChild.after(next) : to.append(next);
 
