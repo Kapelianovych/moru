@@ -28,10 +28,9 @@ const run = (callback) => {
 };
 
 const setup = (callback) => {
-  callback.__parent = runningEffect;
   callback.__children = new Set();
 
-  callback.__parent?.__children.add(callback);
+  runningEffect?.__children.add(callback);
 
   return callback;
 };
