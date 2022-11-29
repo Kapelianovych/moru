@@ -41,13 +41,11 @@ export const runInContext = (callback) => run(setup(callback));
 const clean = (effect) => {
   effect.__children.forEach((child) => {
     clean(child);
-    delete child.__parent;
     child.__disposed = true;
   });
   effect.__children.clear();
 
   effect.__cleanup();
-  delete effect.__cleanup;
 };
 
 export const useEffect = (callback) => {
