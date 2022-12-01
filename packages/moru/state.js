@@ -23,8 +23,10 @@ export const useBatch = (callback) => {
 
 const run = (callback) => {
   runningEffect = callback;
-  callback.__cleanup = ensureFunction(useBatch(callback));
+  const result = useBatch(callback);
   runningEffect = null;
+
+  typeof result === "function" && (callback.__cleanup = result);
 };
 
 const setup = (callback) => {
@@ -44,7 +46,10 @@ const clean = (effect) => {
   });
   effect.__children.clear();
 
-  effect.__cleanup();
+  if (effect.__cleanup) {
+    effect.__cleanup();
+    delete effect.__cleanup;
+  }
 };
 
 export const useEffect = (callback) => {
