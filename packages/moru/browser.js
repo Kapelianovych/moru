@@ -109,7 +109,7 @@ export const element = (tag, { ref, children, ...attributes } = {}) => {
 
     ensureArray(children).forEach(createNodeInjector(node));
 
-    ref && ref(node);
+    ref?.(node);
 
     return node;
   }
