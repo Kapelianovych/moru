@@ -98,6 +98,25 @@ test("useState's setter function can issue immediate rerun of dependent effects"
   });
 });
 
+test('using the "raw" property of the state getter should opt out of autotracking', async () => {
+  const [value, setValue] = useState(1);
+
+  const callback = vi.fn(() => {
+    value.raw;
+  });
+
+  useEffect(callback);
+
+  await runInMicrotask(() => {
+    setValue(2, { immediate: true });
+    setValue(3, { immediate: true });
+    setValue(4, { immediate: true });
+
+    expect(value.raw).toBe(4);
+    expect(callback).toBeCalledTimes(1);
+  });
+});
+
 test("useEffect has to register and call a cleanup function when it reexecutes the callback", async () => {
   const [value, setValue] = useState(0);
 
