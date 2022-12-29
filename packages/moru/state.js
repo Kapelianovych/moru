@@ -70,14 +70,9 @@ export const useState = (value, { equals = Object.is } = {}) => {
 
   return [
     Object.defineProperty(
-      () => {
-        runningEffect && listeners.add(runningEffect);
-        return value;
-      },
+      () => (runningEffect && listeners.add(runningEffect), value),
       "raw",
-      {
-        get: () => value,
-      }
+      { get: () => value }
     ),
     (next, { immediate } = {}) => {
       const nextValue = ensureFunction(next)(value);
