@@ -427,3 +427,19 @@ test("change of the state which is used in some event listeners should not cause
     expect(outerCallback).toBeCalledTimes(1);
   });
 });
+
+test("executing state's getter in a functional component's body doesn't cause tracking it by an outer effect", async () => {
+  const [a, setA] = useState(1);
+
+  const A = () => {
+    return a();
+  };
+
+  const div = <div>{() => <A />}</div>;
+
+  setA(2);
+
+  await runTask(() => {
+    expect(div.innerHTML).toMatch("1");
+  });
+});
