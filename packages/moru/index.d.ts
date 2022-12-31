@@ -505,13 +505,9 @@ export type WithChildren<Properties, As = JSX.Element> = Properties & {
 
 export type StateGetter<T> = () => T;
 
-export type StateSetterOptions = {
-  readonly immediate?: boolean;
-};
-
 export type StateSetter<T> = {
-  (value: T, options?: StateSetterOptions): void;
-  (fn: (old: T) => T, options?: StateSetterOptions): void;
+  (value: T): void;
+  (fn: (old: T) => T): void;
 };
 
 export type UseStateOptions<T> = {
