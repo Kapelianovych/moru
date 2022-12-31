@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
-import { useBatch, useEffect, useMemo, useState } from "moru";
+import { useEffect, useFree, useMemo, useState } from "moru";
 
-import runInMicrotask from "./runInMicrotask.js";
+import { runMicrotask, runTask } from "./scheduling.js";
 
 test("useState has to return a tuple with a getter and a setter function", () => {
   const result = useState();
@@ -47,7 +47,7 @@ test("useEffect has to defer calling a callback to a microtask", async () => {
 
   expect(callback).not.toBeCalled();
 
-  await runInMicrotask(() => expect(callback).toBeCalled());
+  await runMicrotask(() => expect(callback).toBeCalled());
 });
 
 test("useEffect has to track a state's getter call and rerun the callback when the state is changed", async () => {
@@ -59,11 +59,11 @@ test("useEffect has to track a state's getter call and rerun the callback when t
 
   useEffect(callback);
 
-  await runInMicrotask(() => expect(callback).toBeCalledTimes(1));
+  await runMicrotask(() => expect(callback).toBeCalledTimes(1));
 
-  await runInMicrotask(() => setValue(2));
+  await runMicrotask(() => setValue(2));
 
-  await runInMicrotask(() => expect(callback).toBeCalledTimes(2));
+  await runTask(() => expect(callback).toBeCalledTimes(2));
 });
 
 test("a state setter has to defer updating dependent effects by default", async () => {
@@ -75,46 +75,12 @@ test("a state setter has to defer updating dependent effects by default", async 
 
   useEffect(callback);
 
-  await runInMicrotask(() => {
+  await runMicrotask(() => {
     setValue(2);
     expect(callback).toBeCalledTimes(1);
   });
 
-  await runInMicrotask(() => expect(callback).toBeCalledTimes(2));
-});
-
-test("useState's setter function can issue immediate rerun of dependent effects", async () => {
-  const [value, setValue] = useState(1);
-
-  const callback = vi.fn(() => {
-    value();
-  });
-
-  useEffect(callback);
-
-  await runInMicrotask(() => {
-    setValue(2, { immediate: true });
-    expect(callback).toBeCalledTimes(2);
-  });
-});
-
-test('using the "raw" property of the state getter should opt out of autotracking', async () => {
-  const [value, setValue] = useState(1);
-
-  const callback = vi.fn(() => {
-    value.raw;
-  });
-
-  useEffect(callback);
-
-  await runInMicrotask(() => {
-    setValue(2, { immediate: true });
-    setValue(3, { immediate: true });
-    setValue(4, { immediate: true });
-
-    expect(value.raw).toBe(4);
-    expect(callback).toBeCalledTimes(1);
-  });
+  await runTask(() => expect(callback).toBeCalledTimes(2));
 });
 
 test("useEffect has to register and call a cleanup function when it reexecutes the callback", async () => {
@@ -130,9 +96,11 @@ test("useEffect has to register and call a cleanup function when it reexecutes t
 
   useEffect(callback);
 
-  await runInMicrotask(() => {
-    setValue(1, { immediate: true });
+  await runMicrotask(() => {
+    setValue(1);
+  });
 
+  await runTask(() => {
     expect(cleanup).toBeCalled();
   });
 });
@@ -149,13 +117,13 @@ test("useEffect has to register a state usage from an executed code part", async
 
   useEffect(callback);
 
-  await runInMicrotask(() => setA(2));
+  await runMicrotask(() => setA(2));
 
-  await runInMicrotask(() => expect(callback).toBeCalledTimes(2));
+  await runTask(() => expect(callback).toBeCalledTimes(2));
 
-  await runInMicrotask(() => setB(2));
+  await runMicrotask(() => setB(2));
 
-  await runInMicrotask(() => expect(callback).toBeCalledTimes(2));
+  await runTask(() => expect(callback).toBeCalledTimes(2));
 });
 
 test("useMemo has to return a single getter function which returns a result of a callback", () => {
@@ -165,20 +133,22 @@ test("useMemo has to return a single getter function which returns a result of a
   expect(a()).toBe(1);
 });
 
-test("useMemo has to track used state getters and rerun a computation if one of dependencies changes", () => {
+test("useMemo has to track used state getters and rerun a computation if one of dependencies changes", async () => {
   const [a, setA] = useState(1);
 
   const callback = vi.fn(() => a() + 1);
 
   const b = useMemo(callback);
 
-  setA(2, { immediate: true });
+  setA(2);
 
-  expect(callback).toBeCalledTimes(2);
-  expect(b()).toBe(3);
+  await runTask(() => {
+    expect(callback).toBeCalledTimes(2);
+    expect(b()).toBe(3);
+  });
 });
 
-test("useMemo's callback receives a previous value as an argument", () => {
+test("useMemo's callback receives a previous value as an argument", async () => {
   const [a, setA] = useState(1);
 
   const callback = vi.fn((previous = 0) => previous + a() + 1);
@@ -187,13 +157,15 @@ test("useMemo's callback receives a previous value as an argument", () => {
 
   expect(callback).toBeCalledWith(undefined);
 
-  setA(2, { immediate: true });
+  setA(2);
 
-  expect(callback).toBeCalledWith(2);
-  expect(b()).toBe(5);
+  await runTask(() => {
+    expect(callback).toBeCalledWith(2);
+    expect(b()).toBe(5);
+  });
 });
 
-test("useMemo receives an equals function that updates the internal value only if the comparator returns false", () => {
+test("useMemo receives an equals function that updates the internal value only if the comparator returns false", async () => {
   const [a, setA] = useState(1);
 
   const callback = vi.fn(() => a() + 1);
@@ -202,33 +174,20 @@ test("useMemo receives an equals function that updates the internal value only i
     equals: (previous, next) => previous + 1 === next,
   });
 
-  setA(2, { immediate: true });
+  setA(2);
+
+  await runTask.empty();
 
   expect(b()).toBe(2);
 
-  setA(3, { immediate: true });
+  setA(3);
+
+  await runTask.empty();
 
   expect(b()).toBe(4);
 });
 
-test("useBatch postpones execution of dependent reactive scopes until the end of the callback", async () => {
-  const [a, setA] = useState(8);
-
-  const callback = vi.fn(() => a());
-
-  useEffect(callback);
-
-  await runInMicrotask(() => {
-    useBatch(() => {
-      setA(0, { immediate: true });
-      expect(callback).toBeCalledTimes(1);
-    });
-
-    expect(callback).toBeCalledTimes(2);
-  });
-});
-
-test("an update of two different states in a batch has to cause rerunning dependent effect only once", async () => {
+test("an update of two different states in the same task has to cause rerunning dependent effect only once", async () => {
   const [a, setA] = useState(8);
   const [b, setB] = useState(8);
 
@@ -239,14 +198,12 @@ test("an update of two different states in a batch has to cause rerunning depend
 
   useEffect(callback);
 
-  await runInMicrotask(() => {
-    useBatch(() => {
-      setA(0);
-      setB(2);
-    });
+  await runMicrotask(() => {
+    setA(0);
+    setB(2);
   });
 
-  await runInMicrotask(() => expect(callback).toBeCalledTimes(2));
+  await runTask(() => expect(callback).toBeCalledTimes(2));
 });
 
 test("when two or more batch updates are overlapping and some state setters request to update the same effect, those effects has to be updated only once with newest values from all states", async () => {
@@ -266,14 +223,14 @@ test("when two or more batch updates are overlapping and some state setters requ
     setA(4);
   });
 
-  await runInMicrotask(() =>
-    useBatch(() => {
-      setC(Math.random(), { immediate: true });
-      setB(Math.random());
-    })
-  );
+  await runMicrotask(() => {
+    setC(Math.random());
+    setB(Math.random());
+  });
 
-  await runInMicrotask(() => expect(callback).toBeCalledTimes(3));
+  await runTask(() => {
+    expect(callback).toBeCalledTimes(2);
+  });
 });
 
 test("state setter should reexecute the closest known reactive scopes", async () => {
@@ -290,15 +247,56 @@ test("state setter should reexecute the closest known reactive scopes", async ()
   useEffect(outerCallback);
 
   // First effect is executed
-  await runInMicrotask(() => {});
+  await runMicrotask.empty();
 
   // Second effect is executed
-  await runInMicrotask(() => {
-    setB(1, { immediate: true });
+  await runMicrotask(() => {
+    setB(1);
   });
 
-  await runInMicrotask(() => {
+  await runTask(() => {
     expect(innerCallback).toBeCalledTimes(2);
     expect(outerCallback).toBeCalledTimes(1);
   });
+});
+
+test("useFree opts out of autotracking", async () => {
+  const [value, setValue] = useState(1);
+
+  const callback = vi.fn(() => {
+    useFree(value);
+  });
+
+  useEffect(callback);
+
+  await runMicrotask(() => {
+    setValue(2);
+    setValue(3);
+    setValue(4);
+  });
+
+  await runTask(() => {
+    expect(value()).toBe(4);
+    expect(callback).toBeCalledTimes(1);
+  });
+});
+
+test("useFree should return the parameter's result", () => {
+  expect(useFree(() => 8)).toBe(8);
+});
+
+test("useEffect inside the useFree hook should register all dependencies", async () => {
+  const [value, setValue] = useState(1);
+
+  const callback = vi.fn(() => {
+    value();
+  });
+
+  useFree(() => {
+    useEffect(callback);
+  });
+
+  await runMicrotask(() => setValue(2));
+
+  await runTask(() => expect(callback).toBeCalledTimes(2));
 });

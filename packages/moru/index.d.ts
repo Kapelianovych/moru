@@ -503,10 +503,7 @@ export type WithChildren<Properties, As = JSX.Element> = Properties & {
   readonly children: As;
 };
 
-export type StateGetter<T> = {
-  (): T;
-  readonly raw: T;
-};
+export type StateGetter<T> = () => T;
 
 export type StateSetterOptions = {
   readonly immediate?: boolean;
@@ -537,4 +534,4 @@ export function useMemo<T>(
   options?: UseMemoOptions<T>
 ): StateGetter<T>;
 
-export function useBatch<T>(callback: () => T): T;
+export function useFree<T>(callback: () => T): T;

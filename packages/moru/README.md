@@ -25,7 +25,7 @@ The library exports an `element` and a `Fragment` functions to create DOM nodes.
 
 The `element` is used to create regular DOM nodes:
 
-```JSX
+```jsx
 const paragraph = <p></p>;
 
 // Compiled output:
@@ -34,11 +34,13 @@ const paragraph = <p></p>;
 
 The `Fragment` is used to create a node that has no equivalent in the DOM tree. That is [DocumentFragment](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment):
 
-```JSX
-const content = <>
-  <p>First paragraph</p>
-  <p>Second paragraph</p>
-</>;
+```jsx
+const content = (
+  <>
+    <p>First paragraph</p>
+    <p>Second paragraph</p>
+  </>
+);
 
 const parent = <div>{content}</div>;
 
@@ -52,11 +54,8 @@ const parent = <div>{content}</div>;
 
 Instead of the `Fragment` you can also populate JSX elements in the array.
 
-```JSX
-const content = [
-  <p>First paragraph</p>,
-  <p>Second paragraph</p>
-];
+```jsx
+const content = [<p>First paragraph</p>, <p>Second paragraph</p>];
 
 const parent = <div>{content}</div>;
 
@@ -70,7 +69,7 @@ const parent = <div>{content}</div>;
 
 If you will pass `null` and `undefined` as element's children they will be converted to the empty strings and inserted as _Text_ nodes. All other _falsy_ values will be stringified (so 0 becomes '0', false -> 'false'):
 
-```JSX
+```jsx
 const child = null;
 
 const parent = <p>{child}</p>;
@@ -84,8 +83,8 @@ const parent2 = <p>{child2}</p>;
 
 You can even pass native nodes as children:
 
-```JSX
-const child = document.createElement('p');
+```jsx
+const child = document.createElement("p");
 
 const parent = <div>{child}</div>;
 // Becomes HTML: <div><p></p></div>
@@ -93,7 +92,7 @@ const parent = <div>{child}</div>;
 
 At the end, you can use a function as a child. If you use a reactive value (state) in there, then on every change of the reactive value that part of the DOM will be updated:
 
-```JSX
+```jsx
 const [counter, setCounter] = useState(0);
 
 const dom = <div>{() => counter()}</div>;
@@ -107,23 +106,23 @@ All props to the native elements are treated as attributes. All attribute names 
 
 1. `boolean`. If the value is `false`, then the attribute is omitted from the DOM. Otherwise, it will be retained.
 
-```JSX
-<input readonly={false}/>
+```jsx
+<input readonly={false} />
 ```
 
 2. `function that returns a value`. In that case, if you use a reactive value inside the function, than any change of the value will update the attribute's value in the DOM.
 
-```JSX
+```jsx
 const [counter, setCounter] = useState(0);
 
-<div class={() => counter()}></div>
+<div class={() => counter()}></div>;
 ```
 
 ### Event listeners
 
 To attach an event listener to the element you must write the `on` prefix followed by the name of the event and pass a function as a value to it. Function receives the native event object. You may write: `onclick`, `onClick`, `OnClick`, `OnCliCK` - all of them are the same.
 
-```JSX
+```jsx
 <div onclick={(event) => console.log(event)}></div>
 ```
 
@@ -136,7 +135,7 @@ All events are registered with a native `addEventListener` method and you can pr
 
 You can combine them together except `Passive` and `NoPassive`. If you do, then `NoPassive` wins.
 
-```JSX
+```jsx
 <div onClickCaptureOnce={(event) => console.log(event)}></div>
 ```
 
@@ -144,31 +143,39 @@ You can combine them together except `Passive` and `NoPassive`. If you do, then 
 
 Alongside the _string_ and _function_ that attribute accepts an array of strings or objects. If you provide an object inside the array, then all keys with _truthy_ values will be added to the attribute. A function is allowed as a value also.
 
-```JSX
+```jsx
 const [isFullWidth, setFullWidth] = useState(false);
 
-<div class={[{ 'h-full': true, 'w-full': () => isFullWidth() }, 'flex', 'items-center']}></div>
+<div
+  class={[
+    { "h-full": true, "w-full": () => isFullWidth() },
+    "flex",
+    "items-center",
+  ]}
+></div>;
 ```
 
 ### Style
 
 Alongside the _string_ and _function_ attribute's value may be an object with the same properties and values as the native `style` tag accepts. There is one difference, that here you can define a function as a value.
 
-```JSX
+```jsx
 const [translateX, setTranslateX] = useState(0);
 
-<div style={{
-  opacity: 1,
-  transform: () => `translateX(${translateX()}%)`,
-  'background-color': 'tomato'
-}}></div>
+<div
+  style={{
+    opacity: 1,
+    transform: () => `translateX(${translateX()}%)`,
+    "background-color": "tomato",
+  }}
+></div>;
 ```
 
 > `moru` uses the _element.style.setProperty_ method to set style's value, so you are able to define custom properties in there.
 
 All other attributes are the same as in HTML. You are free to pass all `aria-*` and `data-*` attributes as they are.
 
-```JSX
+```jsx
 <div data-id="foo"></div>
 ```
 
@@ -178,16 +185,14 @@ All other attributes are the same as in HTML. You are free to pass all `aria-*` 
 
 You can nest JSX elements inside each other.
 
-```JavaScript
+```jsx
 // component
-const Header = () => (
-  <header></header>
-);
+const Header = () => <header></header>;
 
 <div>
   <Header />
   <p>Moru</p>
-</div>
+</div>;
 ```
 
 > Actually, all values that are assignable to the `JSX.Element` type are considered as valid children. The type consist of:
@@ -209,7 +214,7 @@ There are four hooks available:
 1. `useState`
 2. `useEffect`
 3. `useMemo`
-4. `useBatch`
+4. `useFree`
 
 You can use them without any restrictions unlike React's hooks.
 
@@ -217,29 +222,28 @@ You can use them without any restrictions unlike React's hooks.
 
 It creates a reactive variable that may be used in the reactive context (function) and that context will be able to track value's changes and reexecute itself. It accepts the default value and returns a tuple with value's getter and value's setter (both functions).
 
-```JavaScript
+```js
 const [valueGetter, valueSetter] = useState(0);
 ```
 
 The getter returns an internal value. The setter updates the value. The latter can take either the new value or the function that takes the old value and have to return a new one.
 
-```JavaScript
+```js
 const value = valueGetter();
 valueSetter(1);
 valueSetter((old) => old + 1);
 ```
 
-Setter does not trigger an update of the state immediately. Instead, it queues the update after the current task is complete (UI update or some other important operation). If you know that updating have to be done as soon as possible, you can pass an _options_ object to the setter with an _immediate_ property set to `true`.
-
-```JavaScript
-valueSetter(3, { immediate: true });
-```
+Setter does not trigger an update of the state immediately. Instead, it queues the update after the current task is complete (UI update or some other important operation). Basically, `moru` always tries to minimise the amount of work to be done after some state changes.
 
 By default, before updating a value of the `useState` a new one is compared to the old by using the strict equality operator (`===`). Only distinct values cause an update. You can pass your own function to compare values:
 
-```JavaScript
+```js
 // Only changes of the _a_ property will cause an update of the state.
-const [value, setValue] = useState({ a: 0, b: '' }, { equals: (previous, next) => previous.a === next.a });
+const [value, setValue] = useState(
+  { a: 0, b: "" },
+  { equals: (previous, next) => previous.a === next.a }
+);
 ```
 
 > You can disable comparing values by providing the `equals` function that always returns `false`. Then every execution of the setter will cause an update and reexecution of dependent reactive contexts.
@@ -248,35 +252,23 @@ const [value, setValue] = useState({ a: 0, b: '' }, { equals: (previous, next) =
 
 It creates a context that you can use to register some job that should be done each time the reactive value which is used inside the context is updated. It accepts a synchronous function which may return another function. The returned function clears the artifacts after the context is destroyed.
 
-```JavaScript
+```js
 useEffect(() => {
-  window.addEventListener('click', console.log);
+  window.addEventListener("click", console.log);
 
-  return () => window.removeEventListener('click', console.log);
+  return () => window.removeEventListener("click", console.log);
 });
 ```
 
 It's an important thing that a context cannot detect declared, but _not invoked_, values.
 
-```JavaScript
+```js
 useEffect(() => {
-    // If it returns `true`, then code inside _if_ is evaluated and
-    // context will register the count state also. Otherwise, it won't.
-    if (shouldBeExecuted()) {
-        console.log(count());
-    }
-});
-```
-
-You may want to opt out of autotracking for some reactive values. To achieve this behaviour instead of calling a getter function use its `raw` property.
-
-```JavaScript
-const [count, setCount] = useState(0);
-
-useEffect(() => {
-  // This effect will be executed only once and will ignore subsequent
-  // setCount calls.
-  console.log(count.raw);
+  // If it returns `true`, then code inside _if_ is evaluated and
+  // context will register the count state also. Otherwise, it won't.
+  if (shouldBeExecuted()) {
+    console.log(count());
+  }
 });
 ```
 
@@ -284,7 +276,7 @@ useEffect(() => {
 
 It creates a derived computation that is reexecuted when some dependency (reactive value) used inside it is changed. The hook returns a getter function that returns a result of the computation. The getter is recognized by reactive contexts as a dependency (it is basically the same thing as the first value of the `useState`'s tuple).
 
-```JavaScript
+```js
 const [count, setCount] = useState(0);
 
 const sum = useMemo((previousSum = 0) => previousSum + count());
@@ -294,27 +286,39 @@ useEffect(() => console.log(sum()));
 
 `useMemo` accepts a callback that receives the previous value (or _undefined_ on the first run) and returns a new one. The hook can accept an _options_ object with the `equals` property which has the same meaning as the _options_ in the `useState`.
 
-### useBatch
+### useFree
 
-Postpones rerunning all depending effects until the end of the callback. If inside the callback different state setters are executed, all dependent reactive scopes are executed at most once. State setters with `immediate: true` will mark their dependent scopes as such that must be executed _before_ others.
+You may want to opt out of autotracking for some reactive values. To achieve this behaviour you have to wrap a computation in a function passed to the `useFree` hook.
 
-```JavaScript
-const [a, setA] = useState(0);
-const [b, setB] = useState('');
+```js
+const [count, setCount] = useState(0);
 
 useEffect(() => {
-  console.log(a());
-  console.log(b());
-});
-
-// effect above will be executed only once on update of two states.
-useBatch(() => {
-  setA(3);
-  setB('hello');
+  // This effect will be executed only once and will ignore subsequent
+  // setCount calls.
+  useFree(() => console.log(count()));
+  // or you can pass the getter himself
+  console.log(useFree(count));
 });
 ```
 
-> Effects, reactive contexts in JSX and memos are always executed in a batch.
+If you are creating an effect inside the free context, it will register every used dependency inside it though. That's because the `useFree` prevents a state to be registered by the outer effect and inner effects have separate contexts.
+
+```js
+const [count, setCount] = useState(0);
+
+useEffect(() => {
+  useFree(() => {
+    // Won't be tracked by outer effect
+    count();
+
+    useEffect(() => {
+      // Will be tracked by this effect
+      count();
+    });
+  });
+});
+```
 
 ## SSR
 

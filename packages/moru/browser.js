@@ -1,4 +1,4 @@
-import { runInContext } from "./state.js";
+import { useFree, runInContext } from "./state.js";
 import { ensureArray, ensureFunction } from "./utils.js";
 import {
   SVG_ELEMENTS,
@@ -114,7 +114,7 @@ export const element = (tag, { ref, children, ...attributes } = {}) => {
     return node;
   }
 
-  return tag({ ref, children, ...attributes });
+  return useFree(() => tag({ ref, children, ...attributes }));
 };
 
 export { element as jsx, element as jsxs, element as jsxDEV };

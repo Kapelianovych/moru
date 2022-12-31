@@ -1,7 +1,7 @@
-import { useEffect, useState } from "moru";
 import { test, expect, vi } from "vitest";
+import { useEffect, useState } from "moru";
 
-import runInMicrotask from "./runInMicrotask.js";
+import { runMicrotask, runTask } from "./scheduling.js";
 
 test("native tags has to be rendered into native DOM elements", () => {
   const paragraph = <p></p>;
@@ -36,28 +36,32 @@ test("a boolean value passed to the attribute either include the attribute or re
   expect(div.hasAttribute("disabled")).toBe(false);
 });
 
-test("a function that returns a boolean value causes an attribute to be toggled depending of the boolean value", () => {
+test("a function that returns a boolean value causes an attribute to be toggled depending of the boolean value", async () => {
   const [toggle, setToggle] = useState(false);
 
   const div = <div readonly={toggle}></div>;
 
   expect(div.hasAttribute("readonly")).toBe(false);
 
-  setToggle(true, { immediate: true });
+  setToggle(true);
 
-  expect(div.hasAttribute("readonly")).toBe(true);
+  await runTask(() => {
+    expect(div.hasAttribute("readonly")).toBe(true);
+  });
 });
 
-test("function passed to an attribute causes an update of the attribute's value if any state used inside is updated", () => {
+test("function passed to an attribute causes an update of the attribute's value if any state used inside is updated", async () => {
   const [a, setA] = useState(1);
 
   const div = <div id={() => a()}></div>;
 
   expect(div.getAttribute("id")).toBe("1");
 
-  setA(2, { immediate: true });
+  setA(2);
 
-  expect(div.getAttribute("id")).toBe("2");
+  await runTask(() => {
+    expect(div.getAttribute("id")).toBe("2");
+  });
 });
 
 test("class attribute can have an array of strings as a value", () => {
@@ -72,28 +76,32 @@ test("array value of the class attribute can have objects whose keys are classes
   expect(div.getAttribute("class")).toMatch("bar");
 });
 
-test("object's values can be functions which are executed in a reactive context and add/remove classes when a state's value is updated", () => {
+test("object's values can be functions which are executed in a reactive context and add/remove classes when a state's value is updated", async () => {
   const [yes, setYes] = useState(false);
 
   const div = <div class={[{ foo: () => yes() }]}></div>;
 
   expect(div.getAttribute("class")).toBe(null);
 
-  setYes(true, { immediate: true });
+  setYes(true);
 
-  expect(div.getAttribute("class")).toMatch("foo");
+  await runTask(() => {
+    expect(div.getAttribute("class")).toMatch("foo");
+  });
 });
 
-test("strings and object can be mixed in class value", () => {
+test("strings and object can be mixed in class value", async () => {
   const [yes, setYes] = useState(false);
 
   const div = <div class={["bar", { foo: () => yes() }]}></div>;
 
   expect(div.getAttribute("class")).toMatch("bar");
 
-  setYes(true, { immediate: true });
+  setYes(true);
 
-  expect(div.getAttribute("class")).toMatch("bar foo");
+  await runTask(() => {
+    expect(div.getAttribute("class")).toMatch("bar foo");
+  });
 });
 
 test("style attribute can have an object as a value whose keys are CSS properties and values are their respective values", () => {
@@ -104,16 +112,18 @@ test("style attribute can have an object as a value whose keys are CSS propertie
   );
 });
 
-test("a function as the value of style's property causes value's update if any used state is changed", () => {
+test("a function as the value of style's property causes value's update if any used state is changed", async () => {
   const [a, setA] = useState("flex");
 
   const div = <div style={{ display: () => a() }}></div>;
 
   expect(div.getAttribute("style")).toMatch("display: flex;");
 
-  setA("block", { immediate: true });
+  setA("block");
 
-  expect(div.getAttribute("style")).toMatch("display: block;");
+  await runTask(() => {
+    expect(div.getAttribute("style")).toMatch("display: block;");
+  });
 });
 
 test("ref attribute executes callback value with a reference to a DOM node", () => {
@@ -221,19 +231,21 @@ test("inline component has to be executed and the result is inserted into the DO
   expect(div.innerHTML).toMatch("8");
 });
 
-test("inline component is rendered in a reactive context", () => {
+test("inline component is rendered in a reactive context", async () => {
   const [value, setValue] = useState("initial");
 
   const div = <div>{() => value()}</div>;
 
   expect(div.innerHTML).toMatch("initial");
 
-  setValue("second", { immediate: true });
+  setValue("second");
 
-  expect(div.innerHTML).toMatch("second");
+  await runTask(() => {
+    expect(div.innerHTML).toMatch("second");
+  });
 });
 
-test("inline component in a fragment has to correctly update nodes in its position", () => {
+test("inline component in a fragment has to correctly update nodes in its position", async () => {
   const [value, setValue] = useState("initial");
 
   const div = (
@@ -249,12 +261,14 @@ test("inline component in a fragment has to correctly update nodes in its positi
 
   expect(div.innerHTML).toMatch("fooinitial");
 
-  setValue("second", { immediate: true });
+  setValue("second");
 
-  expect(div.innerHTML).toMatch("foosecond");
+  await runTask(() => {
+    expect(div.innerHTML).toMatch("foosecond");
+  });
 });
 
-test("inline component has to remove all nodes that it produced after unmounting or rerendering", () => {
+test("inline component has to remove all nodes that it produced after unmounting or rerendering", async () => {
   const [a, setA] = useState(8);
 
   const div = (
@@ -275,10 +289,12 @@ test("inline component has to remove all nodes that it produced after unmounting
 
   expect(div.innerHTML).toMatch("<p>baz</p>");
 
-  setA(0, { immediate: true });
+  setA(0);
 
-  expect(div.innerHTML).toMatch("<div></div><span>foo</span><div></div>");
-  expect(div.innerHTML).not.toMatch("<p>baz</p>");
+  await runTask(() => {
+    expect(div.innerHTML).toMatch("<div></div><span>foo</span><div></div>");
+    expect(div.innerHTML).not.toMatch("<p>baz</p>");
+  });
 });
 
 test("component can return inline component", () => {
@@ -293,7 +309,7 @@ test("component can return inline component", () => {
   expect(div.innerHTML).toMatch("<p>paragraph</p>");
 });
 
-test("outer fragment has to remove children of inner fragments when it is about to be removed from the DOM", () => {
+test("outer fragment has to remove children of inner fragments when it is about to be removed from the DOM", async () => {
   const [t, setT] = useState(true);
 
   const inline = () =>
@@ -319,14 +335,16 @@ test("outer fragment has to remove children of inner fragments when it is about 
   expect(div.querySelector(".second")).toBeTruthy();
   expect(div.querySelector(".third")).toBeTruthy();
 
-  setT(false, { immediate: true });
+  setT(false);
 
-  expect(div.querySelector(".first")).toBeFalsy();
-  expect(div.querySelector(".second")).toBeFalsy();
-  expect(div.querySelector(".third")).toBeFalsy();
+  await runTask(() => {
+    expect(div.querySelector(".first")).toBeFalsy();
+    expect(div.querySelector(".second")).toBeFalsy();
+    expect(div.querySelector(".third")).toBeFalsy();
+  });
 });
 
-test("outer fragment must remove children of user defined DocumentFragment", () => {
+test("outer fragment must remove children of user defined DocumentFragment", async () => {
   const [t, setT] = useState(false);
 
   const nodes = () => {
@@ -343,12 +361,14 @@ test("outer fragment must remove children of user defined DocumentFragment", () 
 
   expect(fragment.querySelector("div")).toBeTruthy();
 
-  setT(true, { immediate: true });
+  setT(true);
 
-  expect(fragment.querySelector("div")).toBeFalsy();
+  await runTask(() => {
+    expect(fragment.querySelector("div")).toBeFalsy();
+  });
 });
 
-test("outer reactive context must clear inner reactive context that returns DOM nodes when it is reexecuted", () => {
+test("outer reactive context must clear inner reactive context that returns DOM nodes when it is reexecuted", async () => {
   const [a, setA] = useState("one");
 
   const div = (
@@ -367,10 +387,12 @@ test("outer reactive context must clear inner reactive context that returns DOM 
 
   expect(div.querySelector(".one")).toBeTruthy();
 
-  setA("two", { immediate: true });
+  setA("two");
 
-  expect(div.querySelector(".one")).toBeFalsy();
-  expect(div.querySelector(".two")).toBeTruthy();
+  await runTask(() => {
+    expect(div.querySelector(".one")).toBeFalsy();
+    expect(div.querySelector(".two")).toBeTruthy();
+  });
 });
 
 test("change of the state which is used in some event listeners should not cause reexecuting of the most recently updated effect", async () => {
@@ -388,19 +410,19 @@ test("change of the state which is used in some event listeners should not cause
 
   const button = <button onclick={() => a()}></button>;
 
-  await runInMicrotask(() => {});
+  await runMicrotask.empty();
 
-  await runInMicrotask(() => {
-    setB(Math.random(), { immediate: true });
+  await runMicrotask(() => {
+    setB(Math.random());
 
     button.click();
   });
 
-  await new Promise((resolve) => setTimeout(resolve));
+  await runTask.empty();
 
-  await runInMicrotask(() => {
-    setB(Math.random(), { immediate: true });
+  setB(Math.random());
 
+  await runTask(() => {
     expect(innerCallback).toBeCalledTimes(3);
     expect(outerCallback).toBeCalledTimes(1);
   });

@@ -1,33 +1,8 @@
 import { ensureFunction } from "./utils.js";
 
-let runningEffect, batchedEffects;
+const batchedEffects = new Set();
 
-export const useBatch = (callback) => {
-  const previousBatchedEffects = batchedEffects;
-  batchedEffects = new Set();
-
-  const result = callback();
-
-  batchedEffects.forEach((effect) => {
-    if (!previousBatchedEffects?.has(effect)) {
-      rerun(effect, effect.__immediate);
-      effect.__immediate && batchedEffects.delete(effect);
-      delete effect.__immediate;
-    }
-  });
-
-  batchedEffects = previousBatchedEffects;
-
-  return result;
-};
-
-const run = (callback) => {
-  runningEffect = callback;
-  const result = useBatch(callback);
-  runningEffect = null;
-
-  typeof result === "function" && (callback.__cleanup = result);
-};
+let isFree, runningEffect, effectsRunnerTimer;
 
 const setup = (callback) => {
   callback.__children = new Set();
@@ -37,7 +12,13 @@ const setup = (callback) => {
   return callback;
 };
 
-export const runInContext = (callback) => run(setup(callback));
+const run = (effect) => {
+  runningEffect = effect;
+  const result = runFree(effect, false);
+  runningEffect = null;
+
+  typeof result === "function" && (effect.__cleanup = result);
+};
 
 const clean = (effect) => {
   effect.__children.forEach((child) => {
@@ -52,29 +33,36 @@ const clean = (effect) => {
   }
 };
 
-export const useEffect = (callback) => {
-  const effect = setup(callback);
+const scheduleEffectsRunner = () => {
+  effectsRunnerTimer && clearTimeout(effectsRunnerTimer);
 
-  queueMicrotask(() => run(effect));
+  effectsRunnerTimer = setTimeout(() => {
+    effectsRunnerTimer = null;
+    batchedEffects.forEach((effect) => {
+      clean(effect);
+      run(effect);
+    });
+    batchedEffects.clear();
+  });
 };
 
-const rerun = (effect, immediate) => {
-  if (immediate) {
-    clean(effect);
-    run(effect);
-  } else queueMicrotask(() => rerun(effect, true));
+const runFree = (callback, bool) => {
+  const outerTrackingBool = isFree;
+  isFree = bool;
+  const result = callback();
+  isFree = outerTrackingBool;
+
+  return result;
 };
+
+export const runInContext = (callback) => run(setup(callback));
 
 export const useState = (value, { equals = Object.is } = {}) => {
   const listeners = new Set();
 
   return [
-    Object.defineProperty(
-      () => (runningEffect && listeners.add(runningEffect), value),
-      "raw",
-      { get: () => value }
-    ),
-    (next, { immediate } = {}) => {
+    () => (!isFree && runningEffect && listeners.add(runningEffect), value),
+    (next) => {
       const nextValue = ensureFunction(next)(value);
 
       if (!equals(value, nextValue)) {
@@ -83,15 +71,19 @@ export const useState = (value, { equals = Object.is } = {}) => {
         listeners.forEach((effect) =>
           effect.__disposed
             ? listeners.delete(effect)
-            : batchedEffects?.add(
-                Object.assign(effect, {
-                  __immediate: effect.__immediate || immediate,
-                })
-              ) ?? rerun(effect, immediate)
+            : batchedEffects.add(effect)
         );
+
+        scheduleEffectsRunner();
       }
     },
   ];
+};
+
+export const useEffect = (callback) => {
+  const effect = setup(callback);
+
+  queueMicrotask(() => run(effect));
 };
 
 export const useMemo = (callback, options) => {
@@ -101,3 +93,5 @@ export const useMemo = (callback, options) => {
 
   return value;
 };
+
+export const useFree = (callback) => runFree(callback, true);
