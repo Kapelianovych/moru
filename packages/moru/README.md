@@ -32,7 +32,7 @@ const paragraph = <p></p>;
 // const paragraph = element('p');
 ```
 
-The `Fragment` is used to create a node that has no equivalent in the DOM tree. That is [DocumentFragment](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment):
+The `Fragment` is used to create a node that is not visible to the user. That is [DocumentFragment](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment):
 
 ```jsx
 const content = (
@@ -67,7 +67,7 @@ const parent = <div>{content}</div>;
 // </div>
 ```
 
-If you will pass `null` and `undefined` as element's children they will be converted to the empty strings and inserted as _Text_ nodes. All other _falsy_ values will be stringified (so 0 becomes '0', false -> 'false'):
+If you pass `null` and `undefined` as element's children, they will be converted to the empty strings and inserted as _Text_ nodes. All other _falsy_ values will be stringified (so 0 becomes '0', false -> 'false' and so on):
 
 ```jsx
 const child = null;
@@ -90,7 +90,7 @@ const parent = <div>{child}</div>;
 // Becomes HTML: <div><p></p></div>
 ```
 
-At the end, you can use a function as a child. If you use a reactive value (state) in there, then on every change of the reactive value that part of the DOM will be updated:
+Finally, you can use a function as a child. If you use a reactive value (state) in there, then on every change of the reactive value that part of the DOM will be updated:
 
 ```jsx
 const [counter, setCounter] = useState(0);
@@ -113,9 +113,9 @@ All props to the native elements are treated as attributes. All attribute names 
 2. `function that returns a value`. In that case, if you use a reactive value inside the function, than any change of the value will update the attribute's value in the DOM.
 
 ```jsx
-const [counter, setCounter] = useState(0);
+const [state, setState] = useState(Math.random());
 
-<div class={() => counter()}></div>;
+<div class={() => (state() > 0.5 ? "active" : "lazy")}></div>;
 ```
 
 ### Event listeners
