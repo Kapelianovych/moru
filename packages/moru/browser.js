@@ -16,7 +16,10 @@ const createNodeInjector = (to, lastChild) => (child) => {
 
     runInContext(() => createNodeInjector(to, emptyNode)(child()));
   } else if (Array.isArray(child))
-    return createNodeInjector(to, lastChild)(Fragment({ children: child }));
+    return createNodeInjector(
+      to,
+      lastChild
+    )(element(Fragment, { children: child }));
   else {
     const next =
       child instanceof Node ? child : document.createTextNode(child ?? "");
