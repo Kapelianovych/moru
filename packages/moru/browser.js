@@ -25,9 +25,7 @@ const createNodeInjector = (to, lastChild) => (child) => {
       child instanceof Node ? child : document.createTextNode(child ?? "");
 
     if (next instanceof DocumentFragment && !next.__nodes)
-      Object.assign(next, {
-        __nodes: Array.from(next.childNodes),
-      });
+      next.__nodes = Array.from(next.childNodes);
 
     to.__nodes?.push(next);
 
