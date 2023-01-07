@@ -207,12 +207,16 @@ test("an update of two different states in the same task has to cause rerunning 
 });
 
 test("when two or more batch updates are overlapping and some state setters request to update the same effect, those effects has to be updated only once with newest values from all states", async () => {
-  const [a, setA] = useState(8);
-  const [b, setB] = useState(8);
+  let aResult = 0;
+
+  const [a, setA] = useState(aResult);
+  const [b, setB] = useState(0);
   const [c, setC] = useState(0);
 
+  const spiedA = vi.fn(a);
+
   const callback = vi.fn(() => {
-    a();
+    spiedA();
     b();
   });
 
@@ -220,7 +224,7 @@ test("when two or more batch updates are overlapping and some state setters requ
 
   useEffect(() => {
     c();
-    setA(4);
+    setA(++aResult);
   });
 
   await runMicrotask(() => {
@@ -229,7 +233,11 @@ test("when two or more batch updates are overlapping and some state setters requ
   });
 
   await runTask(() => {
-    expect(callback).toBeCalledTimes(2);
+    expect(callback).toBeCalledTimes(3);
+    expect(spiedA).toBeCalledTimes(3);
+    expect(spiedA).toHaveNthReturnedWith(1, 0);
+    expect(spiedA).toHaveNthReturnedWith(2, 1);
+    expect(spiedA).toHaveNthReturnedWith(3, 2);
   });
 });
 

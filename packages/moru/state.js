@@ -41,8 +41,8 @@ const scheduleEffectsRunner = () => {
     batchedEffects.forEach((effect) => {
       clean(effect);
       run(effect);
+      batchedEffects.delete(effect);
     });
-    batchedEffects.clear();
   });
 };
 
