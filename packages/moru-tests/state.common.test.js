@@ -1,5 +1,11 @@
 import { expect, test, vi } from "vitest";
-import { useEffect, useFree, useMemo, useState } from "moru";
+import {
+  onError,
+  useFree,
+  useState,
+  useEffect,
+  useImmediateEffect,
+} from "moru";
 
 import { runMicrotask, runTask } from "./scheduling.js";
 
@@ -126,67 +132,6 @@ test("useEffect has to register a state usage from an executed code part", async
   await runTask(() => expect(callback).toBeCalledTimes(2));
 });
 
-test("useMemo has to return a single getter function which returns a result of a callback", () => {
-  const a = useMemo(() => 1);
-
-  expect(a).toBeTypeOf("function");
-  expect(a()).toBe(1);
-});
-
-test("useMemo has to track used state getters and rerun a computation if one of dependencies changes", async () => {
-  const [a, setA] = useState(1);
-
-  const callback = vi.fn(() => a() + 1);
-
-  const b = useMemo(callback);
-
-  setA(2);
-
-  await runTask(() => {
-    expect(callback).toBeCalledTimes(2);
-    expect(b()).toBe(3);
-  });
-});
-
-test("useMemo's callback receives a previous value as an argument", async () => {
-  const [a, setA] = useState(1);
-
-  const callback = vi.fn((previous = 0) => previous + a() + 1);
-
-  const b = useMemo(callback);
-
-  expect(callback).toBeCalledWith(undefined);
-
-  setA(2);
-
-  await runTask(() => {
-    expect(callback).toBeCalledWith(2);
-    expect(b()).toBe(5);
-  });
-});
-
-test("useMemo receives an equals function that updates the internal value only if the comparator returns false", async () => {
-  const [a, setA] = useState(1);
-
-  const callback = vi.fn(() => a() + 1);
-
-  const b = useMemo(callback, {
-    equals: (previous, next) => previous + 1 === next,
-  });
-
-  setA(2);
-
-  await runTask.empty();
-
-  expect(b()).toBe(2);
-
-  setA(3);
-
-  await runTask.empty();
-
-  expect(b()).toBe(4);
-});
-
 test("an update of two different states in the same task has to cause rerunning dependent effect only once", async () => {
   const [a, setA] = useState(8);
   const [b, setB] = useState(8);
@@ -307,4 +252,80 @@ test("useEffect inside the useFree hook should register all dependencies", async
   await runMicrotask(() => setValue(2));
 
   await runTask(() => expect(callback).toBeCalledTimes(2));
+});
+
+test("onError should catch errors", async () => {
+  const errorHandler = vi.fn();
+
+  useEffect(() => {
+    onError(errorHandler);
+
+    useEffect(() => {
+      throw "error";
+    });
+  });
+
+  await runTask(() => {
+    expect(errorHandler).toBeCalled();
+    expect(errorHandler).toBeCalledWith("error");
+  });
+});
+
+test("onError should catch errors on the same effect level", async () => {
+  const errorHandler = vi.fn();
+
+  useEffect(() => {
+    onError(errorHandler);
+
+    throw "error";
+  });
+
+  await runTask(() => {
+    expect(errorHandler).toBeCalled();
+    expect(errorHandler).toBeCalledWith("error");
+  });
+});
+
+test("useImmediateEffect immediately executes its parameter", () => {
+  const fn = vi.fn();
+
+  useImmediateEffect(fn);
+
+  expect(fn).toBeCalled();
+});
+
+test("useImmediateEffect autodetects dependencies as the useEffect", async () => {
+  const [a, setA] = useState("");
+
+  const callback = vi.fn(() => {
+    a();
+  });
+
+  useImmediateEffect(callback);
+
+  setA("foo");
+
+  expect(callback).toBeCalledTimes(1);
+
+  await runTask(() => {
+    expect(callback).toHaveBeenCalledTimes(2);
+  });
+});
+
+test("useImmediateEffect registers a cleanup like the useEffect", async () => {
+  const [a, setA] = useState("");
+
+  const cleanup = vi.fn();
+
+  useImmediateEffect(() => {
+    a();
+
+    return cleanup;
+  });
+
+  setA("foo");
+
+  await runTask(() => {
+    expect(cleanup).toHaveBeenCalled();
+  });
 });

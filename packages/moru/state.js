@@ -1,10 +1,11 @@
-import { ensureFunction } from "./utils.js";
+import { isFunction } from "./utils.js";
 
 const batchedEffects = new Set();
 
-let isFree, runningEffect, effectsRunnerTimer;
+let runningEffect, effectsRunnerTimer;
 
 const setup = (callback) => {
+  callback.__parent = runningEffect;
   callback.__children = new Set();
 
   runningEffect?.__children.add(callback);
@@ -12,12 +13,26 @@ const setup = (callback) => {
   return callback;
 };
 
-const run = (effect) => {
-  runningEffect = effect;
-  const result = runFree(effect, false);
-  runningEffect = null;
+const searchErrorHandler = (effect) =>
+  effect.__error || (effect.__parent && searchErrorHandler(effect.__parent));
 
-  typeof result === "function" && (effect.__cleanup = result);
+const run = (effect) => {
+  const parentEffect = runningEffect;
+  runningEffect = effect;
+
+  try {
+    const result = effect();
+
+    isFunction(result) && (effect.__cleanup = result);
+  } catch (error) {
+    const handle = searchErrorHandler(effect);
+
+    if (!handle) throw error;
+
+    handle(error);
+  } finally {
+    runningEffect = parentEffect;
+  }
 };
 
 const clean = (effect) => {
@@ -27,43 +42,28 @@ const clean = (effect) => {
   });
   effect.__children.clear();
 
-  if (effect.__cleanup) {
-    effect.__cleanup();
-    delete effect.__cleanup;
-  }
+  delete effect.__error;
+
+  effect.__cleanup?.();
+  delete effect.__cleanup;
 };
 
-const scheduleEffectsRunner = () => {
-  effectsRunnerTimer && clearTimeout(effectsRunnerTimer);
-
-  effectsRunnerTimer = setTimeout(() => {
-    effectsRunnerTimer = null;
+const scheduleEffectsRunner = () =>
+  (effectsRunnerTimer ??= setTimeout(() => {
     batchedEffects.forEach((effect) => {
-      clean(effect);
-      run(effect);
+      clean(effect), run(effect);
       batchedEffects.delete(effect);
     });
-  });
-};
-
-const runFree = (callback, bool) => {
-  const outerTrackingBool = isFree;
-  isFree = bool;
-  const result = callback();
-  isFree = outerTrackingBool;
-
-  return result;
-};
-
-export const runInContext = (callback) => run(setup(callback));
+    effectsRunnerTimer = null;
+  }));
 
 export const useState = (value, { equals = Object.is } = {}) => {
   const listeners = new Set();
 
   return [
-    () => (!isFree && runningEffect && listeners.add(runningEffect), value),
+    () => (runningEffect && listeners.add(runningEffect), value),
     (next) => {
-      const nextValue = ensureFunction(next)(value);
+      const nextValue = isFunction(next) ? next(value) : next;
 
       if (!equals(value, nextValue)) {
         value = nextValue;
@@ -80,18 +80,24 @@ export const useState = (value, { equals = Object.is } = {}) => {
   ];
 };
 
+export const useImmediateEffect = (callback) => run(setup(callback));
+
 export const useEffect = (callback) => {
   const effect = setup(callback);
 
   queueMicrotask(() => run(effect));
 };
 
-export const useMemo = (callback, options) => {
-  const [value, setValue] = useState(undefined, options);
+export const useFree = (callback) => {
+  const preservedRunningEffect = runningEffect;
 
-  runInContext(() => setValue(callback));
+  runningEffect = null;
+  const result = callback();
+  runningEffect = preservedRunningEffect;
 
-  return value;
+  return result;
 };
 
-export const useFree = (callback) => runFree(callback, true);
+export const onError = (callback) => {
+  runningEffect && (runningEffect.__error = callback);
+};

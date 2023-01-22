@@ -1,7 +1,7 @@
 {
   "name": "moru",
   "version": "0.0.4-1",
-  "description": "Simple reactive JSX implementation.",
+  "description": "Simple reactive JSX UI library.",
   "type": "module",
   "license": "MIT",
   "author": "Yevhen Kapelianovych",
@@ -15,18 +15,13 @@
     "url": "https://github.com/Kapelianovych/moru.git"
   },
   "exports": {
-    ".": {
-      "types": "./index.d.ts",
-      "browser": "./index.browser.js",
-      "default": "./index.server.js"
-    },
-    "./jsx-runtime": {
+    ".": "./index.js",
+    "./web": {
+      "types": "./web.d.ts",
       "browser": "./browser.js",
       "default": "./server.js"
     },
-    "./jsx-dev-runtime": {
-      "browser": "./browser.js",
-      "default": "./server.js"
-    }
+    "./jsx-runtime": "./index.js",
+    "./jsx-dev-runtime": "./index.js"
   }
 }

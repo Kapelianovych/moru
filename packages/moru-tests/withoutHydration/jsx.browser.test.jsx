@@ -1,35 +1,36 @@
+import { render } from "moru/web";
 import { test, expect, vi } from "vitest";
 import { useEffect, useState } from "moru";
 
 import { runMicrotask, runTask } from "./scheduling.js";
 
 test("native tags has to be rendered into native DOM elements", () => {
-  const paragraph = <p></p>;
+  const paragraph = render(<p></p>);
 
   expect(paragraph).toBeInstanceOf(HTMLParagraphElement);
 });
 
 test("a fragment has to be rendered into the DocumentFragment", () => {
-  const fragment = <></>;
+  const fragment = render(<></>);
 
   expect(fragment).toBeInstanceOf(DocumentFragment);
 });
 
 test("jsx has to attach attributes", () => {
-  const div = <div id="root"></div>;
+  const div = render(<div id="root"></div>);
 
   expect(div.getAttribute("id")).toMatch("root");
 });
 
 test("jsx has to handle attributes with a dash", () => {
-  const div = <div data-id="uuid" aria-label="empty"></div>;
+  const div = render(<div data-id="uuid" aria-label="empty"></div>);
 
   expect(div.getAttribute("data-id")).toMatch("uuid");
   expect(div.getAttribute("aria-label")).toMatch("empty");
 });
 
 test("a boolean value passed to the attribute either include the attribute or remove it from an element", () => {
-  const div = <div aria-readonly={true} disabled={false}></div>;
+  const div = render(<div aria-readonly={true} disabled={false}></div>);
 
   expect(div.hasAttribute("aria-readonly")).toBe(true);
   expect(div.getAttribute("aria-readonly")).toBe("");
@@ -39,7 +40,7 @@ test("a boolean value passed to the attribute either include the attribute or re
 test("a function that returns a boolean value causes an attribute to be toggled depending of the boolean value", async () => {
   const [toggle, setToggle] = useState(false);
 
-  const div = <div readonly={toggle}></div>;
+  const div = render(<div readonly={toggle}></div>);
 
   expect(div.hasAttribute("readonly")).toBe(false);
 
@@ -53,7 +54,7 @@ test("a function that returns a boolean value causes an attribute to be toggled 
 test("function passed to an attribute causes an update of the attribute's value if any state used inside is updated", async () => {
   const [a, setA] = useState(1);
 
-  const div = <div id={() => a()}></div>;
+  const div = render(<div id={() => a()}></div>);
 
   expect(div.getAttribute("id")).toBe("1");
 
@@ -65,13 +66,13 @@ test("function passed to an attribute causes an update of the attribute's value 
 });
 
 test("class attribute can have an array of strings as a value", () => {
-  const div = <div class={["foo", "baz"]}></div>;
+  const div = render(<div class={["foo", "baz"]}></div>);
 
   expect(div.getAttribute("class")).toMatch("foo baz");
 });
 
 test("array value of the class attribute can have objects whose keys are classes and values determines whether the key will be added", () => {
-  const div = <div class={[{ foo: false, bar: true }]}></div>;
+  const div = render(<div class={[{ foo: false, bar: true }]}></div>);
 
   expect(div.getAttribute("class")).toMatch("bar");
 });
@@ -79,7 +80,7 @@ test("array value of the class attribute can have objects whose keys are classes
 test("object's values can be functions which are executed in a reactive context and add/remove classes when a state's value is updated", async () => {
   const [yes, setYes] = useState(false);
 
-  const div = <div class={[{ foo: () => yes() }]}></div>;
+  const div = render(<div class={[{ foo: () => yes() }]}></div>);
 
   expect(div.getAttribute("class")).toBe(null);
 
@@ -93,7 +94,7 @@ test("object's values can be functions which are executed in a reactive context 
 test("strings and object can be mixed in class value", async () => {
   const [yes, setYes] = useState(false);
 
-  const div = <div class={["bar", { foo: () => yes() }]}></div>;
+  const div = render(<div class={["bar", { foo: () => yes() }]}></div>);
 
   expect(div.getAttribute("class")).toMatch("bar");
 
@@ -105,7 +106,9 @@ test("strings and object can be mixed in class value", async () => {
 });
 
 test("style attribute can have an object as a value whose keys are CSS properties and values are their respective values", () => {
-  const div = <div style={{ display: "flex", "align-items": "center" }}></div>;
+  const div = render(
+    <div style={{ display: "flex", "align-items": "center" }}></div>
+  );
 
   expect(div.getAttribute("style")).toMatch(
     "display: flex; align-items: center;"
@@ -115,7 +118,7 @@ test("style attribute can have an object as a value whose keys are CSS propertie
 test("a function as the value of style's property causes value's update if any used state is changed", async () => {
   const [a, setA] = useState("flex");
 
-  const div = <div style={{ display: () => a() }}></div>;
+  const div = render(<div style={{ display: () => a() }}></div>);
 
   expect(div.getAttribute("style")).toMatch("display: flex;");
 
@@ -129,7 +132,7 @@ test("a function as the value of style's property causes value's update if any u
 test("ref attribute executes callback value with a reference to a DOM node", () => {
   let ref;
 
-  <div ref={(node) => (ref = node)}></div>;
+  render(<div ref={(node) => (ref = node)}></div>);
 
   expect(ref).toBeInstanceOf(HTMLDivElement);
 });
@@ -137,7 +140,7 @@ test("ref attribute executes callback value with a reference to a DOM node", () 
 test("attributes with on prefix will attach listeners to the DOM node", () => {
   const callback = vi.fn();
 
-  const div = <div ongot={callback}></div>;
+  const div = render(<div ongot={callback}></div>);
 
   expect(callback).not.toBeCalled();
 
@@ -149,7 +152,7 @@ test("attributes with on prefix will attach listeners to the DOM node", () => {
 test("once suffix registers one-time executed event listener", () => {
   const callback = vi.fn();
 
-  const div = <div onClickOnce={callback}></div>;
+  const div = render(<div onClickOnce={callback}></div>);
 
   expect(callback).not.toBeCalled();
 
@@ -169,8 +172,8 @@ test("capture suffix registers a listener for the capturing phase", () => {
   const callback1 = vi.fn(() => (time1 = performance.now()));
   const callback2 = vi.fn(() => (time2 = performance.now()));
 
-  const child = <div onClick={callback2}></div>;
-  const parent = <div onClickCapture={callback1}>{child}</div>;
+  const child = render(<div onClick={callback2}></div>);
+  const parent = render(<div onClickCapture={callback1}>{child}</div>);
 
   child.dispatchEvent(new MouseEvent("click"));
 
@@ -180,7 +183,7 @@ test("capture suffix registers a listener for the capturing phase", () => {
 test("JSX elements can contain other elements and components", () => {
   const P = () => <p class="p"></p>;
 
-  const div = (
+  const div = render(
     <div class="parent">
       <span class="span"></span>
       <P />
@@ -191,8 +194,8 @@ test("JSX elements can contain other elements and components", () => {
   expect(div.querySelector(".span")).toBeInstanceOf(HTMLSpanElement);
 });
 
-test("null and undefined are rendered as empty Text nodes", () => {
-  const div = (
+test("null and undefined are not rendered", () => {
+  const div = render(
     <div>
       {null}
       {undefined}
@@ -201,13 +204,12 @@ test("null and undefined are rendered as empty Text nodes", () => {
 
   const children = Array.from(div.childNodes);
 
-  expect(children.length).toBe(2);
-  children.forEach((node) => expect(node).toBeInstanceOf(Text));
+  expect(children.length).toBe(0);
   expect(div.innerHTML).toBe("");
 });
 
 test("0, empty string, false are rendered as is", () => {
-  const div = (
+  const div = render(
     <div>
       <p>{0}</p>
       {""}
@@ -220,13 +222,13 @@ test("0, empty string, false are rendered as is", () => {
 });
 
 test("array passed as a child has to be flattened and all items rendered as children", () => {
-  const div = <div>{["foo", <div>baz</div>]}</div>;
+  const div = render(<div>{["foo", <div>baz</div>]}</div>);
 
   expect(div.innerHTML).toMatch("foo<div>baz</div>");
 });
 
 test("inline component has to be executed and the result is inserted into the DOM", () => {
-  const div = <div>{() => "8"}</div>;
+  const div = render(<div>{() => "8"}</div>);
 
   expect(div.innerHTML).toMatch("8");
 });
@@ -234,7 +236,7 @@ test("inline component has to be executed and the result is inserted into the DO
 test("inline component is rendered in a reactive context", async () => {
   const [value, setValue] = useState("initial");
 
-  const div = <div>{() => value()}</div>;
+  const div = render(<div>{() => value()}</div>);
 
   expect(div.innerHTML).toMatch("initial");
 
@@ -248,7 +250,7 @@ test("inline component is rendered in a reactive context", async () => {
 test("inline component in a fragment has to correctly update nodes in its position", async () => {
   const [value, setValue] = useState("initial");
 
-  const div = (
+  const div = render(
     <div>
       {() => (
         <>
@@ -271,7 +273,7 @@ test("inline component in a fragment has to correctly update nodes in its positi
 test("inline component has to remove all nodes that it produced after unmounting or rerendering", async () => {
   const [a, setA] = useState(8);
 
-  const div = (
+  const div = render(
     <div>
       {() =>
         a() > 1 ? (
@@ -300,7 +302,7 @@ test("inline component has to remove all nodes that it produced after unmounting
 test("component can return inline component", () => {
   const P = () => () => <p>paragraph</p>;
 
-  const div = (
+  const div = render(
     <div>
       <P />
     </div>
@@ -329,7 +331,7 @@ test("outer fragment has to remove children of inner fragments when it is about 
       </>
     ) : null;
 
-  const div = <div>{inline}</div>;
+  const div = render(<div>{inline}</div>);
 
   expect(div.querySelector(".first")).toBeTruthy();
   expect(div.querySelector(".second")).toBeTruthy();
@@ -352,12 +354,12 @@ test("outer fragment must remove children of user defined DocumentFragment", asy
 
     const template = document.createDocumentFragment();
 
-    template.append(<div>I am a user defined DocumentFragment</div>);
+    template.append(render(<div>I am a user defined DocumentFragment</div>));
 
     return template;
   };
 
-  const fragment = <>{nodes}</>;
+  const fragment = render(<>{nodes}</>);
 
   expect(fragment.querySelector("div")).toBeTruthy();
 
@@ -371,7 +373,7 @@ test("outer fragment must remove children of user defined DocumentFragment", asy
 test("outer reactive context must clear inner reactive context that returns DOM nodes when it is reexecuted", async () => {
   const [a, setA] = useState("one");
 
-  const div = (
+  const div = render(
     <div class="outer">
       {() => {
         const result = a();
@@ -408,7 +410,7 @@ test("change of the state which is used in some event listeners should not cause
 
   useEffect(outerCallback);
 
-  const button = <button onclick={() => a()}></button>;
+  const button = render(<button onclick={() => a()}></button>);
 
   await runMicrotask.empty();
 
@@ -435,7 +437,7 @@ test("executing state's getter in a functional component's body doesn't cause tr
     return a();
   };
 
-  const div = <div>{() => <A />}</div>;
+  const div = render(<div>{() => <A />}</div>);
 
   setA(2);
 
