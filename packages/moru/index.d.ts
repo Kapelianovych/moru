@@ -77,10 +77,6 @@ export function useState<T>(): readonly [
   StateSetter<T | undefined>
 ];
 export function useState<T>(
-  value: undefined,
-  options: UseStateOptions<T | undefined>
-): readonly [StateGetter<T | undefined>, StateSetter<T | undefined>];
-export function useState<T>(
   value: T,
   options?: UseStateOptions<T>
 ): readonly [StateGetter<T>, StateSetter<T>];
