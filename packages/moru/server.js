@@ -6,7 +6,8 @@ export const isServer = true,
   isBrowser = false,
   isHydrationEnabled = import.meta.env.MORU_IS_HYDRATION_ENABLED;
 
-let hydrationId = 0;
+let hydrationId = 0,
+  renderingStarted;
 
 const createElement = ({ tag, ref, children, attributes }) => {
   if (typeof tag === "string") {
@@ -81,31 +82,52 @@ const createElement = ({ tag, ref, children, attributes }) => {
   return tag({ ref, children, ...attributes });
 };
 
-const renderToString = (element) => {
-  if (element == null) return "";
+const finishRendering = (isTopLevel) => {
+  if (isHydrationEnabled && isTopLevel) {
+    hydrationId = 0;
+    renderingStarted = null;
+  }
+};
 
-  if (isJSXCoreElement(element))
-    return element.tag === "fragment"
-      ? render(element.children)
-      : render(createElement(element));
+export const render = (element) => {
+  const isTopLevel = renderingStarted == null;
+
+  isHydrationEnabled && (renderingStarted = true);
+
+  if (element == null) {
+    finishRendering(isTopLevel);
+
+    return "";
+  }
+
+  if (isJSXCoreElement(element)) {
+    const html =
+      element.tag === "fragment"
+        ? render(element.children)
+        : render(createElement(element));
+
+    finishRendering(isTopLevel);
+
+    return html;
+  }
 
   if (isFunction(element)) {
     if (!isHydrationEnabled) return render(element());
 
     const tag = hydrationId++;
 
-    return `<!--${tag}/-->${render(element())}<!--/${tag}-->`;
+    const html = `<!--${tag}/-->${render(element())}<!--/${tag}-->`;
+
+    finishRendering(isTopLevel);
+
+    return html;
   }
 
-  return Array.isArray(element)
+  const html = Array.isArray(element)
     ? element.map(render).join("")
     : String(element);
-};
 
-export const render = (element) => {
-  const html = renderToString(element);
-
-  hydrationId = 0;
+  finishRendering(isTopLevel);
 
   return html;
 };
