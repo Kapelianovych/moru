@@ -33,7 +33,7 @@ The library exports a `createElement` and a `Fragment` functions to create UI el
 
 > The last three properties are separated from the second function's parameter.
 
-The `Fragment` expect only for one parameter - `children` and returns a `FragmentElement` with only a `tag` property which is always equal to the `fragment` string and the `children` property. All other properties if exist in JSX are ignored.
+The `Fragment` expect only for one parameter - `children` and returns a `FragmentElement` with only a `tag` property which is always equal to the `"fragment"` string and the `children` property. All other properties if exist in JSX are ignored.
 
 To detect the `RegularElement` and the `FragmentElement` the library exports a `isJSXCoreElement` function.
 
@@ -208,81 +208,85 @@ If you have been ever wrote JSX before, you know how to write JSX with Moru too.
 
 1.  Don't use the `className`, `htmlFor`, `defaultValue` and `dangerouslySetInnerHtml` attributes because they will be treated as regular attributes and of course have no meaning in HTML. Use the `class` and `for`. In case of the `dangerouslySetInnerHtml` Moru supports rendering native DOM nodes, so you can do like this:
 
-        ```jsx
-        export default ({ html }) => {
-            const userDefinedHtml = document.createElement('div');
-            userDefinedHtml.innerHTML = html; // Better use the Sanitization API for safety.
+    ```jsx
+    export default ({ html }) => {
+      const userDefinedHtml = document.createElement("div");
+      userDefinedHtml.innerHTML = html; // Better use the Sanitization API for safety.
 
-            return (
-                <div>
-                    <p></p>
-                    {userDefinedHtml}
-                </div>
-            );
-        }
-        ```
+      return (
+        <div>
+          <p></p>
+          {userDefinedHtml}
+        </div>
+      );
+    };
+    ```
 
 2.  A function passed in any place of JSX creates a reactive context and is valid value. So if you want to change the attribute values depending of some value or change the markup, use the function.
 
-        ```jsx
-        export default () => {
-            const [visible, setVisible] = useState(false);
+    ```jsx
+    export default () => {
+      const [visible, setVisible] = useState(false);
 
-            return (
-                <div class={() => visible() ? 'visible' : 'hidden'}>
-                    {() => visible() ? <p>I am visible</p> : null}
-                </div>
-            );
-        }
-        ```
+      return (
+        <div class={() => (visible() ? "visible" : "hidden")}>
+          {() => (visible() ? <p>I am visible</p> : null)}
+        </div>
+      );
+    };
+    ```
 
 3.  Only `null` and `undefined` will render nothing, other _falsy_ values will be rendered as is.
 4.  The `class` attribute can accept an array with strings and objects. Use object when you want some classes be dynamically included or excluded. When a value is a _falsy_ value or returns a _falsy_ value it will be excluded from the `classList`. Otherwise, it will be preserved.
 
-        ```jsx
-        export default () => {
-            const [visible, setVisible] = useState(false);
+    ```jsx
+    export default () => {
+      const [visible, setVisible] = useState(false);
 
-            return (
-                <div
-                    class={['I', 'am', 'static', 'class', { dynamic: () => visible() }]}
-                ></div>
-            );
-        }
-        ```
+      return (
+        <div
+          class={["I", "am", "static", "class", { dynamic: () => visible() }]}
+        ></div>
+      );
+    };
+    ```
 
 5.  The `style` attribute may be an object with key/values properties as CSS declarations. If you want a declaration to change the value dynamically, use the function.
 
-        ```jsx
-        export default () => {
-            const [translateX, setTranslateX] = useState(0);
+    ```jsx
+    export default () => {
+      const [translateX, setTranslateX] = useState(0);
 
-            return <div
-              style={{
-                opacity: 1,
-                transform: () => `translateX(${translateX()}%)`,
-                "background-color": "tomato",
-              }}
-            ></div>;
-        }
-        ```
+      return (
+        <div
+          style={{
+            opacity: 1,
+            transform: () => `translateX(${translateX()}%)`,
+            "background-color": "tomato",
+          }}
+        ></div>
+      );
+    };
+    ```
 
-        > `moru` uses the _element.style.setProperty_ method to set style's value, so you are able to define custom properties in there.
+    > Moru uses the _element.style.setProperty_ method to set style's value, so you are able to define custom properties in there.
 
 6.  Event listener's attribute name is case insensitive, so `onClick` is the same as `onclick`.All events are registered with a native `addEventListener` method and you can provide any option that is acceptable as the third parameter by adding an according suffix to the event name. Four suffixes are allowed:
 
-        1. `Once` - sets the `once` option to `true`.
-        2. `Capture` - sets the `capture` option to `true`.
-        3. `Passive` - sets the `passive` option to `true`.
-        4. `NoPassive` - sets the `passive` option to `false` explicitly.
+    1. `Once` - sets the `once` option to `true`.
+    2. `Capture` - sets the `capture` option to `true`.
+    3. `Passive` - sets the `passive` option to `true`.
+    4. `NoPassive` - sets the `passive` option to `false` explicitly.
 
-        You can combine them together except `Passive` and `NoPassive`. If you do, then `NoPassive` wins.
+    You can combine them together except `Passive` and `NoPassive`. If you do, then `NoPassive` wins.
 
-        ```jsx
-        <div onClickCaptureOnce={(event) => console.log(event)}></div>
-        ```
+    ```jsx
+    export default () => (
+      <div onClickCaptureOnce={(event) => console.log(event)}></div>
+    );
+    ```
 
-        The `event` parameter is the native event object.
+    The `event` parameter is the native event object.
 
 ### For TypeScript users
 
