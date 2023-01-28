@@ -24,18 +24,20 @@ const endsAt = (once, capture, passive, noPassive) =>
 const clearNode = (node) =>
   node.__nodes ? node.__nodes.forEach(clearNode) : node.remove();
 
-const renderChild = (to, child, lastChild) => {
+const renderChild = (to, child, previousNodeMarker) => {
   if (isFunction(child)) {
-    const tagId = hydrationId++,
-      emptyNode = document.createTextNode("");
+    const currentNodeMarker = document.createTextNode("");
 
     let hydrationCleanup;
 
     if (isHydrationEnabled && !hydrationFinished) {
-      const startNode = nodesToHydrate[`${tagId}/`],
+      const tagId = hydrationId++,
+        startNode = nodesToHydrate[`${tagId}/`],
         endNode = nodesToHydrate[`/${tagId}`];
 
-      startNode.before(emptyNode);
+      startNode.before(currentNodeMarker);
+
+      to = startNode.parentNode;
 
       hydrationCleanup = () => {
         while (startNode.nextSibling !== endNode) {
@@ -46,24 +48,31 @@ const renderChild = (to, child, lastChild) => {
 
         hydrationCleanup = null;
       };
-    } else to.append(emptyNode);
+    } else
+      previousNodeMarker
+        ? previousNodeMarker.after(currentNodeMarker)
+        : to.append(currentNodeMarker);
 
     useImmediateEffect(() => {
-      const cleanup = renderChild(to, child(), emptyNode);
+      useImmediateEffect(() => {
+        const cleanup = renderChild(to, child(), currentNodeMarker);
 
-      return isHydrationEnabled && !hydrationFinished
-        ? hydrationCleanup
-        : cleanup;
+        return isHydrationEnabled && !hydrationFinished
+          ? hydrationCleanup
+          : cleanup;
+      });
+
+      return () => clearNode(currentNodeMarker);
     });
   } else if (Array.isArray(child))
-    return renderChild(to, createFragment(child), lastChild);
+    return renderChild(to, createFragment(child), previousNodeMarker);
   else if (isJSXCoreElement(child))
     return renderChild(
       to,
       child.tag === "fragment"
         ? createFragment(child.children)
         : createElement(child),
-      lastChild
+      previousNodeMarker
     );
   else {
     if (isHydrationEnabled && !hydrationFinished) return;
@@ -75,18 +84,13 @@ const renderChild = (to, child, lastChild) => {
     if (next instanceof DocumentFragment && !next.__nodes)
       next.__nodes = Array.from(next.childNodes);
 
-    to?.__nodes?.push(next);
+    to.__nodes?.push(next);
 
-    lastChild ? lastChild.after(next) : to.append(next);
+    previousNodeMarker ? previousNodeMarker.after(next) : to.append(next);
 
     return () => clearNode(next);
   }
 };
-
-const renderChildren = (parent, children) =>
-  Array.isArray(children)
-    ? children.forEach((child) => renderChild(parent, child))
-    : renderChild(parent, children);
 
 const createElement = ({ tag, ref, attributes, children }) => {
   if (typeof tag === "string") {
@@ -186,7 +190,7 @@ const createElement = ({ tag, ref, attributes, children }) => {
 
     isHydrationEnabled && !hydrationFinished && !wasHydrated && hydrationId--;
 
-    renderChildren(node, children);
+    renderChild(node, children);
 
     ref?.(node);
 
@@ -201,7 +205,9 @@ const createFragment = (children) => {
     __nodes: [],
   });
 
-  renderChildren(fragment, children);
+  Array.isArray(children)
+    ? children.forEach((child) => renderChild(fragment, child))
+    : renderChild(fragment, children);
 
   return fragment;
 };
