@@ -1,0 +1,56 @@
+export type Effect<const T extends readonly unknown[]> = (
+  ...parameters: T
+) => void | VoidFunction | Promise<void | VoidFunction>;
+
+export type CreateStateOptions<T> = {
+  equals?(previous: T, next: T): boolean;
+};
+
+declare const GETTER: unique symbol;
+
+export type Getter<T> = {
+  (): T;
+  // This property is not an exact correspondence to the assigned symbol
+  // but it makes the getter function unique which is the only requirement.
+  readonly [GETTER]: null;
+};
+
+export type Setter<T> = {
+  (map: (current: T) => T): void;
+  (value: T): void;
+};
+
+type EffectParameters<const T extends readonly Getter<unknown>[]> = {
+  readonly [K in keyof T]: ReturnType<T[K]>;
+};
+
+export type Context = {
+  dispose(): void;
+
+  createState<T>(): readonly [
+    Getter<T | undefined>,
+    Setter<T | undefined>,
+    VoidFunction
+  ];
+  createState<T>(
+    initial: T,
+    options?: CreateStateOptions<T>
+  ): readonly [Getter<T>, Setter<T>, VoidFunction];
+
+  createEffect(callback: Effect<[]>): VoidFunction;
+  createEffect<const T extends readonly Getter<unknown>[]>(
+    callback: Effect<EffectParameters<T>>,
+    dependencies: T
+  ): VoidFunction;
+
+  createImmediateEffect(callback: Effect<[]>): VoidFunction;
+  createImmediateEffect<const T extends readonly Getter<unknown>[]>(
+    callback: Effect<EffectParameters<T>>,
+    dependencies: T
+  ): VoidFunction;
+};
+
+export function createContext(): Context;
+
+export function isGetter<T>(value: Getter<T>): true;
+export function isGetter<T>(value: unknown): value is Getter<T>;

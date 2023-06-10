@@ -16,11 +16,6 @@
   },
   "exports": {
     ".": "./index.js",
-    "./web": {
-      "types": "./web.d.ts",
-      "browser": "./browser.js",
-      "default": "./server.js"
-    },
     "./jsx-runtime": "./index.js",
     "./jsx-dev-runtime": "./index.js"
   }

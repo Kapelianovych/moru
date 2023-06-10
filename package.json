@@ -8,7 +8,10 @@
     "test": "npm test --workspaces --if-present"
   },
   "workspaces": [
+    "packages/web",
     "packages/moru",
-    "packages/moru-tests"
+    "packages/hooks",
+    "packages/context",
+    "packages/renderer"
   ]
 }

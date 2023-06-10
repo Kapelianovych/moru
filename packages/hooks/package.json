@@ -1,0 +1,9 @@
+{
+  "name": "@moru/hooks",
+  "type": "module",
+  "version": "0.0.1",
+  "author": "Yevhen Kapelianovych",
+  "exports": {
+    ".": "./index.js"
+  }
+}

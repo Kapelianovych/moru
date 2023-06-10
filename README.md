@@ -6,7 +6,7 @@
 
 The idea is to provide the simplest abstraction layer that can be translated into the UI depending of the environment and the reactivity system to propagate updates to the UI. The runtime for specific environment should be created separately by using former entities. It is easy to understand and easy to use.
 
-> Abstraction layer it **not** the Virtual DOM. It is used solely for preserving information about UI elements for the `render` function. After rendering it is completely discarded.
+> Abstraction layer it **not** the Virtual DOM. It is used solely for preserving information about UI elements for a renderer. After rendering it is completely discarded.
 
 ## Word from author
 

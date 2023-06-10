@@ -1,0 +1,12 @@
+{
+  "name": "@moru/web",
+  "type": "module",
+  "version": "0.0.1",
+  "author": "Yevhen Kapelianovych",
+  "exports": {
+    ".": "./index.js"
+  },
+  "dependencies": {
+    "@moru/renderer": "0.0.1"
+  }
+}

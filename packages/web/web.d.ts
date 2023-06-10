@@ -1,4 +1,4 @@
-import ".";
+import { Control } from ".";
 
 type Replace<
   O,
@@ -33,6 +33,53 @@ type EventAttributesMapOf<T extends globalThis.Element> = {
     ? `on${Name}` | `on${Capitalize<Name>}${"" | EventListenerModifiers}`
     : never]: (event: JSX.EventOf<T, Replace<K, "on", "">>) => void;
 };
+
+type GetterUniquePart = {
+  readonly [K in keyof Getter<unknown> as K extends symbol
+    ? K
+    : never]: Getter<unknown>[K];
+};
+
+declare global {
+  namespace JSX {
+    type Component<T = {}> = (properties: T, context: Context) => Element;
+
+    type FragmentElement = {
+      readonly tag: "fragment";
+      readonly children?: Element;
+    };
+
+    type RegularElement<K extends keyof RegularElementsMap> = {
+      readonly tag: K;
+      readonly ref?: (element: RegularElementsMap[K]["ref"]) => void;
+      readonly children?: Element;
+      readonly attributes: Omit<RegularElementsMap[K], "ref">;
+    };
+
+    interface ElementMap {
+      readonly 0: null;
+      readonly 1: string;
+      readonly 2: number;
+      readonly 3: bigint;
+      readonly 4: boolean;
+      readonly 5: undefined;
+      // TypeScipt doesn't like sircular dependencies, we cannot use the Getter<Element> type directly.
+      readonly 6: (() => Element) & GetterUniquePart;
+      readonly 7: RegularElement<keyof RegularElementsMap>;
+      readonly 8: FragmentElement;
+    }
+
+    type Element = ElementMap[keyof ElementMap] | readonly Element[];
+
+    type WithRef<A, R> = A & {
+      readonly ref: (element: R) => void;
+    };
+
+    type WithChildren<A, C = Element> = A & {
+      readonly children: C;
+    };
+  }
+}
 
 declare global {
   namespace JSX {
@@ -489,8 +536,8 @@ export const isHydrationEnabled: boolean;
  * In the *server* environment it returns the `string`.
  * In the *browser* environment it returns the `Node`.
  */
-export function render(element: JSX.Element): Node;
-export function render(element: JSX.Element): string;
+export function render(element: JSX.Element): Control<Node>;
+export function render(element: JSX.Element): Control<string>;
 
 /**
  * It is available only in the *browser* environment.
