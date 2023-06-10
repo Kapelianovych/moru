@@ -69,7 +69,9 @@ export const SVG_ELEMENTS = new Set([
   "view",
 ]);
 
-export const AttributesToProperties = new Set(["value"]);
+export const AttributesToProperties = new Map([
+  ["value", ["input", "textarea"]],
+]);
 
 export const SelfClosedElements = new Set([
   "area",

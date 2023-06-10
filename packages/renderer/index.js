@@ -168,44 +168,8 @@ const renderIntrinsic = (
 ) => {
   const instance = options.createInstance(tag);
 
-  for (const name in attributes) {
-    const value = attributes[name];
-
-    if (name === "class" && Array.isArray(value))
-      value.forEach((name) =>
-        typeof name === "string"
-          ? options.setProperty(instance, "class", name)
-          : Object.entries(value).forEach(([name, value]) => {
-              if (isGetter(value))
-                if (options.allowEffects) {
-                  const dispose = context.createUrgentEffect(
-                    (value) => {
-                      options.setProperty(instance, "class:" + name, value);
-                    },
-                    [value]
-                  );
-
-                  nearestScopedDisposals?.add(dispose);
-                } else options.setProperty(instance, "class:" + name, value());
-              else options.setProperty(instance, "class:" + name, value);
-            })
-      );
-    else if (name === "style" && typeof value === "object")
-      Object.entries(value ?? {}).forEach(([name, value]) => {
-        if (isGetter(value))
-          if (options.allowEffects) {
-            const dispose = context.createUrgentEffect(
-              (value) => {
-                options.setProperty(instance, "style:" + name, value);
-              },
-              [value]
-            );
-
-            nearestScopedDisposals?.add(dispose);
-          } else options.setProperty(instance, "style:" + name, value());
-        else options.setProperty(instance, "style:" + name, value);
-      });
-    else if (isGetter(value))
+  Object.entries(attributes).forEach(([name, value]) => {
+    if (isGetter(value))
       if (options.allowEffects) {
         const dispose = context.createUrgentEffect(
           (value) => {
@@ -217,7 +181,7 @@ const renderIntrinsic = (
         nearestScopedDisposals?.add(dispose);
       } else options.setProperty(instance, name, value());
     else options.setProperty(instance, name, value);
-  }
+  });
 
   appendChild(
     options,

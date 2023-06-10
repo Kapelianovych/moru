@@ -47,11 +47,10 @@ export const mount = createRenderer({
           passive: noPassive ? false : passive,
         }
       );
-    } else if (name.startsWith("class:"))
-      instance.classList[value ? "add" : "remove"](name.slice(6));
-    else if (name.startsWith("style:"))
-      instance.style.setProperty(name.slice(6), value);
-    else if (AttributesToProperties.has(name)) instance[name] = value;
+    } else if (
+      AttributesToProperties.get(name)?.includes(instance.tagName.toLowerCase())
+    )
+      instance[name] = value;
     else
       typeof value === "boolean"
         ? value
