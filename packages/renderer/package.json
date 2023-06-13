@@ -6,7 +6,7 @@
   "exports": {
     ".": "./index.js"
   },
-  "dependencies": {
+  "peerDependencies": {
     "moru": "0.0.4-1",
     "@moru/context": "0.0.1"
   }

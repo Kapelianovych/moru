@@ -1,8 +1,8 @@
 import { createRenderer } from "@moru/renderer";
 
 import {
-  SVG_ELEMENTS,
   SVG_NAMESPACE,
+  HTML_NAMESPACE,
   AttributesToProperties,
 } from "./constants.js";
 
@@ -16,16 +16,24 @@ export const mount = createRenderer({
   defaultRoot: document.body,
   allowEffects: true,
 
-  appendChild(parent, instance) {
+  appendInstance(parent, instance) {
     parent.append(instance);
   },
-  removeInstance(instance) {
+  removeInstance(_parent, instance) {
     instance.remove();
   },
-  createInstance(tag) {
-    return SVG_ELEMENTS.has(tag)
-      ? document.createElementNS(SVG_NAMESPACE, tag)
-      : document.createElement(tag);
+  createInstance(parent, tag) {
+    return document.createElementNS(
+      tag === "svg"
+        ? SVG_NAMESPACE
+        : // This SVG element requires children to have a non-SVG namespace.
+        // For a browser it is the most likely HTML namespace.
+        parent.tagName === "foreignObject"
+        ? HTML_NAMESPACE
+        : // Otherwise just inherit the parent's namespace.
+          parent.namespaceURI,
+      tag
+    );
   },
   setProperty(instance, name, value) {
     if (name.startsWith("on")) {
@@ -47,9 +55,7 @@ export const mount = createRenderer({
           passive: noPassive ? false : passive,
         }
       );
-    } else if (
-      AttributesToProperties.get(name)?.includes(instance.tagName.toLowerCase())
-    )
+    } else if (AttributesToProperties.get(name)?.includes(instance.tagName))
       instance[name] = value;
     else
       typeof value === "boolean"
@@ -58,10 +64,10 @@ export const mount = createRenderer({
           : instance.removeAttribute(name)
         : instance.setAttribute(name, value);
   },
-  insertInstanceAfter(previousSibling, nextSibling) {
+  insertInstanceAfter(_parent, previousSibling, nextSibling) {
     previousSibling.after(nextSibling);
   },
-  createDefaultInstance(element) {
+  createDefaultInstance(_parent, element) {
     return element instanceof Node
       ? element
       : document.createTextNode(element ?? "");

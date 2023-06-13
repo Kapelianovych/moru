@@ -1,133 +1,48 @@
-import { isFunction } from "./utils.js";
-import { isJSXCoreElement } from "./core.js";
+import { createRenderer } from "@moru/renderer";
+
 import { SelfClosedElements } from "./constants.js";
 
-export const isServer = true,
-  isBrowser = false,
-  isHydrationEnabled = import.meta.env.MORU_IS_HYDRATION_ENABLED;
+const OPEN_TAG_RE = /^<[\w-]+/;
+const CLOSE_TAG_RE = /<\/[\w-]+>$/;
+const DEFAULT_PARENT_TAG = "__parent__";
 
-let hydrationId = 0,
-  renderingStarted;
+const stringRenderer = createRenderer({
+  allowEffects: false,
 
-const createElement = ({ tag, ref, children, attributes }) => {
-  if (typeof tag === "string") {
-    let shouldHydrate = !!ref;
+  appendInstance(parent, instance) {
+    parent.html = parent.html.replace(CLOSE_TAG_RE, `${instance.html}$&`);
+  },
+  removeInstance(_parent, _instance) {
+    // It is not needed in a static html.
+  },
+  createInstance(_parent, tag) {
+    return {
+      html: SelfClosedElements.has(tag) ? `<${tag}/>` : `<${tag}></${tag}>`,
+    };
+  },
+  setProperty(instance, name, value) {
+    if (!name.startsWith("on"))
+      instance.html =
+        typeof value === "boolean"
+          ? value
+            ? instance.html.replace(OPEN_TAG_RE, `$& ${name}`)
+            : instance.html
+          : instance.html.replace(OPEN_TAG_RE, `$& ${name}="${value}"`);
+  },
+  insertInstanceAfter(_parent, _previousSibling, _nextSibling) {
+    // It is not needed in a static html.
+  },
+  createDefaultInstance(_parent, element) {
+    return { html: String(element ?? "") };
+  },
+});
 
-    const elementMarker = isHydrationEnabled && `data-he="${hydrationId++}"`;
+export const renderToString = (context, element) => {
+  const root = { html: `<${DEFAULT_PARENT_TAG}></${DEFAULT_PARENT_TAG}>` };
 
-    const tagsAttributes = Object.entries(attributes)
-      .map(([key, value]) => {
-        if (key.startsWith("on")) {
-          isHydrationEnabled && (shouldHydrate = true);
-          return;
-        }
+  const _ = stringRenderer(context, element, root);
 
-        let attributeValue = "";
-
-        if (key === "class" && Array.isArray(value))
-          attributeValue = value
-            .flatMap((name) =>
-              typeof name === "string"
-                ? name
-                : Object.entries(name)
-                    .map(([key, value]) => {
-                      const isFn = isFunction(value);
-
-                      isHydrationEnabled && (shouldHydrate ||= isFn);
-
-                      return (isFn ? value() : value) ? key : "";
-                    })
-                    .filter(Boolean)
-            )
-            .join(" ");
-        else if (key === "style" && typeof value === "object")
-          attributeValue = Object.entries(value ?? {})
-            .map(([key, value]) => {
-              const isFn = isFunction(value);
-
-              isHydrationEnabled && (shouldHydrate ||= isFn);
-
-              return `${key}:${isFn ? value() : value};`;
-            })
-            .join("");
-        else {
-          const isFn = isFunction(value);
-
-          isHydrationEnabled && (shouldHydrate ||= isFn);
-
-          const result = isFn ? value() : value;
-
-          if (typeof result === "boolean") return result ? key : "";
-
-          attributeValue = result;
-        }
-
-        return `${key}="${attributeValue}"`;
-      })
-      .filter(Boolean)
-      .join(" ");
-
-    let halfElement = `<${tag}${tagsAttributes && ` ${tagsAttributes}`}>`;
-
-    if (isHydrationEnabled)
-      shouldHydrate
-        ? (halfElement = halfElement.slice(0, -1) + ` ${elementMarker}>`)
-        : hydrationId--;
-
-    return SelfClosedElements.has(tag)
-      ? halfElement
-      : `${halfElement}${render(children)}</${tag}>`;
-  }
-
-  return tag({ ref, children, ...attributes });
-};
-
-const finishRendering = (isTopLevel) => {
-  if (isHydrationEnabled && isTopLevel) {
-    hydrationId = 0;
-    renderingStarted = null;
-  }
-};
-
-export const render = (element) => {
-  const isTopLevel = renderingStarted == null;
-
-  isHydrationEnabled && (renderingStarted = true);
-
-  if (element == null) {
-    finishRendering(isTopLevel);
-
-    return "";
-  }
-
-  if (isJSXCoreElement(element)) {
-    const html =
-      element.tag === "fragment"
-        ? render(element.children)
-        : render(createElement(element));
-
-    finishRendering(isTopLevel);
-
-    return html;
-  }
-
-  if (isFunction(element)) {
-    if (!isHydrationEnabled) return render(element());
-
-    const tag = hydrationId++;
-
-    const html = `<!--${tag}/-->${render(element())}<!--/${tag}-->`;
-
-    finishRendering(isTopLevel);
-
-    return html;
-  }
-
-  const html = Array.isArray(element)
-    ? element.map(render).join("")
-    : String(element);
-
-  finishRendering(isTopLevel);
-
-  return html;
+  return root.html
+    .replace(`<${DEFAULT_PARENT_TAG}>`, "")
+    .replace(`</${DEFAULT_PARENT_TAG}>`, "");
 };

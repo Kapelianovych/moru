@@ -5,5 +5,8 @@
   "author": "Yevhen Kapelianovych",
   "exports": {
     ".": "./index.js"
+  },
+  "peerDependencies": {
+    "@moru/context": "0.0.1"
   }
 }

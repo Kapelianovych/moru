@@ -17,7 +17,8 @@ export const createMemo = (context, callback, dependencies, options) => {
 
   createUrgentEffect(
     context,
-    (...parameters) => setValue(() => callback(...parameters)),
+    (...parameters) =>
+      setValue((oldValue) => callback(oldValue, ...parameters)),
     dependencies
   );
 

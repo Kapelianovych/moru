@@ -6,17 +6,17 @@ const ASYNC_INSTANCE = Symbol("moru:async_instance");
 const isAsyncInstance = (value) =>
   value && typeof value === "object" && ASYNC_INSTANCE in value;
 
-const appendChild = (options, parent, children) => {
+const appendInstance = (options, parent, children) => {
   if (Array.isArray(children))
-    children.forEach((child) => appendChild(options, parent, child));
+    children.forEach((child) => appendInstance(options, parent, child));
   else if (isAsyncInstance(children)) {
-    appendChild(options, parent, children.currentInstance);
+    appendInstance(options, parent, children.currentInstance);
 
-    children.continue();
-  } else options.appendChild(parent, children);
+    options.allowEffects && children.continue();
+  } else options.appendInstance(parent, children);
 };
 
-const insertInstanceAfter = (options, previousSibling, instance) => {
+const insertInstanceAfter = (options, parent, previousSibling, instance) => {
   const lastSiblingInstance = Array.isArray(previousSibling)
     ? previousSibling[previousSibling.length - 1]
     : isAsyncInstance(previousSibling)
@@ -27,43 +27,51 @@ const insertInstanceAfter = (options, previousSibling, instance) => {
     let lastInsertedInstance = lastSiblingInstance;
 
     instance.forEach((child) => {
-      insertInstanceAfter(options, lastInsertedInstance, child);
+      insertInstanceAfter(options, parent, lastInsertedInstance, child);
       lastInsertedInstance = child;
     });
   } else if (isAsyncInstance(instance)) {
-    insertInstanceAfter(options, lastSiblingInstance, instance.currentInstance);
+    insertInstanceAfter(
+      options,
+      parent,
+      lastSiblingInstance,
+      instance.currentInstance
+    );
 
-    instance.continue();
-  } else options.insertInstanceAfter(lastSiblingInstance, instance);
+    options.allowEffects && instance.continue();
+  } else options.insertInstanceAfter(parent, lastSiblingInstance, instance);
 };
 
-const replaceInstance = (options, previous, next) => {
+const replaceInstance = (options, parent, previous, next) => {
   let previousInstance;
 
   if (Array.isArray(previous)) {
     previousInstance = previous[0];
 
-    previous.slice(1).forEach((child) => removeInstance(options, child));
+    previous
+      .slice(1)
+      .forEach((child) => removeInstance(options, parent, child));
   } else if (isAsyncInstance(previous))
     previousInstance = previous.currentInstance;
   else previousInstance = previous;
 
-  insertInstanceAfter(options, previousInstance, next);
+  insertInstanceAfter(options, parent, previousInstance, next);
 
-  removeInstance(options, previousInstance);
+  removeInstance(options, parent, previousInstance);
 };
 
-const removeInstance = (options, instance) => {
+const removeInstance = (options, parent, instance) => {
   if (Array.isArray(instance))
-    instance.forEach((child) => removeInstance(options, child));
+    instance.forEach((child) => removeInstance(options, parent, child));
   else if (isAsyncInstance(instance))
-    removeInstance(options, instance.currentInstance);
-  else options.removeInstance(instance);
+    removeInstance(options, parent, instance.currentInstance);
+  else options.removeInstance(parent, instance);
 };
 
 const createAsyncInstance = (
   options,
   context,
+  parent,
   fallback,
   promise,
   nearestScopedDisposals
@@ -73,6 +81,7 @@ const createAsyncInstance = (
   let currentInstance = render(
     options,
     context,
+    parent,
     fallback,
     nearestScopedDisposals
   );
@@ -86,11 +95,12 @@ const createAsyncInstance = (
         const nextInstance = render(
           options,
           context,
+          parent,
           instance,
           nearestScopedDisposals
         );
 
-        replaceInstance(options, currentInstance, nextInstance);
+        replaceInstance(options, parent, currentInstance, nextInstance);
 
         currentInstance = nextInstance;
         isFinished = true;
@@ -105,6 +115,7 @@ const createAsyncInstance = (
 const renderComponent = (
   options,
   context,
+  parent,
   { tag, properties },
   nearestScopedDisposals
 ) => {
@@ -134,11 +145,9 @@ const renderComponent = (
           ...dependencies.map((dependency) => dependency())
         );
 
-        return () => {
-          dispose instanceof Promise
-            ? dispose.then((fn) => fn?.())
-            : dispose?.();
-        };
+        dispose instanceof Promise ? dispose.then((fn) => fn?.()) : dispose?.();
+
+        return () => {};
       }
 
       const dispose = context.createUrgentEffect(callback, dependencies);
@@ -153,20 +162,22 @@ const renderComponent = (
     ? createAsyncInstance(
         options,
         context,
+        parent,
         properties.fallback,
         result,
         nearestScopedDisposals
       )
-    : render(options, context, result, nearestScopedDisposals);
+    : render(options, context, parent, result, nearestScopedDisposals);
 };
 
 const renderIntrinsic = (
   options,
   context,
+  parent,
   { tag, properties: { ref, children, ...attributes } },
   nearestScopedDisposals
 ) => {
-  const instance = options.createInstance(tag);
+  const instance = options.createInstance(parent, tag);
 
   Object.entries(attributes).forEach(([name, value]) => {
     if (isGetter(value))
@@ -183,10 +194,10 @@ const renderIntrinsic = (
     else options.setProperty(instance, name, value);
   });
 
-  appendChild(
+  appendInstance(
     options,
     instance,
-    render(options, context, children, nearestScopedDisposals)
+    render(options, context, instance, children, nearestScopedDisposals)
   );
 
   ref?.(instance);
@@ -194,9 +205,10 @@ const renderIntrinsic = (
   return instance;
 };
 
-const render = (options, context, element, nearestScopedDisposals) => {
+const render = (options, context, parent, element, nearestScopedDisposals) => {
   if (isGetter(element)) {
-    if (!options.allowEffects) return render(options, context, element(), null);
+    if (!options.allowEffects)
+      return render(options, context, parent, element(), null);
 
     let previousInstance;
     const currentScopedDisposals = new Set();
@@ -207,17 +219,19 @@ const render = (options, context, element, nearestScopedDisposals) => {
           const instance = render(
             options,
             context,
+            parent,
             element,
             currentScopedDisposals
           );
 
-          replaceInstance(options, previousInstance, instance);
+          replaceInstance(options, parent, previousInstance, instance);
 
           previousInstance = instance;
         } else
           previousInstance = render(
             options,
             context,
+            parent,
             element,
             currentScopedDisposals
           );
@@ -240,7 +254,7 @@ const render = (options, context, element, nearestScopedDisposals) => {
 
     nearestScopedDisposals?.add(() => {
       dispose();
-      removeInstance(options, previousInstance);
+      removeInstance(options, parent, previousInstance);
     });
 
     return previousInstance;
@@ -248,30 +262,42 @@ const render = (options, context, element, nearestScopedDisposals) => {
 
   if (isElement(element))
     return isGetter(element.tag)
-      ? render(options, context, element.tag, nearestScopedDisposals)
+      ? render(options, context, parent, element.tag, nearestScopedDisposals)
       : typeof element.tag === "string"
-      ? renderIntrinsic(options, context, element, nearestScopedDisposals)
-      : renderComponent(options, context, element, nearestScopedDisposals);
+      ? renderIntrinsic(
+          options,
+          context,
+          parent,
+          element,
+          nearestScopedDisposals
+        )
+      : renderComponent(
+          options,
+          context,
+          parent,
+          element,
+          nearestScopedDisposals
+        );
 
   if (Array.isArray(element)) {
     const renderedChildren = element.flatMap((child) =>
-      render(options, context, child, nearestScopedDisposals)
+      render(options, context, parent, child, nearestScopedDisposals)
     );
 
     return renderedChildren.length
       ? renderedChildren
-      : options.createDefaultInstance("");
+      : options.createDefaultInstance(parent, null);
   }
 
-  return options.createDefaultInstance(element);
+  return options.createDefaultInstance(parent, element);
 };
 
 export const createRenderer =
   (options) =>
   (context, element, root = options.defaultRoot) => {
-    const instance = render(options, context, element, null);
+    const instance = render(options, context, root, element, null);
 
-    appendChild(options, root, instance);
+    appendInstance(options, root, instance);
 
-    return () => removeInstance(options, instance);
+    return () => removeInstance(options, root, instance);
   };

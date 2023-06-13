@@ -4,9 +4,10 @@
   "version": "0.0.1",
   "author": "Yevhen Kapelianovych",
   "exports": {
-    ".": "./index.js"
+    "./client": "./client.js",
+    "./server": "./server.js"
   },
-  "dependencies": {
+  "peerDependencies": {
     "@moru/renderer": "0.0.1"
   }
 }

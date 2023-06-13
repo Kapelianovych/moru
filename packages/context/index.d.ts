@@ -1,4 +1,4 @@
-export type Effect<const T extends readonly unknown[]> = (
+export type Effect<T extends readonly unknown[]> = (
   ...parameters: T
 ) => void | VoidFunction | Promise<void | VoidFunction>;
 
@@ -20,7 +20,7 @@ export type Setter<T> = {
   (value: T): void;
 };
 
-type EffectParameters<const T extends readonly Getter<unknown>[]> = {
+export type EffectParameters<T extends readonly Getter<unknown>[]> = {
   readonly [K in keyof T]: ReturnType<T[K]>;
 };
 
@@ -43,8 +43,8 @@ export type Context = {
     dependencies: T
   ): VoidFunction;
 
-  createImmediateEffect(callback: Effect<[]>): VoidFunction;
-  createImmediateEffect<const T extends readonly Getter<unknown>[]>(
+  createUrgentEffect(callback: Effect<[]>): VoidFunction;
+  createUrgentEffect<const T extends readonly Getter<unknown>[]>(
     callback: Effect<EffectParameters<T>>,
     dependencies: T
   ): VoidFunction;
