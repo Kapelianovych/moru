@@ -1,47 +1,55 @@
-export interface RegularElementsMap {}
+export type Component<
+  Properties extends Record<string, unknown>,
+  ReturnValue
+> = (properties: Properties) => ReturnValue;
 
-interface ElementMap {
-  readonly 0: null;
-  readonly 1: string;
-  readonly 2: number;
-  readonly 3: bigint;
-  readonly 4: boolean;
-  readonly 5: undefined;
-  readonly 7: RegularElement<keyof RegularElementsMap>;
-  readonly 8: FragmentElement;
-}
+declare const ELEMENT: unique symbol;
 
-export type Element = ElementMap[keyof ElementMap] | readonly Element[];
-
-export type Component<Properties = {}, Context = {}> = (
-  properties: Properties,
-  context: Context
-) => Element | Promise<Element>;
-
-export type FragmentElement = {
-  readonly tag: "fragment";
-  readonly children: Element;
-};
-
-type RegularElement<Tag extends keyof RegularElementsMap> = {
+export type IntrinsicElement<
+  Tag extends string,
+  Properties extends Record<string, unknown>
+> = {
   readonly tag: Tag;
-  readonly children?: Element;
-  readonly attributes: RegularElementsMap[Tag];
+  readonly properties: Properties;
+  readonly [ELEMENT]: null;
 };
 
-export function Fragment(children?: Element): FragmentElement;
+export type ComponentElement<
+  Properties extends Record<string, unknown>,
+  ReturnValue
+> = {
+  readonly tag: Component<Properties, ReturnValue>;
+  readonly properties: Properties;
+  readonly [ELEMENT]: null;
+};
 
-export function createElement<Tag extends keyof RegularElementsMap>(
-  tag: Tag,
-  options: RegularElementsMap[Tag]
-): Element;
-export function createElement<Properties>(
-  tag: Component<Properties>,
-  options: Properties
-): Element;
+export function isElement<
+  Tag extends string,
+  Properties extends Record<string, unknown>
+>(value: unknown): value is IntrinsicElement<Tag, Properties>;
+export function isElement<
+  Properties extends Record<string, unknown>,
+  ReturnValue
+>(value: unknown): value is ComponentElement<Properties, ReturnValue>;
 
-export function isElement<Tag extends keyof RegularElementsMap>(
-  value: unknown
-): value is RegularElement<Tag> | FragmentElement;
+export const Fragment: unique symbol;
+
+export function createElement<const Children>(
+  tag: typeof Fragment,
+  properties: {
+    readonly children: Children;
+  }
+): Children;
+export function createElement<
+  const Tag extends string,
+  const Properties extends Record<string, unknown>
+>(tag: Tag, options: Properties): IntrinsicElement<Tag, Properties>;
+export function createElement<
+  const Properties extends Record<string, unknown>,
+  const ReturnValue
+>(
+  tag: Component<Properties, ReturnValue>,
+  properties: Properties
+): ComponentElement<Properties, ReturnValue>;
 
 export { createElement as jsx, createElement as jsxs, createElement as jsxDEV };

@@ -16,7 +16,13 @@ const appendInstance = (options, parent, children) => {
   } else options.appendInstance(parent, children);
 };
 
-const insertInstanceAfter = (options, parent, previousSibling, instance) => {
+const insertInstanceAfter = (
+  options,
+  parent,
+  previousSibling,
+  instance,
+  updateInstance
+) => {
   const lastSiblingInstance = Array.isArray(previousSibling)
     ? previousSibling[previousSibling.length - 1]
     : isAsyncInstance(previousSibling)
@@ -38,11 +44,11 @@ const insertInstanceAfter = (options, parent, previousSibling, instance) => {
       instance.currentInstance
     );
 
-    options.allowEffects && instance.continue();
+    options.allowEffects && instance.continue(updateInstance);
   } else options.insertInstanceAfter(parent, lastSiblingInstance, instance);
 };
 
-const replaceInstance = (options, parent, previous, next) => {
+const replaceInstance = (options, parent, previous, next, updateInstance) => {
   let previousInstance;
 
   if (Array.isArray(previous)) {
@@ -55,7 +61,7 @@ const replaceInstance = (options, parent, previous, next) => {
     previousInstance = previous.currentInstance;
   else previousInstance = previous;
 
-  insertInstanceAfter(options, parent, previousInstance, next);
+  insertInstanceAfter(options, parent, previousInstance, next, updateInstance);
 
   removeInstance(options, parent, previousInstance);
 };
@@ -88,7 +94,7 @@ const createAsyncInstance = (
 
   return {
     [ASYNC_INSTANCE]: null,
-    continue() {
+    continue(updateInstance) {
       promise.then((instance) => {
         if (isFinished) return;
 
@@ -103,6 +109,7 @@ const createAsyncInstance = (
         replaceInstance(options, parent, currentInstance, nextInstance);
 
         currentInstance = nextInstance;
+        updateInstance?.(nextInstance);
         isFinished = true;
       });
     },
@@ -120,6 +127,14 @@ const renderComponent = (
   nearestScopedDisposals
 ) => {
   const result = tag(properties, {
+    createCache(key, value) {
+      const cache = context.createCache(key, value);
+
+      // Immediately dispose the cache entry and pertain only local value.
+      options.allowEffects || cache[2]();
+
+      return cache;
+    },
     createState(initial, stateOptions) {
       const state = context.createState(initial, stateOptions);
 
@@ -224,7 +239,13 @@ const render = (options, context, parent, element, nearestScopedDisposals) => {
             currentScopedDisposals
           );
 
-          replaceInstance(options, parent, previousInstance, instance);
+          replaceInstance(
+            options,
+            parent,
+            previousInstance,
+            instance,
+            (deferredInstance) => (previousInstance = deferredInstance)
+          );
 
           previousInstance = instance;
         } else

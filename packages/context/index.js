@@ -61,6 +61,7 @@ const createScheduler = () => {
 
 const createContextState = () => ({
   disposed: false,
+  cache: new Map(),
   effects: new Map(),
   cleanups: new Map(),
   scheduler: createScheduler(),
@@ -72,6 +73,7 @@ const createContextDisposer = (contextState) => () => {
   contextState.effects.clear();
   contextState.cleanups.forEach((clean) => clean());
   contextState.cleanups.clear();
+  contextState.cache.clear();
 };
 
 const createStateHook =
@@ -144,11 +146,38 @@ const createEffectHook =
     };
   };
 
+const createCacheHook = (contextState) => (key, value) => {
+  let cacheDisposed = contextState.disposed;
+  const initial = value;
+
+  if (!cacheDisposed)
+    contextState.cache.has(key)
+      ? (value = contextState.cache.get(key))
+      : contextState.cache.set(key, value);
+
+  return [
+    () => value,
+    (map) => {
+      value = typeof map === "function" ? map(value) : map;
+
+      if (contextState.disposed || cacheDisposed) return;
+
+      contextState.cache.set(key, value);
+    },
+    () => {
+      cacheDisposed = true;
+      contextState.cache.delete(key);
+      value = initial;
+    },
+  ];
+};
+
 export const createContext = () => {
   const contextState = createContextState();
 
   return {
     dispose: createContextDisposer(contextState),
+    createCache: createCacheHook(contextState),
     createState: createStateHook(contextState),
     createEffect: createEffectHook(contextState, (effect) => {
       contextState.scheduler.add(effect);
