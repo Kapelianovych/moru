@@ -4,10 +4,13 @@
   "version": "0.0.1",
   "author": "Yevhen Kapelianovych",
   "exports": {
+    "./jsx": "./jsx.js",
     "./client": "./client.js",
     "./server": "./server.js"
   },
   "peerDependencies": {
+    "moru": "0.0.4-1",
+    "@moru/context": "0.0.1",
     "@moru/renderer": "0.0.1"
   }
 }

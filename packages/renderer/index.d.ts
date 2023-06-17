@@ -1,5 +1,5 @@
-import { Context } from "@moru/context";
-import { ComponentElement, IntrinsicElement } from "moru";
+import { JSX } from "moru";
+import { Context, Getter } from "@moru/context";
 
 export type RendererMethods<I, E> = {
   readonly defaultRoot?: I;
@@ -22,49 +22,19 @@ export type RendererMethods<I, E> = {
   insertInstanceAfter(parent: I, sibling: I, instance: I): void;
   createDefaultInstance(
     parent: I,
-    element: null | string | number | bigint | boolean | undefined | E,
+    element: Exclude<E, JSX.Element | Getter<unknown> | readonly unknown[]>,
     position: number,
     isHydrating: () => boolean
   ): I;
 };
 
-export type Renderer<I, E> = {
-  <Tag extends string, Properties extends Record<string, unknown>>(
-    context: Context,
-    value: IntrinsicElement<Tag, Properties>,
-    root?: I,
-    hydration?: boolean
-  ): VoidFunction;
-  <Properties extends Record<string, unknown>, ReturnValue>(
-    context: Context,
-    value: ComponentElement<Properties, ReturnValue>,
-    root?: I,
-    hydration?: boolean
-  ): VoidFunction;
-  (
-    context: Context,
-    value: readonly (
-      | null
-      | string
-      | number
-      | bigint
-      | boolean
-      | undefined
-      | E
-      | IntrinsicElement<string, Record<string, unknown>>
-      | ComponentElement<Record<string, unknown>, unknown>
-    )[],
-    root?: I,
-    hydration?: boolean
-  ): VoidFunction;
-  (
-    context: Context,
-    value: null | string | number | bigint | boolean | undefined | E,
-    root?: I,
-    hydration?: boolean
-  ): VoidFunction;
-};
+export type Renderer<I, E> = (
+  context: Context,
+  value: E,
+  root?: I,
+  hydration?: boolean
+) => VoidFunction;
 
-export function createRenderer<I, E = never>(
+export function createRenderer<I, E>(
   options: RendererMethods<I, E>
 ): Renderer<I, E>;

@@ -1,7 +1,6 @@
-export type Component<
-  Properties extends Record<string, unknown>,
-  ReturnValue
-> = (properties: Properties) => ReturnValue;
+export type Component<Properties extends readonly unknown[], ReturnValue> = (
+  ...parameters: Properties
+) => ReturnValue;
 
 declare const ELEMENT: unique symbol;
 
@@ -15,7 +14,7 @@ export type IntrinsicElement<
 };
 
 export type ComponentElement<
-  Properties extends Record<string, unknown>,
+  Properties extends readonly unknown[],
   ReturnValue
 > = {
   readonly tag: Component<Properties, ReturnValue>;
@@ -27,10 +26,9 @@ export function isElement<
   Tag extends string,
   Properties extends Record<string, unknown>
 >(value: unknown): value is IntrinsicElement<Tag, Properties>;
-export function isElement<
-  Properties extends Record<string, unknown>,
-  ReturnValue
->(value: unknown): value is ComponentElement<Properties, ReturnValue>;
+export function isElement<Properties extends readonly unknown[], ReturnValue>(
+  value: unknown
+): value is ComponentElement<Properties, ReturnValue>;
 
 export const Fragment: unique symbol;
 
@@ -45,7 +43,7 @@ export function createElement<
   const Properties extends Record<string, unknown>
 >(tag: Tag, options: Properties): IntrinsicElement<Tag, Properties>;
 export function createElement<
-  const Properties extends Record<string, unknown>,
+  const Properties extends readonly unknown[],
   const ReturnValue
 >(
   tag: Component<Properties, ReturnValue>,
@@ -53,3 +51,17 @@ export function createElement<
 ): ComponentElement<Properties, ReturnValue>;
 
 export { createElement as jsx, createElement as jsxs, createElement as jsxDEV };
+
+export namespace JSX {
+  type Element =
+    | IntrinsicElement<string, Record<string, unknown>>
+    | ComponentElement<readonly any[], unknown>;
+
+  type ElementType = string | Component<readonly any[], unknown>;
+
+  interface IntrinsicElements {}
+
+  type ElementChildrenAttribute = {
+    children: {};
+  };
+}
