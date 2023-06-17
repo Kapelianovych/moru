@@ -17,25 +17,28 @@ export const mount = createRenderer({
   allowEffects: true,
 
   appendInstance(parent, instance) {
-    parent.append(instance);
+    // instance can be undefined for nodes that cannot have children.
+    if (instance != null) instance.isConnected || parent.append(instance);
   },
   removeInstance(_parent, instance) {
     instance.remove();
   },
-  createInstance(parent, tag) {
-    return document.createElementNS(
-      tag === "svg"
-        ? SVG_NAMESPACE
-        : // This SVG element requires children to have a non-SVG namespace.
-        // For a browser it is the most likely HTML namespace.
-        parent.tagName === "foreignObject"
-        ? HTML_NAMESPACE
-        : // Otherwise just inherit the parent's namespace.
-          parent.namespaceURI,
-      tag
-    );
+  createInstance(parent, tag, position, isHydrating) {
+    return isHydrating()
+      ? parent.childNodes[position]
+      : document.createElementNS(
+          tag === "svg"
+            ? SVG_NAMESPACE
+            : // This SVG element requires children to have a non-SVG namespace.
+            // For a browser it is the most likely HTML namespace.
+            parent.tagName === "foreignObject"
+            ? HTML_NAMESPACE
+            : // Otherwise just inherit the parent's namespace.
+              parent.namespaceURI,
+          tag
+        );
   },
-  setProperty(instance, name, value) {
+  setProperty(instance, name, value, isHydrating) {
     if (name.startsWith("on")) {
       const _name = name.toLowerCase(),
         once = _name.includes("once"),
@@ -57,7 +60,7 @@ export const mount = createRenderer({
       );
     } else if (AttributesToProperties.get(name)?.includes(instance.tagName))
       instance[name] = value;
-    else
+    else if (!isHydrating())
       typeof value === "boolean"
         ? value
           ? instance.setAttribute(name, "")
@@ -67,9 +70,17 @@ export const mount = createRenderer({
   insertInstanceAfter(_parent, previousSibling, nextSibling) {
     previousSibling.after(nextSibling);
   },
-  createDefaultInstance(_parent, element) {
-    return element instanceof Node
-      ? element
-      : document.createTextNode(element ?? "");
+  createDefaultInstance(parent, element, position, isHydrating) {
+    if (element instanceof Node) {
+      isHydrating() && parent.childNodes[position].replaceWith(element);
+
+      return element;
+    } else
+      return isHydrating()
+        ? parent.childNodes[position]
+        : document.createTextNode(element ?? "");
   },
 });
+
+export const hydrate = (context, element, root) =>
+  mount(context, element, root, true);

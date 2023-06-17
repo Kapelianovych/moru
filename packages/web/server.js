@@ -15,12 +15,12 @@ const stringRenderer = createRenderer({
   removeInstance(_parent, _instance) {
     // It is not needed in a static html.
   },
-  createInstance(_parent, tag) {
+  createInstance(_parent, tag, _position, _isHydrating) {
     return {
       html: SelfClosedElements.has(tag) ? `<${tag}/>` : `<${tag}></${tag}>`,
     };
   },
-  setProperty(instance, name, value) {
+  setProperty(instance, name, value, _isHydrating) {
     if (!name.startsWith("on"))
       instance.html =
         typeof value === "boolean"
@@ -32,8 +32,10 @@ const stringRenderer = createRenderer({
   insertInstanceAfter(_parent, _previousSibling, _nextSibling) {
     // It is not needed in a static html.
   },
-  createDefaultInstance(_parent, element) {
-    return { html: String(element ?? "") };
+  createDefaultInstance(_parent, element, _position, _isHydrating) {
+    return {
+      html: element == null || element === "" ? "<!---->" : String(element),
+    };
   },
 });
 

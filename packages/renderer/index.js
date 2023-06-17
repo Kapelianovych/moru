@@ -80,7 +80,9 @@ const createAsyncInstance = (
   parent,
   fallback,
   promise,
-  nearestScopedDisposals
+  nearestScopedDisposals,
+  position,
+  isHydrating
 ) => {
   let isFinished;
 
@@ -89,7 +91,9 @@ const createAsyncInstance = (
     context,
     parent,
     fallback,
-    nearestScopedDisposals
+    nearestScopedDisposals,
+    position,
+    isHydrating
   );
 
   return {
@@ -103,7 +107,9 @@ const createAsyncInstance = (
           context,
           parent,
           instance,
-          nearestScopedDisposals
+          nearestScopedDisposals,
+          position,
+          isHydrating
         );
 
         replaceInstance(options, parent, currentInstance, nextInstance);
@@ -124,7 +130,9 @@ const renderComponent = (
   context,
   parent,
   { tag, properties },
-  nearestScopedDisposals
+  nearestScopedDisposals,
+  position,
+  isHydrating
 ) => {
   const result = tag(properties, {
     createCache(key, value) {
@@ -180,9 +188,19 @@ const renderComponent = (
         parent,
         properties.fallback,
         result,
-        nearestScopedDisposals
+        nearestScopedDisposals,
+        position,
+        isHydrating
       )
-    : render(options, context, parent, result, nearestScopedDisposals);
+    : render(
+        options,
+        context,
+        parent,
+        result,
+        nearestScopedDisposals,
+        position,
+        isHydrating
+      );
 };
 
 const renderIntrinsic = (
@@ -190,29 +208,39 @@ const renderIntrinsic = (
   context,
   parent,
   { tag, properties: { ref, children, ...attributes } },
-  nearestScopedDisposals
+  nearestScopedDisposals,
+  position,
+  isHydrating
 ) => {
-  const instance = options.createInstance(parent, tag);
+  const instance = options.createInstance(parent, tag, position, isHydrating);
 
   Object.entries(attributes).forEach(([name, value]) => {
     if (isGetter(value))
       if (options.allowEffects) {
         const dispose = context.createUrgentEffect(
           (value) => {
-            options.setProperty(instance, name, value);
+            options.setProperty(instance, name, value, isHydrating);
           },
           [value]
         );
 
         nearestScopedDisposals?.add(dispose);
-      } else options.setProperty(instance, name, value());
-    else options.setProperty(instance, name, value);
+      } else options.setProperty(instance, name, value(), isHydrating);
+    else options.setProperty(instance, name, value, isHydrating);
   });
 
   appendInstance(
     options,
     instance,
-    render(options, context, instance, children, nearestScopedDisposals)
+    render(
+      options,
+      context,
+      instance,
+      children,
+      nearestScopedDisposals,
+      0,
+      isHydrating
+    )
   );
 
   ref?.(instance);
@@ -220,10 +248,26 @@ const renderIntrinsic = (
   return instance;
 };
 
-const render = (options, context, parent, element, nearestScopedDisposals) => {
+const render = (
+  options,
+  context,
+  parent,
+  element,
+  nearestScopedDisposals,
+  position,
+  isHydrating
+) => {
   if (isGetter(element)) {
     if (!options.allowEffects)
-      return render(options, context, parent, element(), null);
+      return render(
+        options,
+        context,
+        parent,
+        element(),
+        null,
+        position,
+        isHydrating
+      );
 
     let previousInstance;
     const currentScopedDisposals = new Set();
@@ -236,7 +280,9 @@ const render = (options, context, parent, element, nearestScopedDisposals) => {
             context,
             parent,
             element,
-            currentScopedDisposals
+            currentScopedDisposals,
+            position,
+            isHydrating
           );
 
           replaceInstance(
@@ -254,7 +300,9 @@ const render = (options, context, parent, element, nearestScopedDisposals) => {
             context,
             parent,
             element,
-            currentScopedDisposals
+            currentScopedDisposals,
+            position,
+            isHydrating
           );
 
         if (nearestScopedDisposals)
@@ -283,42 +331,72 @@ const render = (options, context, parent, element, nearestScopedDisposals) => {
 
   if (isElement(element))
     return isGetter(element.tag)
-      ? render(options, context, parent, element.tag, nearestScopedDisposals)
+      ? render(
+          options,
+          context,
+          parent,
+          element.tag,
+          nearestScopedDisposals,
+          position,
+          isHydrating
+        )
       : typeof element.tag === "string"
       ? renderIntrinsic(
           options,
           context,
           parent,
           element,
-          nearestScopedDisposals
+          nearestScopedDisposals,
+          position,
+          isHydrating
         )
       : renderComponent(
           options,
           context,
           parent,
           element,
-          nearestScopedDisposals
+          nearestScopedDisposals,
+          position,
+          isHydrating
         );
 
   if (Array.isArray(element)) {
-    const renderedChildren = element.flatMap((child) =>
-      render(options, context, parent, child, nearestScopedDisposals)
+    const renderedChildren = element.flatMap((child, index) =>
+      render(
+        options,
+        context,
+        parent,
+        child,
+        nearestScopedDisposals,
+        position + index,
+        isHydrating
+      )
     );
 
     return renderedChildren.length
       ? renderedChildren
-      : options.createDefaultInstance(parent, null);
+      : options.createDefaultInstance(parent, null, position, isHydrating);
   }
 
-  return options.createDefaultInstance(parent, element);
+  return options.createDefaultInstance(parent, element, position, isHydrating);
 };
 
 export const createRenderer =
   (options) =>
-  (context, element, root = options.defaultRoot) => {
-    const instance = render(options, context, root, element, null);
+  (context, element, root = options.defaultRoot, hydration) => {
+    const instance = render(
+      options,
+      context,
+      root,
+      element,
+      null,
+      0,
+      () => hydration
+    );
 
     appendInstance(options, root, instance);
+
+    hydration = false;
 
     return () => removeInstance(options, root, instance);
   };
