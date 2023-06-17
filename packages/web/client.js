@@ -16,9 +16,10 @@ export const mount = createRenderer({
   defaultRoot: document.body,
   allowEffects: true,
 
-  appendInstance(parent, instance) {
+  appendInstance(parent, instance, isHydrating) {
     // instance can be undefined for nodes that cannot have children.
-    if (instance != null) instance.isConnected || parent.append(instance);
+    if (instance != null)
+      (isHydrating() && instance.isConnected) || parent.append(instance);
   },
   removeInstance(_parent, instance) {
     instance.remove();

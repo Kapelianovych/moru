@@ -9,7 +9,7 @@ const DEFAULT_PARENT_TAG = "__parent__";
 const stringRenderer = createRenderer({
   allowEffects: false,
 
-  appendInstance(parent, instance) {
+  appendInstance(parent, instance, _isHydrating) {
     parent.html = parent.html.replace(CLOSE_TAG_RE, `${instance.html}$&`);
   },
   removeInstance(_parent, _instance) {

@@ -6,14 +6,16 @@ const ASYNC_INSTANCE = Symbol("moru:async_instance");
 const isAsyncInstance = (value) =>
   value && typeof value === "object" && ASYNC_INSTANCE in value;
 
-const appendInstance = (options, parent, children) => {
+const appendInstance = (options, parent, children, isHydrating) => {
   if (Array.isArray(children))
-    children.forEach((child) => appendInstance(options, parent, child));
+    children.forEach((child) =>
+      appendInstance(options, parent, child, isHydrating)
+    );
   else if (isAsyncInstance(children)) {
-    appendInstance(options, parent, children.currentInstance);
+    appendInstance(options, parent, children.currentInstance, isHydrating);
 
     options.allowEffects && children.continue();
-  } else options.appendInstance(parent, children);
+  } else options.appendInstance(parent, children, isHydrating);
 };
 
 const insertInstanceAfter = (
@@ -240,7 +242,8 @@ const renderIntrinsic = (
       nearestScopedDisposals,
       0,
       isHydrating
-    )
+    ),
+    isHydrating
   );
 
   ref?.(instance);
@@ -394,7 +397,7 @@ export const createRenderer =
       () => hydration
     );
 
-    appendInstance(options, root, instance);
+    appendInstance(options, root, instance, () => hydration);
 
     hydration = false;
 
