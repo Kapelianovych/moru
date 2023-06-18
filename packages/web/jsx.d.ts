@@ -99,7 +99,7 @@ declare module "moru" {
       readonly big: {} & EventAttributes<HTMLAnchorElement>;
       readonly blink: {} & EventAttributes<HTMLAnchorElement>;
       readonly blockquote: {} & EventAttributes<HTMLAnchorElement>;
-      readonly body: {} & EventAttributes<HTMLAnchorElement>;
+      readonly body: HTMLBodyAttributes & EventAttributes<HTMLBodyElement>;
       readonly br: {} & EventAttributes<HTMLAnchorElement>;
       readonly button: HTMLButtonAttributes &
         EventAttributes<HTMLButtonElement>;
@@ -138,11 +138,11 @@ declare module "moru" {
       readonly h4: {} & EventAttributes<HTMLAnchorElement>;
       readonly h5: {} & EventAttributes<HTMLAnchorElement>;
       readonly h6: {} & EventAttributes<HTMLAnchorElement>;
-      readonly head: {} & EventAttributes<HTMLAnchorElement>;
+      readonly head: HTMLHeadAttributes & EventAttributes<HTMLHeadElement>;
       readonly header: HTMLHeaderAttributes & EventAttributes<HTMLElement>;
       readonly hgroup: {} & EventAttributes<HTMLAnchorElement>;
       readonly hr: {} & EventAttributes<HTMLAnchorElement>;
-      readonly html: {} & EventAttributes<HTMLAnchorElement>;
+      readonly html: HTMLHtmlAttributes & EventAttributes<HTMLHtmlElement>;
       readonly i: {} & EventAttributes<HTMLAnchorElement>;
       readonly iframe: {} & EventAttributes<HTMLAnchorElement>;
       readonly img: HTMLImageAttributes & EventAttributes<HTMLAnchorElement>;
@@ -161,7 +161,7 @@ declare module "moru" {
       readonly math: {} & EventAttributes<HTMLAnchorElement>;
       readonly menu: {} & EventAttributes<HTMLAnchorElement>;
       readonly menuitem: {} & EventAttributes<HTMLAnchorElement>;
-      readonly meta: {} & EventAttributes<HTMLAnchorElement>;
+      readonly meta: HTMLMetaAttributes & EventAttributes<HTMLMetaElement>;
       readonly meter: {} & EventAttributes<HTMLAnchorElement>;
       readonly nav: {} & EventAttributes<HTMLAnchorElement>;
       readonly nobr: {} & EventAttributes<HTMLAnchorElement>;
@@ -212,7 +212,7 @@ declare module "moru" {
       readonly th: {} & EventAttributes<HTMLAnchorElement>;
       readonly thead: {} & EventAttributes<HTMLAnchorElement>;
       readonly time: {} & EventAttributes<HTMLAnchorElement>;
-      readonly title: {} & EventAttributes<HTMLAnchorElement>;
+      readonly title: HTMLTitleAttributes & EventAttributes<HTMLTitleElement>;
       readonly tr: {} & EventAttributes<HTMLAnchorElement>;
       readonly track: {} & EventAttributes<HTMLAnchorElement>;
       readonly tt: {} & EventAttributes<HTMLAnchorElement>;
@@ -224,66 +224,66 @@ declare module "moru" {
       readonly xmp: {} & EventAttributes<HTMLAnchorElement>;
 
       // SVG
-      readonly svg: {};
-      readonly animate: {};
-      readonly animateColor: {};
-      readonly animateMotion: {};
-      readonly animateTransform: {};
-      readonly circle: {};
-      readonly clipPath: {};
-      readonly "color-profile": {};
-      readonly defs: {};
-      readonly desc: {};
-      readonly ellipse: {};
-      readonly feBlend: {};
-      readonly feColorMatrix: {};
-      readonly feComponentTransfer: {};
-      readonly feComposite: {};
-      readonly feConvolveMatrix: {};
-      readonly feDiffuseLighting: {};
-      readonly feDisplacementMap: {};
-      readonly feDistantLight: {};
-      readonly feFlood: {};
-      readonly feFuncA: {};
-      readonly feFuncB: {};
-      readonly feFuncG: {};
-      readonly feFuncR: {};
-      readonly feGaussianBlur: {};
-      readonly feImage: {};
-      readonly feMerge: {};
-      readonly feMergeNode: {};
-      readonly feMorphology: {};
-      readonly feOffset: {};
-      readonly fePointLight: {};
-      readonly feSpecularLighting: {};
-      readonly feSpotLight: {};
-      readonly feTile: {};
-      readonly feTurbulence: {};
-      readonly filter: {};
-      readonly foreignObject: {};
-      readonly g: {};
-      readonly image: {};
-      readonly line: {};
-      readonly linearGradient: {};
-      readonly marker: {};
-      readonly mask: {};
-      readonly metadata: {};
-      readonly mpath: {};
-      readonly path: {};
-      readonly pattern: {};
-      readonly polygon: {};
-      readonly polyline: {};
-      readonly radialGradient: {};
-      readonly rect: {};
-      readonly set: {};
-      readonly stop: {};
-      readonly switch: {};
-      readonly symbol: {};
-      readonly text: {};
-      readonly textPath: {};
-      readonly tspan: {};
-      readonly use: {};
-      readonly view: {};
+      readonly svg: {} & EventAttributes<SVGElement>;
+      readonly animate: {} & EventAttributes<SVGElement>;
+      readonly animateColor: {} & EventAttributes<SVGElement>;
+      readonly animateMotion: {} & EventAttributes<SVGElement>;
+      readonly animateTransform: {} & EventAttributes<SVGElement>;
+      readonly circle: {} & EventAttributes<SVGElement>;
+      readonly clipPath: {} & EventAttributes<SVGElement>;
+      readonly "color-profile": {} & EventAttributes<SVGElement>;
+      readonly defs: {} & EventAttributes<SVGElement>;
+      readonly desc: {} & EventAttributes<SVGElement>;
+      readonly ellipse: {} & EventAttributes<SVGElement>;
+      readonly feBlend: {} & EventAttributes<SVGElement>;
+      readonly feColorMatrix: {} & EventAttributes<SVGElement>;
+      readonly feComponentTransfer: {} & EventAttributes<SVGElement>;
+      readonly feComposite: {} & EventAttributes<SVGElement>;
+      readonly feConvolveMatrix: {} & EventAttributes<SVGElement>;
+      readonly feDiffuseLighting: {} & EventAttributes<SVGElement>;
+      readonly feDisplacementMap: {} & EventAttributes<SVGElement>;
+      readonly feDistantLight: {} & EventAttributes<SVGElement>;
+      readonly feFlood: {} & EventAttributes<SVGElement>;
+      readonly feFuncA: {} & EventAttributes<SVGElement>;
+      readonly feFuncB: {} & EventAttributes<SVGElement>;
+      readonly feFuncG: {} & EventAttributes<SVGElement>;
+      readonly feFuncR: {} & EventAttributes<SVGElement>;
+      readonly feGaussianBlur: {} & EventAttributes<SVGElement>;
+      readonly feImage: {} & EventAttributes<SVGElement>;
+      readonly feMerge: {} & EventAttributes<SVGElement>;
+      readonly feMergeNode: {} & EventAttributes<SVGElement>;
+      readonly feMorphology: {} & EventAttributes<SVGElement>;
+      readonly feOffset: {} & EventAttributes<SVGElement>;
+      readonly fePointLight: {} & EventAttributes<SVGElement>;
+      readonly feSpecularLighting: {} & EventAttributes<SVGElement>;
+      readonly feSpotLight: {} & EventAttributes<SVGElement>;
+      readonly feTile: {} & EventAttributes<SVGElement>;
+      readonly feTurbulence: {} & EventAttributes<SVGElement>;
+      readonly filter: {} & EventAttributes<SVGElement>;
+      readonly foreignObject: {} & EventAttributes<SVGElement>;
+      readonly g: {} & EventAttributes<SVGElement>;
+      readonly image: {} & EventAttributes<SVGElement>;
+      readonly line: {} & EventAttributes<SVGElement>;
+      readonly linearGradient: {} & EventAttributes<SVGElement>;
+      readonly marker: {} & EventAttributes<SVGElement>;
+      readonly mask: {} & EventAttributes<SVGElement>;
+      readonly metadata: {} & EventAttributes<SVGElement>;
+      readonly mpath: {} & EventAttributes<SVGElement>;
+      readonly path: {} & EventAttributes<SVGElement>;
+      readonly pattern: {} & EventAttributes<SVGElement>;
+      readonly polygon: {} & EventAttributes<SVGElement>;
+      readonly polyline: {} & EventAttributes<SVGElement>;
+      readonly radialGradient: {} & EventAttributes<SVGElement>;
+      readonly rect: {} & EventAttributes<SVGElement>;
+      readonly set: {} & EventAttributes<SVGElement>;
+      readonly stop: {} & EventAttributes<SVGElement>;
+      readonly switch: {} & EventAttributes<SVGElement>;
+      readonly symbol: {} & EventAttributes<SVGElement>;
+      readonly text: {} & EventAttributes<SVGElement>;
+      readonly textPath: {} & EventAttributes<SVGElement>;
+      readonly tspan: {} & EventAttributes<SVGElement>;
+      readonly use: {} & EventAttributes<SVGElement>;
+      readonly view: {} & EventAttributes<SVGElement>;
     }
 
     interface AriaAttributes {
@@ -523,6 +523,55 @@ declare module "moru" {
     interface HTMLParagraphAttributes
       extends WithChildren,
         CommonAttributes<HTMLParagraphElement> {}
+
+    interface HTMLHtmlAttributes
+      extends WithChildren,
+        CommonAttributes<HTMLHtmlElement> {
+      readonly lang?: AttributeValue<string>;
+      readonly xmlns?: AttributeValue<string>;
+    }
+
+    interface HTMLHeadAttributes
+      extends WithChildren,
+        CommonAttributes<HTMLHeadElement> {}
+
+    interface HTMLTitleAttributes
+      extends WithChildren,
+        CommonAttributes<HTMLTitleElement> {}
+
+    interface HTMLMetaAttributes
+      extends WithChildren,
+        CommonAttributes<HTMLMetaElement> {
+      readonly charset?: AttributeValue<string>;
+      // TODO: improve content values depending on the name or http-equiv attribute.
+      readonly content?: AttributeValue<string>;
+      readonly "http-equiv"?: AttributeValue<
+        | "content-security-policy"
+        | "content-type"
+        | "default-style"
+        | "x-ua-compatible"
+        | "refresh"
+      >;
+      readonly name?: AttributeValue<
+        | "application-name"
+        | "author"
+        | "description"
+        | "generator"
+        | "keywords"
+        | "referrer"
+        | "theme-color"
+        | "color-scheme"
+        | "viewport"
+        // Extended
+        | "creator"
+        | "publisher"
+        | "robots"
+      >;
+    }
+
+    interface HTMLBodyAttributes
+      extends WithChildren,
+        CommonAttributes<HTMLBodyElement> {}
   }
 }
 

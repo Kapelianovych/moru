@@ -62,6 +62,6 @@ export namespace JSX {
   interface IntrinsicElements {}
 
   type ElementChildrenAttribute = {
-    children: {};
+    readonly children: null;
   };
 }
