@@ -82,8 +82,12 @@ export type WithChildren<A = {}> = A & {
 declare module "moru" {
   export namespace JSX {
     interface IntrinsicElements {
+      // HTML + SVG
+      readonly a:
+        | (HTMLAnchorAttributes & EventAttributes<HTMLAnchorElement>)
+        | (SVGAnchorAttributes & EventAttributes<SVGElement>);
+
       // HTML
-      readonly a: HTMLAnchorAttributes & EventAttributes<HTMLAnchorElement>;
       readonly abbr: {} & EventAttributes<HTMLElement>;
       readonly address: {} & EventAttributes<HTMLElement>;
       readonly area: HTMLAreaAttributes & EventAttributes<HTMLAreaElement>;
@@ -290,7 +294,17 @@ declare module "moru" {
       readonly role?: AttributeValue<string>;
     }
 
-    interface CommonAttributes<E extends globalThis.Element>
+    interface SVGCommonAttributes<E extends globalThis.Element>
+      extends RefAttribute<E> {
+      readonly id?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
+      readonly lang?: AttributeValue<string>;
+      readonly tabindex?: AttributeValue<number | bigint>;
+      // Styling attributes
+      readonly class?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
+      readonly style?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
+    }
+
+    interface HTMLCommonAttributes<E extends globalThis.Element>
       extends RefAttribute<E>,
         AriaAttributes {
       readonly accesskey?: AttributeValue<string>;
@@ -340,7 +354,7 @@ declare module "moru" {
 
     interface HTMLAnchorAttributes
       extends WithChildren,
-        CommonAttributes<HTMLAnchorElement> {
+        HTMLCommonAttributes<HTMLAnchorElement> {
       readonly href: AttributeValue<string>;
       readonly target?: AttributeValue<Target>;
       readonly download?: AttributeValue<
@@ -355,7 +369,24 @@ declare module "moru" {
       readonly type?: AttributeValue<string>;
     }
 
-    interface HTMLAreaAttributes extends CommonAttributes<HTMLAreaElement> {
+    interface SVGAnchorAttributes
+      extends WithChildren,
+        SVGCommonAttributes<SVGElement> {
+      readonly href: AttributeValue<string>;
+      readonly target?: AttributeValue<Target>;
+      readonly download?: AttributeValue<
+        Exclude<AttributeLiteral, number | bigint>
+      >;
+      readonly hreflang?: AttributeValue<string>;
+      readonly ping?: AttributeValue<string>;
+      readonly referrerpolicy?: AttributeValue<ReferrerPolicy>;
+      // TODO: Describe and set explicit values of the link types.
+      // https://developer.mozilla.org/en-US/docs/Web/HTML/Link_types
+      readonly rel?: AttributeValue<string>;
+      readonly type?: AttributeValue<string>;
+    }
+
+    interface HTMLAreaAttributes extends HTMLCommonAttributes<HTMLAreaElement> {
       readonly alt?: AttributeValue<string>;
       readonly coords?: AttributeValue<
         | `${number},${number},${number}`
@@ -394,7 +425,8 @@ declare module "moru" {
       | "multipart/form-data"
       | "text/plain";
 
-    interface HTMLInputAttributes extends CommonAttributes<HTMLInputElement> {
+    interface HTMLInputAttributes
+      extends HTMLCommonAttributes<HTMLInputElement> {
       readonly accept?: AttributeValue<string>;
       readonly alt?: AttributeValue<string>;
       readonly autocomplete?: AttributeValue<string>;
@@ -462,7 +494,8 @@ declare module "moru" {
       readonly width?: AttributeValue<number | bigint>;
     }
 
-    interface HTMLImageAttributes extends CommonAttributes<HTMLImageElement> {
+    interface HTMLImageAttributes
+      extends HTMLCommonAttributes<HTMLImageElement> {
       readonly alt: AttributeValue<string>;
       readonly crossorigin?: AttributeValue<Crossorigin>;
       readonly decoding?: AttributeValue<"sync" | "async" | "auto">;
@@ -480,21 +513,21 @@ declare module "moru" {
 
     interface HTMLLabelAttributes
       extends WithChildren,
-        CommonAttributes<HTMLLabelElement> {
+        HTMLCommonAttributes<HTMLLabelElement> {
       readonly for: AttributeValue<Exclude<AttributeLiteral, boolean>>;
     }
 
     interface HTMLDivAttributes
       extends WithChildren,
-        CommonAttributes<HTMLDivElement> {}
+        HTMLCommonAttributes<HTMLDivElement> {}
 
     interface HTMLHeaderAttributes
       extends WithChildren,
-        CommonAttributes<HTMLElement> {}
+        HTMLCommonAttributes<HTMLElement> {}
 
     interface HTMLButtonAttributes
       extends WithChildren,
-        CommonAttributes<HTMLButtonElement> {
+        HTMLCommonAttributes<HTMLButtonElement> {
       readonly autofocus?: AttributeValue<boolean>;
       readonly disabled?: AttributeValue<boolean>;
       readonly form?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
@@ -514,34 +547,34 @@ declare module "moru" {
 
     interface HTMLMainAttributes
       extends WithChildren,
-        CommonAttributes<HTMLElement> {}
+        HTMLCommonAttributes<HTMLElement> {}
 
     interface HTMLFooterAttributes
       extends WithChildren,
-        CommonAttributes<HTMLElement> {}
+        HTMLCommonAttributes<HTMLElement> {}
 
     interface HTMLParagraphAttributes
       extends WithChildren,
-        CommonAttributes<HTMLParagraphElement> {}
+        HTMLCommonAttributes<HTMLParagraphElement> {}
 
     interface HTMLHtmlAttributes
       extends WithChildren,
-        CommonAttributes<HTMLHtmlElement> {
+        HTMLCommonAttributes<HTMLHtmlElement> {
       readonly lang?: AttributeValue<string>;
       readonly xmlns?: AttributeValue<string>;
     }
 
     interface HTMLHeadAttributes
       extends WithChildren,
-        CommonAttributes<HTMLHeadElement> {}
+        HTMLCommonAttributes<HTMLHeadElement> {}
 
     interface HTMLTitleAttributes
       extends WithChildren,
-        CommonAttributes<HTMLTitleElement> {}
+        HTMLCommonAttributes<HTMLTitleElement> {}
 
     interface HTMLMetaAttributes
       extends WithChildren,
-        CommonAttributes<HTMLMetaElement> {
+        HTMLCommonAttributes<HTMLMetaElement> {
       readonly charset?: AttributeValue<string>;
       // TODO: improve content values depending on the name or http-equiv attribute.
       readonly content?: AttributeValue<string>;
@@ -571,7 +604,7 @@ declare module "moru" {
 
     interface HTMLBodyAttributes
       extends WithChildren,
-        CommonAttributes<HTMLBodyElement> {}
+        HTMLCommonAttributes<HTMLBodyElement> {}
   }
 }
 
