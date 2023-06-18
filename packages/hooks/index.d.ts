@@ -48,11 +48,11 @@ export function createUrgentEffect<const T extends readonly Getter<unknown>[]>(
 
 export function createMemo<T>(
   context: Context,
-  callback: (previous: T | null) => T
+  callback: (previous: T | undefined) => T
 ): Disposable<Getter<T>>;
 export function createMemo<T, const D extends readonly Getter<unknown>[]>(
   context: Context,
-  callback: (previous: T | null, ...parameters: EffectParameters<D>) => T,
+  callback: (previous: T | undefined, ...parameters: EffectParameters<D>) => T,
   dependencies: D,
   options?: CreateStateOptions<T>
 ): Disposable<Getter<T>>;
