@@ -34,7 +34,13 @@ const stringRenderer = createRenderer({
   },
   createDefaultInstance(_parent, element, _position, _isHydrating) {
     return {
-      html: element == null || element === "" ? "<!---->" : String(element),
+      html:
+        element == null || element === ""
+          ? // Empty string is lost after transporting HTML over the wire,
+            // but it should be preserved, since it is a potential marker for
+            // the nodes hydration.
+            "<!---->"
+          : String(element),
     };
   },
 });

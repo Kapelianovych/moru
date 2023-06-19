@@ -246,7 +246,7 @@ const renderIntrinsic = (
     isHydrating
   );
 
-  ref?.(instance);
+  options.allowEffects && ref?.(instance);
 
   return instance;
 };

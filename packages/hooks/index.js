@@ -11,7 +11,11 @@ export const createUrgentEffect = (context, callback, dependencies) =>
   context.createUrgentEffect(callback, dependencies);
 
 export const createMemo = (context, callback, dependencies, options) => {
-  const [value, setValue, disposeState] = createState(context, undefined, options);
+  const [value, setValue, disposeState] = createState(
+    context,
+    undefined,
+    options
+  );
 
   const disposeEffect = createUrgentEffect(
     context,
