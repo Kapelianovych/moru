@@ -51,10 +51,6 @@ type AttributeValue<T extends AttributeLiteral = string> =
   | Mix<T, string, boolean>
   | Getter<Mix<T, string, boolean>>;
 
-type RefAttribute<B> = {
-  readonly ref?: B;
-};
-
 export type Component<T = {}> = (properties: T, context: Context) => Node;
 
 export type AsyncComponent<T = {}> = (
@@ -84,210 +80,434 @@ declare module "moru" {
     interface IntrinsicElements {
       // HTML + SVG
       readonly a:
-        | (HTMLAnchorAttributes & EventAttributes<HTMLAnchorElement>)
-        | (SVGAnchorAttributes & EventAttributes<SVGElement>);
+        | (HTMLAnchorAttributes &
+            EventAttributes<HTMLAnchorElement> &
+            IntrinsicProperties<HTMLAnchorElement>)
+        | (SVGAnchorAttributes &
+            EventAttributes<SVGElement> &
+            IntrinsicProperties<SVGElement>);
 
       // HTML
-      readonly abbr: {} & EventAttributes<HTMLElement>;
-      readonly address: {} & EventAttributes<HTMLElement>;
-      readonly area: HTMLAreaAttributes & EventAttributes<HTMLAreaElement>;
-      readonly article: {} & EventAttributes<HTMLElement>;
-      readonly aside: {} & EventAttributes<HTMLElement>;
-      readonly audio: HTMLAudioAttributes & EventAttributes<HTMLAudioElement>;
-      readonly b: {} & EventAttributes<HTMLAnchorElement>;
-      readonly base: {} & EventAttributes<HTMLAnchorElement>;
-      readonly basefont: {} & EventAttributes<HTMLAnchorElement>;
-      readonly bdi: {} & EventAttributes<HTMLAnchorElement>;
-      readonly bdo: {} & EventAttributes<HTMLAnchorElement>;
-      readonly bgsound: {} & EventAttributes<HTMLAnchorElement>;
-      readonly big: {} & EventAttributes<HTMLAnchorElement>;
-      readonly blink: {} & EventAttributes<HTMLAnchorElement>;
-      readonly blockquote: {} & EventAttributes<HTMLAnchorElement>;
-      readonly body: HTMLBodyAttributes & EventAttributes<HTMLBodyElement>;
-      readonly br: {} & EventAttributes<HTMLAnchorElement>;
+      readonly abbr: {} & EventAttributes<HTMLElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly address: {} & EventAttributes<HTMLElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly area: HTMLAreaAttributes &
+        EventAttributes<HTMLAreaElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly article: {} & EventAttributes<HTMLElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly aside: {} & EventAttributes<HTMLElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly audio: HTMLAudioAttributes &
+        EventAttributes<HTMLAudioElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly b: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly base: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly basefont: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly bdi: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly bdo: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly bgsound: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly big: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly blink: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly blockquote: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly body: HTMLBodyAttributes &
+        EventAttributes<HTMLBodyElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly br: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
       readonly button: HTMLButtonAttributes &
-        EventAttributes<HTMLButtonElement>;
-      readonly canvas: {} & EventAttributes<HTMLAnchorElement>;
-      readonly caption: {} & EventAttributes<HTMLAnchorElement>;
-      readonly center: {} & EventAttributes<HTMLAnchorElement>;
-      readonly cite: {} & EventAttributes<HTMLAnchorElement>;
-      readonly code: {} & EventAttributes<HTMLAnchorElement>;
-      readonly col: {} & EventAttributes<HTMLAnchorElement>;
-      readonly colgroup: {} & EventAttributes<HTMLAnchorElement>;
-      readonly content: {} & EventAttributes<HTMLAnchorElement>;
-      readonly data: {} & EventAttributes<HTMLAnchorElement>;
-      readonly datalist: {} & EventAttributes<HTMLAnchorElement>;
-      readonly dd: {} & EventAttributes<HTMLAnchorElement>;
-      readonly del: {} & EventAttributes<HTMLAnchorElement>;
-      readonly details: {} & EventAttributes<HTMLAnchorElement>;
-      readonly dfn: {} & EventAttributes<HTMLAnchorElement>;
-      readonly dialog: {} & EventAttributes<HTMLAnchorElement>;
-      readonly dir: {} & EventAttributes<HTMLAnchorElement>;
-      readonly div: HTMLDivAttributes & EventAttributes<HTMLDivElement>;
-      readonly dl: {} & EventAttributes<HTMLAnchorElement>;
-      readonly dt: {} & EventAttributes<HTMLAnchorElement>;
-      readonly em: {} & EventAttributes<HTMLAnchorElement>;
-      readonly embed: {} & EventAttributes<HTMLAnchorElement>;
-      readonly fieldset: {} & EventAttributes<HTMLAnchorElement>;
-      readonly figcaption: {} & EventAttributes<HTMLAnchorElement>;
-      readonly figure: {} & EventAttributes<HTMLAnchorElement>;
-      readonly font: {} & EventAttributes<HTMLAnchorElement>;
-      readonly footer: HTMLFooterAttributes & EventAttributes<HTMLElement>;
-      readonly form: {} & EventAttributes<HTMLAnchorElement>;
-      readonly frame: {} & EventAttributes<HTMLAnchorElement>;
-      readonly frameset: {} & EventAttributes<HTMLAnchorElement>;
-      readonly h1: {} & EventAttributes<HTMLAnchorElement>;
-      readonly h2: {} & EventAttributes<HTMLAnchorElement>;
-      readonly h3: {} & EventAttributes<HTMLAnchorElement>;
-      readonly h4: {} & EventAttributes<HTMLAnchorElement>;
-      readonly h5: {} & EventAttributes<HTMLAnchorElement>;
-      readonly h6: {} & EventAttributes<HTMLAnchorElement>;
-      readonly head: HTMLHeadAttributes & EventAttributes<HTMLHeadElement>;
-      readonly header: HTMLHeaderAttributes & EventAttributes<HTMLElement>;
-      readonly hgroup: {} & EventAttributes<HTMLAnchorElement>;
-      readonly hr: {} & EventAttributes<HTMLAnchorElement>;
-      readonly html: HTMLHtmlAttributes & EventAttributes<HTMLHtmlElement>;
-      readonly i: {} & EventAttributes<HTMLAnchorElement>;
-      readonly iframe: {} & EventAttributes<HTMLAnchorElement>;
-      readonly img: HTMLImageAttributes & EventAttributes<HTMLAnchorElement>;
-      readonly input: HTMLInputAttributes & EventAttributes<HTMLInputElement>;
-      readonly ins: {} & EventAttributes<HTMLAnchorElement>;
-      readonly kbd: {} & EventAttributes<HTMLAnchorElement>;
-      readonly keygen: {} & EventAttributes<HTMLAnchorElement>;
-      readonly label: HTMLLabelAttributes & EventAttributes<HTMLAnchorElement>;
-      readonly legend: {} & EventAttributes<HTMLAnchorElement>;
-      readonly li: {} & EventAttributes<HTMLAnchorElement>;
-      readonly link: {} & EventAttributes<HTMLAnchorElement>;
-      readonly main: HTMLMainAttributes & EventAttributes<HTMLElement>;
-      readonly map: {} & EventAttributes<HTMLAnchorElement>;
-      readonly mark: {} & EventAttributes<HTMLAnchorElement>;
-      readonly marquee: {} & EventAttributes<HTMLAnchorElement>;
-      readonly math: {} & EventAttributes<HTMLAnchorElement>;
-      readonly menu: {} & EventAttributes<HTMLAnchorElement>;
-      readonly menuitem: {} & EventAttributes<HTMLAnchorElement>;
-      readonly meta: HTMLMetaAttributes & EventAttributes<HTMLMetaElement>;
-      readonly meter: {} & EventAttributes<HTMLAnchorElement>;
-      readonly nav: {} & EventAttributes<HTMLAnchorElement>;
-      readonly nobr: {} & EventAttributes<HTMLAnchorElement>;
-      readonly noframes: {} & EventAttributes<HTMLAnchorElement>;
-      readonly noscript: {} & EventAttributes<HTMLAnchorElement>;
-      readonly object: {} & EventAttributes<HTMLAnchorElement>;
-      readonly ol: {} & EventAttributes<HTMLAnchorElement>;
-      readonly optgroup: {} & EventAttributes<HTMLAnchorElement>;
-      readonly option: {} & EventAttributes<HTMLAnchorElement>;
-      readonly output: {} & EventAttributes<HTMLAnchorElement>;
+        EventAttributes<HTMLButtonElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly canvas: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly caption: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly center: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly cite: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly code: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly col: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly colgroup: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly content: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly data: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly datalist: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly dd: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly del: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly details: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly dfn: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly dialog: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly dir: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly div: HTMLDivAttributes &
+        EventAttributes<HTMLDivElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly dl: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly dt: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly em: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly embed: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly fieldset: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly figcaption: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly figure: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly font: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly footer: HTMLFooterAttributes &
+        EventAttributes<HTMLElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly form: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly frame: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly frameset: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly h1: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly h2: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly h3: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly h4: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly h5: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly h6: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly head: HTMLHeadAttributes &
+        EventAttributes<HTMLHeadElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly header: HTMLHeaderAttributes &
+        EventAttributes<HTMLElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly hgroup: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly hr: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly html: HTMLHtmlAttributes &
+        EventAttributes<HTMLHtmlElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly i: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly iframe: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly img: HTMLImageAttributes &
+        EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly input: HTMLInputAttributes &
+        EventAttributes<HTMLInputElement> &
+        IntrinsicProperties<HTMLInputElement>;
+      readonly ins: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly kbd: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly keygen: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly label: HTMLLabelAttributes &
+        EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly legend: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly li: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly link: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly main: HTMLMainAttributes &
+        EventAttributes<HTMLElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly map: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly mark: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly marquee: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly math: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly menu: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly menuitem: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly meta: HTMLMetaAttributes &
+        EventAttributes<HTMLMetaElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly meter: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly nav: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly nobr: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly noframes: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly noscript: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly object: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly ol: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly optgroup: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly option: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly output: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
       readonly p: HTMLParagraphAttributes &
-        EventAttributes<HTMLParagraphElement>;
-      readonly param: {} & EventAttributes<HTMLAnchorElement>;
-      readonly picture: {} & EventAttributes<HTMLAnchorElement>;
-      readonly plaintext: {} & EventAttributes<HTMLAnchorElement>;
-      readonly portal: {} & EventAttributes<HTMLAnchorElement>;
-      readonly pre: {} & EventAttributes<HTMLAnchorElement>;
-      readonly progress: {} & EventAttributes<HTMLAnchorElement>;
-      readonly q: {} & EventAttributes<HTMLAnchorElement>;
-      readonly rb: {} & EventAttributes<HTMLAnchorElement>;
-      readonly rp: {} & EventAttributes<HTMLAnchorElement>;
-      readonly rt: {} & EventAttributes<HTMLAnchorElement>;
-      readonly rtc: {} & EventAttributes<HTMLAnchorElement>;
-      readonly ruby: {} & EventAttributes<HTMLAnchorElement>;
-      readonly s: {} & EventAttributes<HTMLAnchorElement>;
-      readonly samp: {} & EventAttributes<HTMLAnchorElement>;
-      readonly script: {} & EventAttributes<HTMLAnchorElement>;
-      readonly section: {} & EventAttributes<HTMLAnchorElement>;
-      readonly select: {} & EventAttributes<HTMLAnchorElement>;
-      readonly shadow: {} & EventAttributes<HTMLAnchorElement>;
-      readonly slot: {} & EventAttributes<HTMLAnchorElement>;
-      readonly small: {} & EventAttributes<HTMLAnchorElement>;
-      readonly source: {} & EventAttributes<HTMLAnchorElement>;
-      readonly spacer: {} & EventAttributes<HTMLAnchorElement>;
-      readonly span: {} & EventAttributes<HTMLAnchorElement>;
-      readonly strike: {} & EventAttributes<HTMLAnchorElement>;
-      readonly strong: {} & EventAttributes<HTMLAnchorElement>;
-      readonly style: {} & EventAttributes<HTMLAnchorElement>;
-      readonly sub: {} & EventAttributes<HTMLAnchorElement>;
-      readonly summary: {} & EventAttributes<HTMLAnchorElement>;
-      readonly sup: {} & EventAttributes<HTMLAnchorElement>;
-      readonly table: {} & EventAttributes<HTMLAnchorElement>;
-      readonly tbody: {} & EventAttributes<HTMLAnchorElement>;
-      readonly td: {} & EventAttributes<HTMLAnchorElement>;
-      readonly template: {} & EventAttributes<HTMLAnchorElement>;
-      readonly textarea: {} & EventAttributes<HTMLAnchorElement>;
-      readonly tfoot: {} & EventAttributes<HTMLAnchorElement>;
-      readonly th: {} & EventAttributes<HTMLAnchorElement>;
-      readonly thead: {} & EventAttributes<HTMLAnchorElement>;
-      readonly time: {} & EventAttributes<HTMLAnchorElement>;
-      readonly title: HTMLTitleAttributes & EventAttributes<HTMLTitleElement>;
-      readonly tr: {} & EventAttributes<HTMLAnchorElement>;
-      readonly track: {} & EventAttributes<HTMLAnchorElement>;
-      readonly tt: {} & EventAttributes<HTMLAnchorElement>;
-      readonly u: {} & EventAttributes<HTMLAnchorElement>;
-      readonly ul: {} & EventAttributes<HTMLAnchorElement>;
-      readonly var: {} & EventAttributes<HTMLAnchorElement>;
-      readonly video: {} & EventAttributes<HTMLAnchorElement>;
-      readonly wbr: {} & EventAttributes<HTMLAnchorElement>;
-      readonly xmp: {} & EventAttributes<HTMLAnchorElement>;
+        EventAttributes<HTMLParagraphElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly param: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly picture: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly plaintext: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly portal: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly pre: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly progress: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly q: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly rb: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly rp: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly rt: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly rtc: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly ruby: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly s: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly samp: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly script: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly section: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly select: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly shadow: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly slot: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly small: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly source: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly spacer: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly span: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly strike: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly strong: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly style: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly sub: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly summary: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly sup: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly table: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly tbody: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly td: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly template: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly textarea: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly tfoot: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly th: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly thead: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly time: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly title: HTMLTitleAttributes &
+        EventAttributes<HTMLTitleElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly tr: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly track: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly tt: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly u: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly ul: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly var: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly video: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly wbr: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
+      readonly xmp: {} & EventAttributes<HTMLAnchorElement> &
+        IntrinsicProperties<HTMLElement>;
 
       // SVG
-      readonly svg: {} & EventAttributes<SVGElement>;
-      readonly animate: {} & EventAttributes<SVGElement>;
-      readonly animateColor: {} & EventAttributes<SVGElement>;
-      readonly animateMotion: {} & EventAttributes<SVGElement>;
-      readonly animateTransform: {} & EventAttributes<SVGElement>;
-      readonly circle: {} & EventAttributes<SVGElement>;
-      readonly clipPath: {} & EventAttributes<SVGElement>;
-      readonly "color-profile": {} & EventAttributes<SVGElement>;
-      readonly defs: {} & EventAttributes<SVGElement>;
-      readonly desc: {} & EventAttributes<SVGElement>;
-      readonly ellipse: {} & EventAttributes<SVGElement>;
-      readonly feBlend: {} & EventAttributes<SVGElement>;
-      readonly feColorMatrix: {} & EventAttributes<SVGElement>;
-      readonly feComponentTransfer: {} & EventAttributes<SVGElement>;
-      readonly feComposite: {} & EventAttributes<SVGElement>;
-      readonly feConvolveMatrix: {} & EventAttributes<SVGElement>;
-      readonly feDiffuseLighting: {} & EventAttributes<SVGElement>;
-      readonly feDisplacementMap: {} & EventAttributes<SVGElement>;
-      readonly feDistantLight: {} & EventAttributes<SVGElement>;
-      readonly feFlood: {} & EventAttributes<SVGElement>;
-      readonly feFuncA: {} & EventAttributes<SVGElement>;
-      readonly feFuncB: {} & EventAttributes<SVGElement>;
-      readonly feFuncG: {} & EventAttributes<SVGElement>;
-      readonly feFuncR: {} & EventAttributes<SVGElement>;
-      readonly feGaussianBlur: {} & EventAttributes<SVGElement>;
-      readonly feImage: {} & EventAttributes<SVGElement>;
-      readonly feMerge: {} & EventAttributes<SVGElement>;
-      readonly feMergeNode: {} & EventAttributes<SVGElement>;
-      readonly feMorphology: {} & EventAttributes<SVGElement>;
-      readonly feOffset: {} & EventAttributes<SVGElement>;
-      readonly fePointLight: {} & EventAttributes<SVGElement>;
-      readonly feSpecularLighting: {} & EventAttributes<SVGElement>;
-      readonly feSpotLight: {} & EventAttributes<SVGElement>;
-      readonly feTile: {} & EventAttributes<SVGElement>;
-      readonly feTurbulence: {} & EventAttributes<SVGElement>;
-      readonly filter: {} & EventAttributes<SVGElement>;
-      readonly foreignObject: {} & EventAttributes<SVGElement>;
-      readonly g: {} & EventAttributes<SVGElement>;
-      readonly image: {} & EventAttributes<SVGElement>;
-      readonly line: {} & EventAttributes<SVGElement>;
-      readonly linearGradient: {} & EventAttributes<SVGElement>;
-      readonly marker: {} & EventAttributes<SVGElement>;
-      readonly mask: {} & EventAttributes<SVGElement>;
-      readonly metadata: {} & EventAttributes<SVGElement>;
-      readonly mpath: {} & EventAttributes<SVGElement>;
-      readonly path: {} & EventAttributes<SVGElement>;
-      readonly pattern: {} & EventAttributes<SVGElement>;
-      readonly polygon: {} & EventAttributes<SVGElement>;
-      readonly polyline: {} & EventAttributes<SVGElement>;
-      readonly radialGradient: {} & EventAttributes<SVGElement>;
-      readonly rect: {} & EventAttributes<SVGElement>;
-      readonly set: {} & EventAttributes<SVGElement>;
-      readonly stop: {} & EventAttributes<SVGElement>;
-      readonly switch: {} & EventAttributes<SVGElement>;
-      readonly symbol: {} & EventAttributes<SVGElement>;
-      readonly text: {} & EventAttributes<SVGElement>;
-      readonly textPath: {} & EventAttributes<SVGElement>;
-      readonly tspan: {} & EventAttributes<SVGElement>;
-      readonly use: {} & EventAttributes<SVGElement>;
-      readonly view: {} & EventAttributes<SVGElement>;
+      readonly svg: SVGSVGAttributes & EventAttributes<SVGSVGElement> &
+        IntrinsicProperties<SVGSVGElement>;
+      readonly animate: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly animateColor: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly animateMotion: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly animateTransform: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly circle: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly clipPath: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly "color-profile": {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly defs: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly desc: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly ellipse: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feBlend: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feColorMatrix: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feComponentTransfer: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feComposite: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feConvolveMatrix: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feDiffuseLighting: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feDisplacementMap: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feDistantLight: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feFlood: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feFuncA: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feFuncB: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feFuncG: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feFuncR: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feGaussianBlur: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feImage: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feMerge: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feMergeNode: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feMorphology: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feOffset: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly fePointLight: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feSpecularLighting: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feSpotLight: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feTile: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly feTurbulence: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly filter: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly foreignObject: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly g: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly image: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly line: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly linearGradient: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly marker: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly mask: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly metadata: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly mpath: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly path: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly pattern: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly polygon: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly polyline: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly radialGradient: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly rect: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly set: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly stop: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly switch: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly symbol: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly text: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly textPath: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly tspan: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly use: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+      readonly view: {} & EventAttributes<SVGElement> &
+        IntrinsicProperties<SVGElement>;
+    }
+
+    type IntrinsicProperties<E extends globalThis.Element> = {
+      readonly [K in keyof E as K extends string ? `prop:${K}` : never]?:
+        | E[K]
+        | Getter<E[K]>;
+    };
+
+    interface CustomAttributes<B extends globalThis.Element> {
+      readonly ref?: (node: B) => void;
     }
 
     interface AriaAttributes {
@@ -295,7 +515,7 @@ declare module "moru" {
     }
 
     interface SVGCommonAttributes<E extends globalThis.Element>
-      extends RefAttribute<E> {
+      extends CustomAttributes<E> {
       readonly id?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
       readonly lang?: AttributeValue<string>;
       readonly tabindex?: AttributeValue<number | bigint>;
@@ -305,7 +525,7 @@ declare module "moru" {
     }
 
     interface HTMLCommonAttributes<E extends globalThis.Element>
-      extends RefAttribute<E>,
+      extends CustomAttributes<E>,
         AriaAttributes {
       readonly accesskey?: AttributeValue<string>;
       readonly autocapitalize?: AttributeValue<
@@ -605,6 +825,16 @@ declare module "moru" {
     interface HTMLBodyAttributes
       extends WithChildren,
         HTMLCommonAttributes<HTMLBodyElement> {}
+
+    interface SVGSVGAttributes extends WithChildren, SVGCommonAttributes<SVGSVGElement> {
+      readonly height?: AttributeValue<'auto' | number | `${number}%`>      
+      readonly preserveAspectRatio?: AttributeValue<'none' | `${'xMinYMin'| 'xMidYMin'| 'xMaxYMin'| 'xMinYMid'| 'xMidYMid'| 'xMaxYMid'| 'xMinYMax'| 'xMidYMax'| 'xMaxYMax'} ${'meet' | 'slice'}`>;
+      readonly viewBox?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
+      readonly width?: AttributeValue<'auto' | number | `${number}%`>;
+      readonly x?: AttributeValue<number | `${number}%`>;
+      readonly y?: AttributeValue<number | `${number}%`>;
+      readonly xmlns?: AttributeValue<string>;
+    }
   }
 }
 

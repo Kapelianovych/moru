@@ -61,7 +61,15 @@ export namespace JSX {
 
   interface IntrinsicElements {}
 
-  type ElementChildrenAttribute = {
+  interface ElementChildrenAttribute {
     readonly children: null;
-  };
+  }
+
+  interface ElementClass {
+    // empty, libraries can define requirements downstream
+  }
+
+  interface ElementAttributesProperty {
+    // empty, libraries can define requirements downstream
+  }
 }

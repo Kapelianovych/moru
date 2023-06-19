@@ -21,13 +21,14 @@ const stringRenderer = createRenderer({
     };
   },
   setProperty(instance, name, value, _isHydrating) {
-    if (!name.startsWith("on"))
-      instance.html =
-        typeof value === "boolean"
-          ? value
-            ? instance.html.replace(OPEN_TAG_RE, `$& ${name}`)
-            : instance.html
-          : instance.html.replace(OPEN_TAG_RE, `$& ${name}="${value}"`);
+    if (name.startsWith("on") || name.startsWith("prop:")) return;
+
+    instance.html =
+      typeof value === "boolean"
+        ? value
+          ? instance.html.replace(OPEN_TAG_RE, `$& ${name}`)
+          : instance.html
+        : instance.html.replace(OPEN_TAG_RE, `$& ${name}="${value}"`);
   },
   insertInstanceAfter(_parent, _previousSibling, _nextSibling) {
     // It is not needed in a static html.

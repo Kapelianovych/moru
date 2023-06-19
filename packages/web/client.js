@@ -1,10 +1,6 @@
 import { createRenderer } from "@moru/renderer";
 
-import {
-  SVG_NAMESPACE,
-  HTML_NAMESPACE,
-  AttributesToProperties,
-} from "./constants.js";
+import { SVG_NAMESPACE, HTML_NAMESPACE } from "./constants.js";
 
 const endsAt = (once, capture, passive, noPassive) =>
   0 +
@@ -59,8 +55,7 @@ export const mount = createRenderer({
           passive: noPassive ? false : passive,
         }
       );
-    } else if (AttributesToProperties.get(name)?.includes(instance.tagName))
-      instance[name] = value;
+    } else if (name.startsWith("prop:")) instance[name.slice(5)] = value;
     else if (!isHydrating())
       typeof value === "boolean"
         ? value
