@@ -177,7 +177,7 @@ export const createContext = () => {
 
   return {
     dispose: createContextDisposer(contextState),
-    createCache: createCacheHook(contextState),
+    useCache: createCacheHook(contextState),
     createState: createStateHook(contextState),
     createEffect: createEffectHook(contextState, (effect) => {
       contextState.scheduler.add(effect);

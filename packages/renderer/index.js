@@ -137,8 +137,8 @@ const renderComponent = (
   isHydrating
 ) => {
   const result = tag(properties, {
-    createCache(key, value) {
-      const cache = context.createCache(key, value);
+    useCache(key, value) {
+      const cache = context.useCache(key, value);
 
       // Immediately dispose the cache entry and pertain only local value.
       options.allowEffects || cache[2]();

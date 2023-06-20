@@ -11,7 +11,7 @@ export type Disposable<O extends object> = O & {
   readonly dispose: VoidFunction;
 };
 
-export function createCache<K, V>(
+export function useCache<K, V>(
   context: Context,
   key: K,
   value: V
@@ -82,8 +82,20 @@ export type Resource<R, L> =
       readonly value: L;
     };
 
-export type CreateResourceOptions<K> = {
-  readonly cacheKey?: K;
+export type CachedResource<R, L> = {
+  readonly resource: Exclude<
+    Resource<R, L>,
+    { readonly state: "loading" | "failed" }
+  >;
+  readonly dependencies: string;
+};
+
+export type CreateResourceOptions<R, L> = {
+  readonly cache?: readonly [
+    () => null | CachedResource<R, L>,
+    Setter<null | CachedResource<R, L>>,
+    VoidFunction
+  ];
 };
 
 export function createResource<R, L>(
@@ -93,11 +105,10 @@ export function createResource<R, L>(
 export function createResource<
   R,
   L,
-  const D extends readonly Getter<unknown>[],
-  K = void
+  const D extends readonly Getter<unknown>[]
 >(
   context: Context,
   fetcher: (...parameters: EffectParameters<D>) => Promise<R>,
   dependencies: D,
-  options?: CreateResourceOptions<K>
+  options?: CreateResourceOptions<R, L>
 ): Disposable<Getter<Resource<R, L>>>;

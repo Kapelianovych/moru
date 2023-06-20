@@ -1,5 +1,4 @@
-export const createCache = (context, key, value) =>
-  context.createCache(key, value);
+export const useCache = (context, key, value) => context.useCache(key, value);
 
 export const createState = (context, initial, options) =>
   context.createState(initial, options);
@@ -68,22 +67,17 @@ export const createResource = (
   context,
   fetcher,
   dependencies = [],
-  { cacheKey } = {}
+  {
+    cache: [cachedValue, cacheValue, disposeCache] = [
+      () => {},
+      () => {},
+      () => {},
+    ],
+  } = {}
 ) => {
-  const [cachedValue, cacheValue, disposeCache] = cacheKey
-    ? createCache(
-        context,
-        cacheKey,
-        createResourceCache(
-          loadingResource,
-          dependencies.map((dependency) => dependency())
-        )
-      )
-    : [() => createResourceCache(loadingResource, ""), () => {}, () => {}];
-
   const [value, updateValue, disposeState] = createState(
     context,
-    cachedValue().resource
+    cachedValue()?.resource ?? loadingResource
   );
 
   let firstCall = true;
