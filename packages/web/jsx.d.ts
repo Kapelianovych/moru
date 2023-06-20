@@ -378,7 +378,8 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
 
       // SVG
-      readonly svg: SVGSVGAttributes & EventAttributes<SVGSVGElement> &
+      readonly svg: SVGSVGAttributes &
+        EventAttributes<SVGSVGElement> &
         IntrinsicProperties<SVGSVGElement>;
       readonly animate: {} & EventAttributes<SVGElement> &
         IntrinsicProperties<SVGElement>;
@@ -826,11 +827,25 @@ declare module "moru" {
       extends WithChildren,
         HTMLCommonAttributes<HTMLBodyElement> {}
 
-    interface SVGSVGAttributes extends WithChildren, SVGCommonAttributes<SVGSVGElement> {
-      readonly height?: AttributeValue<'auto' | number | `${number}%`>      
-      readonly preserveAspectRatio?: AttributeValue<'none' | `${'xMinYMin'| 'xMidYMin'| 'xMaxYMin'| 'xMinYMid'| 'xMidYMid'| 'xMaxYMid'| 'xMinYMax'| 'xMidYMax'| 'xMaxYMax'} ${'meet' | 'slice'}`>;
+    interface SVGSVGAttributes
+      extends WithChildren,
+        SVGCommonAttributes<SVGSVGElement> {
+      readonly height?: AttributeValue<"auto" | number | `${number}%`>;
+      readonly preserveAspectRatio?: AttributeValue<
+        | "none"
+        | `${
+            | "xMinYMin"
+            | "xMidYMin"
+            | "xMaxYMin"
+            | "xMinYMid"
+            | "xMidYMid"
+            | "xMaxYMid"
+            | "xMinYMax"
+            | "xMidYMax"
+            | "xMaxYMax"} ${"meet" | "slice"}`
+      >;
       readonly viewBox?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
-      readonly width?: AttributeValue<'auto' | number | `${number}%`>;
+      readonly width?: AttributeValue<"auto" | number | `${number}%`>;
       readonly x?: AttributeValue<number | `${number}%`>;
       readonly y?: AttributeValue<number | `${number}%`>;
       readonly xmlns?: AttributeValue<string>;
@@ -840,6 +855,6 @@ declare module "moru" {
 
 type EventAttributes<T extends globalThis.Element> = {
   readonly [K in keyof T as K extends `on${infer Name}`
-    ? `on${Name}` | `on${Capitalize<Name>}${"" | EventListenerModifiers}`
+    ? `on:${Name}` | `on:${Capitalize<Name>}${"" | EventListenerModifiers}`
     : never]?: (event: EventOf<T, Replace<K, "on", "">>) => void;
 };

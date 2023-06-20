@@ -21,7 +21,8 @@ const stringRenderer = createRenderer({
     };
   },
   setProperty(instance, name, value, _isHydrating) {
-    if (name.startsWith("on") || name.startsWith("prop:")) return;
+    // on: and prop: namespaces.
+    if (name.includes(":")) return;
 
     instance.html =
       typeof value === "boolean"

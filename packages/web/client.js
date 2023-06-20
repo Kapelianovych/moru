@@ -36,7 +36,7 @@ export const mount = createRenderer({
         );
   },
   setProperty(instance, name, value, isHydrating) {
-    if (name.startsWith("on")) {
+    if (name.startsWith("on:")) {
       const _name = name.toLowerCase(),
         once = _name.includes("once"),
         capture = _name.includes("capture"),
@@ -45,7 +45,7 @@ export const mount = createRenderer({
 
       instance.addEventListener(
         _name.slice(
-          2,
+          3,
           endsAt(once, capture, passive, noPassive) || _name.length
         ),
         value,
