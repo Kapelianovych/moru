@@ -123,22 +123,22 @@ const createEffectHook =
       const clear = callback(...dependencies.map((dependency) => dependency()));
 
       contextState.cleanups.set(effect, () =>
-        clear instanceof Promise ? clear.then((fn) => fn?.()) : clear?.()
+        clear instanceof Promise ? clear.then((fn) => fn?.()) : clear?.(),
       );
     };
 
     dependencies.forEach((dependency) =>
       contextState.effects.set(
         dependency,
-        contextState.effects.get(dependency)?.add(effect) ?? new Set([effect])
-      )
+        contextState.effects.get(dependency)?.add(effect) ?? new Set([effect]),
+      ),
     );
 
     execute(effect);
 
     return () => {
       dependencies.forEach((dependency) =>
-        contextState.effects.get(dependency)?.delete(effect)
+        contextState.effects.get(dependency)?.delete(effect),
       );
       contextState.scheduler.remove(effect);
       contextState.cleanups.get(effect)?.();

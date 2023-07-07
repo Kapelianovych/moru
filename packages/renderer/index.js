@@ -9,7 +9,7 @@ const isAsyncInstance = (value) =>
 const appendInstance = (options, parent, children, isHydrating) => {
   if (Array.isArray(children))
     children.forEach((child) =>
-      appendInstance(options, parent, child, isHydrating)
+      appendInstance(options, parent, child, isHydrating),
     );
   else if (isAsyncInstance(children)) {
     appendInstance(options, parent, children.currentInstance, isHydrating);
@@ -23,7 +23,7 @@ const insertInstanceAfter = (
   parent,
   previousSibling,
   instance,
-  updateInstance
+  updateInstance,
 ) => {
   const lastSiblingInstance = Array.isArray(previousSibling)
     ? previousSibling[previousSibling.length - 1]
@@ -43,7 +43,7 @@ const insertInstanceAfter = (
       options,
       parent,
       lastSiblingInstance,
-      instance.currentInstance
+      instance.currentInstance,
     );
 
     options.allowEffects && instance.continue(updateInstance);
@@ -84,7 +84,7 @@ const createAsyncInstance = (
   promise,
   nearestScopedDisposals,
   position,
-  isHydrating
+  isHydrating,
 ) => {
   let isFinished;
 
@@ -95,7 +95,7 @@ const createAsyncInstance = (
     fallback,
     nearestScopedDisposals,
     position,
-    isHydrating
+    isHydrating,
   );
 
   return {
@@ -111,7 +111,7 @@ const createAsyncInstance = (
           instance,
           nearestScopedDisposals,
           position,
-          isHydrating
+          isHydrating,
         );
 
         replaceInstance(options, parent, currentInstance, nextInstance);
@@ -134,7 +134,7 @@ const renderComponent = (
   { tag, properties },
   nearestScopedDisposals,
   position,
-  isHydrating
+  isHydrating,
 ) => {
   const result = tag(properties, {
     useCache(key, value) {
@@ -167,7 +167,7 @@ const renderComponent = (
     createUrgentEffect(callback, dependencies = []) {
       if (!options.allowEffects) {
         const dispose = callback(
-          ...dependencies.map((dependency) => dependency())
+          ...dependencies.map((dependency) => dependency()),
         );
 
         dispose instanceof Promise ? dispose.then((fn) => fn?.()) : dispose?.();
@@ -192,7 +192,7 @@ const renderComponent = (
         result,
         nearestScopedDisposals,
         position,
-        isHydrating
+        isHydrating,
       )
     : render(
         options,
@@ -201,7 +201,7 @@ const renderComponent = (
         result,
         nearestScopedDisposals,
         position,
-        isHydrating
+        isHydrating,
       );
 };
 
@@ -212,7 +212,7 @@ const renderIntrinsic = (
   { tag, properties: { ref, children, ...attributes } },
   nearestScopedDisposals,
   position,
-  isHydrating
+  isHydrating,
 ) => {
   const instance = options.createInstance(parent, tag, position, isHydrating);
 
@@ -223,7 +223,7 @@ const renderIntrinsic = (
           (value) => {
             options.setProperty(instance, name, value, isHydrating);
           },
-          [value]
+          [value],
         );
 
         nearestScopedDisposals?.add(dispose);
@@ -241,9 +241,9 @@ const renderIntrinsic = (
       children,
       nearestScopedDisposals,
       0,
-      isHydrating
+      isHydrating,
     ),
-    isHydrating
+    isHydrating,
   );
 
   options.allowEffects && ref?.(instance);
@@ -258,7 +258,7 @@ const render = (
   element,
   nearestScopedDisposals,
   position,
-  isHydrating
+  isHydrating,
 ) => {
   if (isGetter(element)) {
     if (!options.allowEffects)
@@ -269,7 +269,7 @@ const render = (
         element(),
         null,
         position,
-        isHydrating
+        isHydrating,
       );
 
     let previousInstance;
@@ -285,7 +285,7 @@ const render = (
             element,
             currentScopedDisposals,
             position,
-            isHydrating
+            isHydrating,
           );
 
           replaceInstance(
@@ -293,7 +293,7 @@ const render = (
             parent,
             previousInstance,
             instance,
-            (deferredInstance) => (previousInstance = deferredInstance)
+            (deferredInstance) => (previousInstance = deferredInstance),
           );
 
           previousInstance = instance;
@@ -305,12 +305,12 @@ const render = (
             element,
             currentScopedDisposals,
             position,
-            isHydrating
+            isHydrating,
           );
 
         if (nearestScopedDisposals)
           currentScopedDisposals.forEach((dispose) =>
-            nearestScopedDisposals.add(dispose)
+            nearestScopedDisposals.add(dispose),
           );
 
         return () => {
@@ -321,7 +321,7 @@ const render = (
           currentScopedDisposals.clear();
         };
       },
-      [element]
+      [element],
     );
 
     nearestScopedDisposals?.add(() => {
@@ -341,7 +341,7 @@ const render = (
           element.tag,
           nearestScopedDisposals,
           position,
-          isHydrating
+          isHydrating,
         )
       : typeof element.tag === "string"
       ? renderIntrinsic(
@@ -351,7 +351,7 @@ const render = (
           element,
           nearestScopedDisposals,
           position,
-          isHydrating
+          isHydrating,
         )
       : renderComponent(
           options,
@@ -360,7 +360,7 @@ const render = (
           element,
           nearestScopedDisposals,
           position,
-          isHydrating
+          isHydrating,
         );
 
   if (Array.isArray(element)) {
@@ -372,8 +372,8 @@ const render = (
         child,
         nearestScopedDisposals,
         position + index,
-        isHydrating
-      )
+        isHydrating,
+      ),
     );
 
     return renderedChildren.length
@@ -394,7 +394,7 @@ export const createRenderer =
       element,
       null,
       0,
-      () => hydration
+      () => hydration,
     );
 
     appendInstance(options, root, instance, () => hydration);

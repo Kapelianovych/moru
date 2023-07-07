@@ -8,5 +8,5 @@ export const mount: Renderer<ParentNode, Node>;
 export function hydrate(
   context: Context,
   value: Node,
-  root: ParentNode
+  root: ParentNode,
 ): VoidFunction;

@@ -14,59 +14,59 @@ export type Disposable<O extends object> = O & {
 export function useCache<K, V>(
   context: Context,
   key: K,
-  value: V
+  value: V,
 ): readonly [() => V, Setter<V>, VoidFunction];
 
 export function createState<T>(
-  context: Context
+  context: Context,
 ): readonly [Getter<T | undefined>, Setter<T | undefined>, VoidFunction];
 export function createState<T>(
   context: Context,
   initial: T,
-  options?: CreateStateOptions<T>
+  options?: CreateStateOptions<T>,
 ): readonly [Getter<T>, Setter<T>, VoidFunction];
 
 export function createEffect(
   context: Context,
-  callback: Effect<[]>
+  callback: Effect<[]>,
 ): VoidFunction;
 export function createEffect<const T extends readonly Getter<unknown>[]>(
   context: Context,
   callback: Effect<EffectParameters<T>>,
-  dependencies: T
+  dependencies: T,
 ): VoidFunction;
 
 export function createUrgentEffect(
   context: Context,
-  callback: Effect<[]>
+  callback: Effect<[]>,
 ): VoidFunction;
 export function createUrgentEffect<const T extends readonly Getter<unknown>[]>(
   context: Context,
   callback: Effect<EffectParameters<T>>,
-  dependencies: T
+  dependencies: T,
 ): VoidFunction;
 
 export function createMemo<T>(
   context: Context,
-  callback: (previous: T | undefined) => T
+  callback: (previous: T | undefined) => T,
 ): Disposable<Getter<T>>;
 export function createMemo<T, const D extends readonly Getter<unknown>[]>(
   context: Context,
   callback: (previous: T | undefined, ...parameters: EffectParameters<D>) => T,
   dependencies: D,
-  options?: CreateStateOptions<T>
+  options?: CreateStateOptions<T>,
 ): Disposable<Getter<T>>;
 
 export type Provider<Value> = {
   (properties: { readonly value: Value }, context: Context): undefined;
   <Children>(
     properties: { readonly value: Value; readonly children: Children },
-    context: Context
+    context: Context,
   ): Children;
 };
 
 export function createProvider<Value>(
-  initial: Value
+  initial: Value,
 ): readonly [Provider<Value>, () => Value, VoidFunction];
 
 export type Resource<R, L> =
@@ -92,23 +92,27 @@ export type CachedResource<R, L> = {
 
 export type CreateResourceOptions<R, L> = {
   readonly cache?: readonly [
-    () => null | CachedResource<R, L>,
-    Setter<null | CachedResource<R, L>>,
-    VoidFunction
+    () =>
+      | null
+      | undefined
+      | CachedResource<R, L>
+      | Promise<null | undefined | CachedResource<R, L>>,
+    Setter<null | undefined | CachedResource<R, L>>,
+    VoidFunction,
   ];
 };
 
 export function createResource<R, L>(
   context: Context,
-  fetcher: () => Promise<R>
+  fetcher: () => Promise<R>,
 ): Disposable<Getter<Resource<R, L>>>;
 export function createResource<
   R,
   L,
-  const D extends readonly Getter<unknown>[]
+  const D extends readonly Getter<unknown>[],
 >(
   context: Context,
   fetcher: (...parameters: EffectParameters<D>) => Promise<R>,
   dependencies: D,
-  options?: CreateResourceOptions<R, L>
+  options?: CreateResourceOptions<R, L>,
 ): Disposable<Getter<Resource<R, L>>>;

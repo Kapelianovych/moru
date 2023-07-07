@@ -32,7 +32,7 @@ export const mount = createRenderer({
             ? HTML_NAMESPACE
             : // Otherwise just inherit the parent's namespace.
               parent.namespaceURI,
-          tag
+          tag,
         );
   },
   setProperty(instance, name, value, isHydrating) {
@@ -46,14 +46,14 @@ export const mount = createRenderer({
       instance.addEventListener(
         _name.slice(
           3,
-          endsAt(once, capture, passive, noPassive) || _name.length
+          endsAt(once, capture, passive, noPassive) || _name.length,
         ),
         value,
         {
           once,
           capture,
           passive: noPassive ? false : passive,
-        }
+        },
       );
     } else if (name.startsWith("prop:")) instance[name.slice(5)] = value;
     else if (!isHydrating())

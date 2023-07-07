@@ -13,14 +13,14 @@ export const createMemo = (context, callback, dependencies, options) => {
   const [value, setValue, disposeState] = createState(
     context,
     undefined,
-    options
+    options,
   );
 
   const disposeEffect = createUrgentEffect(
     context,
     (...parameters) =>
       setValue((oldValue) => callback(oldValue, ...parameters)),
-    dependencies
+    dependencies,
   );
 
   const initial = value();
@@ -63,58 +63,67 @@ const createResourceCache = (resource, parameters) => ({
   dependencies: JSON.stringify(parameters),
 });
 
+const normaliseCachedValue = async (value) => {
+  try {
+    value = await value;
+  } catch {
+    value = null;
+  }
+
+  return {
+    resource: value?.resource ?? loadingResource,
+    dependencies: value?.dependencies ?? "",
+  };
+};
+
 export const createResource = (
   context,
   fetcher,
   dependencies = [],
-  {
-    cache: [cachedValue, cacheValue, disposeCache] = [
-      () => {},
-      () => {},
-      () => {},
-    ],
-  } = {}
+  { cache: [cachedValue, cacheValue, disposeCache] = [] } = {},
 ) => {
-  const [value, updateValue, disposeState] = createState(
+  const [resource, updateResource, disposeState] = createState(
     context,
-    cachedValue()?.resource ?? loadingResource
+    loadingResource,
   );
 
   let firstCall = true;
 
   const disposeEffect = createEffect(
     context,
-    (...parameters) => {
+    async (...parameters) => {
       if (firstCall) {
         firstCall = false;
 
+        const fromCacheValue = await normaliseCachedValue(cachedValue?.());
+
         if (
-          value() !== loadingResource &&
-          cachedValue().dependencies === JSON.stringify(parameters)
+          fromCacheValue.resource !== loadingResource &&
+          fromCacheValue.dependencies === JSON.stringify(parameters)
         )
           return;
       }
 
-      updateValue(loadingResource);
+      updateResource(loadingResource);
 
       fetcher(...parameters).then(
         (result) => {
-          const loadedState = { state: "loaded", value: result };
+          const loadedResource = { state: "loaded", value: result };
 
-          cacheValue(createResourceCache(loadedState, parameters));
-          updateValue(loadedState);
+          cacheValue?.(createResourceCache(loadedResource, parameters));
+          updateResource(loadedResource);
         },
-        (error) => updateValue({ state: "failed", value: error })
+        (error) => updateResource({ state: "failed", value: error }),
       );
     },
-    dependencies
+    dependencies,
   );
 
-  return Object.assign(value, {
+  return Object.assign(resource, {
     dispose() {
       disposeEffect();
       disposeState();
-      disposeCache();
+      disposeCache?.();
     },
   });
 };

@@ -4,7 +4,7 @@ import { Context, Getter } from "@moru/context";
 type Replace<
   O,
   P extends string,
-  F extends string
+  F extends string,
 > = O extends `${infer A}${P}${infer B}` ? Replace<`${A}${F}${B}`, P, F> : O;
 
 type Cast<A, B> = A extends B ? A : B;
@@ -26,7 +26,7 @@ type EventListenerModifiers =
 
 type Event<
   T extends Element,
-  E extends globalThis.Event = globalThis.Event
+  E extends globalThis.Event = globalThis.Event,
 > = E & {
   readonly target: Element;
   readonly currentTarget: T;
@@ -55,7 +55,7 @@ export type Component<T = {}> = (properties: T, context: Context) => Node;
 
 export type AsyncComponent<T = {}> = (
   properties: T & { readonly fallback?: Node },
-  context: Context
+  context: Context,
 ) => Promise<Node>;
 
 type BaseNode =

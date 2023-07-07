@@ -32,23 +32,23 @@ export type Context = {
   createState<T>(): readonly [
     Getter<T | undefined>,
     Setter<T | undefined>,
-    VoidFunction
+    VoidFunction,
   ];
   createState<T>(
     initial: T,
-    options?: CreateStateOptions<T>
+    options?: CreateStateOptions<T>,
   ): readonly [Getter<T>, Setter<T>, VoidFunction];
 
   createEffect(callback: Effect<[]>): VoidFunction;
   createEffect<const T extends readonly Getter<unknown>[]>(
     callback: Effect<EffectParameters<T>>,
-    dependencies: T
+    dependencies: T,
   ): VoidFunction;
 
   createUrgentEffect(callback: Effect<[]>): VoidFunction;
   createUrgentEffect<const T extends readonly Getter<unknown>[]>(
     callback: Effect<EffectParameters<T>>,
-    dependencies: T
+    dependencies: T,
   ): VoidFunction;
 };
 
