@@ -53,6 +53,10 @@ export function createElement<
 export { createElement as jsx, createElement as jsxs, createElement as jsxDEV };
 
 export namespace JSX {
+  // Runtimes for the moru has to declare the "Node" type
+  // which will describe values that are allowed as children
+  // of the Element instance.
+
   type Element =
     | IntrinsicElement<string, Record<string, unknown>>
     | ComponentElement<readonly any[], unknown>;

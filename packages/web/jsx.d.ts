@@ -51,14 +51,14 @@ type AttributeValue<T extends AttributeLiteral = string> =
   | Mix<T, string, boolean>
   | Getter<Mix<T, string, boolean>>;
 
-export type Component<T = {}> = (properties: T, context: Context) => Node;
+export type Component<T = {}> = (properties: T, context: Context) => JSX.Node;
 
 export type AsyncComponent<T = {}> = (
-  properties: T & { readonly fallback?: Node },
+  properties: T & { readonly fallback?: JSX.Node },
   context: Context,
-) => Promise<Node>;
+) => Promise<JSX.Node>;
 
-type BaseNode =
+type BaseJSXNode =
   | null
   | string
   | number
@@ -67,16 +67,16 @@ type BaseNode =
   | undefined
   | globalThis.Node
   | JSX.Element
-  | readonly Node[];
-
-export type Node = BaseNode | Getter<BaseNode>;
+  | readonly JSX.Node[];
 
 export type WithChildren<A = {}> = A & {
-  readonly children?: Node;
+  readonly children?: JSX.Node;
 };
 
 declare module "moru" {
   export namespace JSX {
+    export type Node = BaseJSXNode | Getter<BaseJSXNode>;
+
     interface IntrinsicElements {
       // HTML + SVG
       readonly a:

@@ -1,12 +1,11 @@
+import { JSX } from "moru";
 import { Context } from "@moru/context";
 import { Renderer } from "@moru/renderer";
-
-import { Node } from "./jsx.js";
 
 export const mount: Renderer<ParentNode, Node>;
 
 export function hydrate(
   context: Context,
-  value: Node,
+  value: JSX.Node,
   root: ParentNode,
 ): VoidFunction;
