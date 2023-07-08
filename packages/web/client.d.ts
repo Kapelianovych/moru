@@ -3,7 +3,7 @@ import { Context } from "@moru/context";
 import { Renderer } from "@moru/renderer";
 
 // Import types so TS will merge namespaces.
-import './jsx.js';
+import "./jsx.js";
 
 export const mount: Renderer<ParentNode, JSX.Node>;
 

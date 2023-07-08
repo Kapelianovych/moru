@@ -469,8 +469,9 @@ declare module "moru" {
         IntrinsicProperties<SVGElement>;
       readonly mpath: {} & EventAttributes<SVGElement> &
         IntrinsicProperties<SVGElement>;
-      readonly path: {} & EventAttributes<SVGElement> &
-        IntrinsicProperties<SVGElement>;
+      readonly path: SVGPathAttributes &
+        EventAttributes<SVGPathElement> &
+        IntrinsicProperties<SVGPathElement>;
       readonly pattern: {} & EventAttributes<SVGElement> &
         IntrinsicProperties<SVGElement>;
       readonly polygon: {} & EventAttributes<SVGElement> &
@@ -752,7 +753,7 @@ declare module "moru" {
       >;
       /** Defines the human readable text alternative of aria-valuenow for a range widget. */
       readonly "aria-valuetext"?: AttributeValue<string>;
-      role?: AttributeValue<
+      readonly role?: AttributeValue<
         | "alert"
         | "alertdialog"
         | "application"
@@ -1160,6 +1161,13 @@ declare module "moru" {
       readonly x?: AttributeValue<number | `${number}%`>;
       readonly y?: AttributeValue<number | `${number}%`>;
       readonly xmlns?: AttributeValue<string>;
+    }
+
+    interface SVGPathAttributes extends SVGCommonAttributes<SVGPathElement> {
+      readonly d?: AttributeValue<string>;
+      readonly pathLength?: AttributeValue<
+        Exclude<AttributeLiteral, string | boolean>
+      >;
     }
   }
 }
