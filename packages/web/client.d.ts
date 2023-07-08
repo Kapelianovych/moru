@@ -2,7 +2,10 @@ import { JSX } from "moru";
 import { Context } from "@moru/context";
 import { Renderer } from "@moru/renderer";
 
-export const mount: Renderer<ParentNode, Node>;
+// Import types so TS will merge namespaces.
+import './jsx.js';
+
+export const mount: Renderer<ParentNode, JSX.Node>;
 
 export function hydrate(
   context: Context,
