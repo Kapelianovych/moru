@@ -69,6 +69,8 @@ export const createProvider = (initial) => {
     },
     get,
     () => {
+      if (disposed) return;
+
       disposed = true;
       disposeEffect?.();
     },
