@@ -52,8 +52,7 @@ export const createMemo = (context, callback, dependencies, options) => {
 export const createProvider = (initial) => {
   const id = Symbol();
 
-  let disposed;
-  let disposeEffect;
+  let disposed, disposeEffect;
 
   const get = (context) =>
     context[id] ?? (context.parent ? get(context.parent) : initial);

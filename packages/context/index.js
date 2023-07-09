@@ -55,6 +55,8 @@ const createContextDisposer = (contextState) => {
 
   return Object.assign(
     () => {
+      if (contextState.disposed) return;
+
       contextState.disposed = true;
       contextState.scheduler.stop();
       contextState.effects.clear();
