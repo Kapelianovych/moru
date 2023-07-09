@@ -1,5 +1,5 @@
 import { JSX } from "moru";
-import { Context, Getter } from "@moru/context";
+import { ChildContext, Getter } from "@moru/context";
 
 type Replace<
   O,
@@ -51,11 +51,14 @@ type AttributeValue<T extends AttributeLiteral = string> =
   | Mix<T, string, boolean>
   | Getter<Mix<T, string, boolean>>;
 
-export type Component<T = {}> = (properties: T, context: Context) => JSX.Node;
+export type Component<T = {}> = (
+  properties: T,
+  context: ChildContext,
+) => JSX.Node;
 
 export type AsyncComponent<T = {}> = (
   properties: T & { readonly fallback?: JSX.Node },
-  context: Context,
+  context: ChildContext,
 ) => Promise<JSX.Node>;
 
 type BaseJSXNode =
@@ -834,7 +837,7 @@ declare module "moru" {
       readonly tabindex?: AttributeValue<number | bigint>;
       // Styling attributes
       readonly class?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
-      readonly style?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
+      readonly style?: AttributeValue<string>;
     }
 
     interface HTMLCommonAttributes<E extends globalThis.Element>
@@ -877,7 +880,7 @@ declare module "moru" {
       readonly part?: AttributeValue<string>;
       readonly slot?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
       readonly spellcheck?: AttributeValue<boolean | "true" | "false">;
-      readonly style?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
+      readonly style?: AttributeValue<string>;
       readonly tabindex?: AttributeValue<number | bigint>;
       readonly title?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
       readonly translate?: AttributeValue<boolean | "yes" | "no">;

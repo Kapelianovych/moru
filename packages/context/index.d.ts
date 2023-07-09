@@ -24,8 +24,14 @@ export type EffectParameters<T extends readonly Getter<unknown>[]> = {
   readonly [K in keyof T]: ReturnType<T[K]>;
 };
 
+export type Disposer = {
+  (): void;
+  on(listen: VoidFunction): void;
+};
+
 export type Context = {
-  dispose(): void;
+  readonly dispose: Disposer;
+  readonly disposed: boolean;
 
   useCache<K, T>(key: K, value: T): readonly [() => T, Setter<T>, VoidFunction];
 
@@ -52,7 +58,15 @@ export type Context = {
   ): VoidFunction;
 };
 
+export type ChildContext = Context & {
+  readonly parent: Context | ChildContext;
+};
+
 export function createContext(): Context;
+
+export function createChildContext(
+  parent: Context | ChildContext,
+): ChildContext;
 
 export function isGetter<T>(value: Getter<T>): true;
 export function isGetter<T>(value: unknown): value is Getter<T>;

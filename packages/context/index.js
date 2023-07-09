@@ -8,52 +8,35 @@ const whenIdle =
 
 const stopIdle = globalThis.cancelIdleCallback ?? clearTimeout;
 
-const run = (queue) =>
-  queue.forEach((effect) => {
-    effect();
-    queue.delete(effect);
-  });
-
 const createScheduler = () => {
-  let stopped, relaxedTimer, urgentEffectsScheduled;
+  let stopped, timer;
 
-  const relaxedEffectsQueue = new Set(),
-    urgentEffectsQueue = new Set();
+  const queue = new Set();
 
   return {
     add(effect) {
       if (stopped) return;
 
-      (effect.urgent ? urgentEffectsQueue : relaxedEffectsQueue).add(effect);
+      queue.add(effect);
     },
     stop() {
       stopped = true;
-      relaxedTimer && stopIdle(relaxedTimer);
-      relaxedEffectsQueue.clear();
-      urgentEffectsQueue.clear();
+      timer && stopIdle(timer);
+      queue.clear();
     },
     remove(effect) {
-      relaxedEffectsQueue.delete(effect);
-      urgentEffectsQueue.delete(effect);
+      queue.delete(effect);
     },
     schedule() {
       if (stopped) return;
 
-      if (urgentEffectsQueue.size && !urgentEffectsScheduled) {
-        urgentEffectsScheduled = true;
-
-        queueMicrotask(() => {
-          // Microtasks can't be canceled so we have to check if the scope
-          // is not disposed when it's time for them to execute.
-          if (!stopped) run(urgentEffectsQueue);
-          urgentEffectsScheduled = false;
-        });
-      }
-
-      if (relaxedEffectsQueue.size)
-        relaxedTimer ??= whenIdle(() => {
-          run(relaxedEffectsQueue);
-          relaxedTimer = null;
+      if (queue.size)
+        timer ??= whenIdle(() => {
+          queue.forEach((effect) => {
+            effect();
+            queue.delete(effect);
+          });
+          timer = null;
         });
     },
   };
@@ -67,13 +50,26 @@ const createContextState = () => ({
   scheduler: createScheduler(),
 });
 
-const createContextDisposer = (contextState) => () => {
-  contextState.disposed = true;
-  contextState.scheduler.stop();
-  contextState.effects.clear();
-  contextState.cleanups.forEach((clean) => clean());
-  contextState.cleanups.clear();
-  contextState.cache.clear();
+const createContextDisposer = (contextState) => {
+  const listeners = new Set();
+
+  return Object.assign(
+    () => {
+      contextState.disposed = true;
+      contextState.scheduler.stop();
+      contextState.effects.clear();
+      contextState.cleanups.forEach((clean) => clean());
+      contextState.cleanups.clear();
+      contextState.cache.clear();
+      listeners.forEach((fn) => fn());
+      listeners.clear();
+    },
+    {
+      on(listen) {
+        !contextState.disposed && listeners.add(listen);
+      },
+    },
+  );
 };
 
 const createStateHook =
@@ -94,12 +90,18 @@ const createStateHook =
 
           if (contextState.disposed || stateDisposed) return;
 
-          contextState.effects.get(getter)?.forEach(contextState.scheduler.add);
+          contextState.effects
+            .get(getter)
+            ?.forEach((effect) =>
+              effect.urgent ? effect() : contextState.scheduler.add(effect),
+            );
 
           contextState.scheduler.schedule();
         }
       },
       () => {
+        if (stateDisposed) return;
+
         stateDisposed = true;
         contextState.effects.get(getter)?.forEach((effect) => {
           contextState.scheduler.remove(effect);
@@ -165,6 +167,8 @@ const createCacheHook = (contextState) => (key, value) => {
       contextState.cache.set(key, value);
     },
     () => {
+      if (cacheDisposed) return;
+
       cacheDisposed = true;
       contextState.cache.delete(key);
       value = initial;
@@ -187,5 +191,91 @@ export const createContext = () => {
       effect.urgent = true;
       effect();
     }),
+    get disposed() {
+      return contextState.disposed;
+    },
+  };
+};
+
+const createChildContextState = (parent) => {
+  const state = {
+    parent,
+    disposes: new Set(),
+    disposed: parent.disposed,
+  };
+
+  parent.dispose.on(() => {
+    state.disposed = true;
+    // Disposes were already called by a parent context,
+    // so we have to just clean the holder up.
+    state.disposes.clear();
+  });
+
+  return state;
+};
+
+const createChildContextDisposer = (childContextState) => {
+  const listeners = new Set();
+
+  return Object.assign(
+    () => {
+      if (childContextState.disposed) return;
+
+      childContextState.disposed = true;
+      childContextState.disposes.forEach((dispose) => dispose());
+      childContextState.disposes.clear();
+      listeners.forEach((fn) => fn());
+      listeners.clear();
+    },
+    {
+      on(listen) {
+        !childContextState.disposed && listeners.add(listen);
+      },
+    },
+  );
+};
+
+const createDerivedWritableHook =
+  (name, childContextState) =>
+  (...parameters) => {
+    const tuple = childContextState.parent[name](...parameters);
+
+    childContextState.disposed
+      ? tuple[2]()
+      : childContextState.disposes.add(tuple[2]);
+
+    return tuple;
+  };
+
+const createDerivedEffectHook =
+  (name, childContextState) =>
+  (...parameters) => {
+    const dispose = childContextState.parent[name](...parameters);
+
+    childContextState.disposed
+      ? dispose()
+      : childContextState.disposes.add(dispose);
+
+    return dispose;
+  };
+
+export const createChildContext = (parent) => {
+  const childContextState = createChildContextState(parent);
+
+  return {
+    dispose: createChildContextDisposer(childContextState),
+    useCache: createDerivedWritableHook("useCache", childContextState),
+    createState: createDerivedWritableHook("createState", childContextState),
+    createEffect: createDerivedEffectHook("createEffect", childContextState),
+    createUrgentEffect: createDerivedEffectHook(
+      "createUrgentEffect",
+      childContextState,
+    ),
+    get parent() {
+      return childContextState.parent;
+    },
+    get disposed() {
+      return childContextState.disposed;
+    },
   };
 };

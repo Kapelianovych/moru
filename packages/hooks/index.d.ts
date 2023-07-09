@@ -11,6 +11,13 @@ export type Disposable<O extends object> = O & {
   readonly dispose: VoidFunction;
 };
 
+export type DisposableGetter<A> = Disposable<Getter<A>>;
+
+export function isDisposableGetter<V>(value: DisposableGetter<V>): true;
+export function isDisposableGetter<V>(
+  value: unknown,
+): value is DisposableGetter<V>;
+
 export function useCache<K, V>(
   context: Context,
   key: K,
@@ -46,16 +53,23 @@ export function createUrgentEffect<const T extends readonly Getter<unknown>[]>(
   dependencies: T,
 ): VoidFunction;
 
+export type CreateMemoOptions<A> = {
+  equals?(previous: A | undefined, next: A): boolean;
+};
+
 export function createMemo<T>(
   context: Context,
-  callback: (previous: T | undefined) => T,
-): Disposable<Getter<T>>;
+  callback: (previous: T | undefined) => T | DisposableGetter<T>,
+): DisposableGetter<T>;
 export function createMemo<T, const D extends readonly Getter<unknown>[]>(
   context: Context,
-  callback: (previous: T | undefined, ...parameters: EffectParameters<D>) => T,
+  callback: (
+    previous: T | undefined,
+    ...parameters: EffectParameters<D>
+  ) => T | DisposableGetter<T>,
   dependencies: D,
-  options?: CreateStateOptions<T>,
-): Disposable<Getter<T>>;
+  options?: CreateMemoOptions<T>,
+): DisposableGetter<T>;
 
 export type Provider<Value> = {
   (properties: { readonly value: Value }, context: Context): undefined;
@@ -67,7 +81,7 @@ export type Provider<Value> = {
 
 export function createProvider<Value>(
   initial: Value,
-): readonly [Provider<Value>, () => Value, VoidFunction];
+): readonly [Provider<Value>, (context: Context) => Value, VoidFunction];
 
 export type Resource<R, L> =
   | {
@@ -105,7 +119,7 @@ export type CreateResourceOptions<R, L> = {
 export function createResource<R, L>(
   context: Context,
   fetcher: () => Promise<R>,
-): Disposable<Getter<Resource<R, L>>>;
+): DisposableGetter<Resource<R, L>>;
 export function createResource<
   R,
   L,
@@ -115,4 +129,4 @@ export function createResource<
   fetcher: (...parameters: EffectParameters<D>) => Promise<R>,
   dependencies: D,
   options?: CreateResourceOptions<R, L>,
-): Disposable<Getter<Resource<R, L>>>;
+): DisposableGetter<Resource<R, L>>;

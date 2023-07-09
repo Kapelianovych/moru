@@ -1,5 +1,5 @@
-import { isGetter } from "@moru/context";
 import { isElement } from "moru";
+import { createChildContext, isGetter } from "@moru/context";
 
 const ASYNC_INSTANCE = Symbol("moru:async_instance");
 
@@ -136,57 +136,16 @@ const renderComponent = (
   position,
   isHydrating,
 ) => {
-  const result = tag(properties, {
-    useCache(key, value) {
-      const cache = context.useCache(key, value);
+  const componentContext = createChildContext(context);
 
-      // Immediately dispose the cache entry and pertain only local value.
-      options.allowEffects || cache[2]();
+  !options.allowEffects && componentContext.dispose();
 
-      return cache;
-    },
-    createState(initial, stateOptions) {
-      const state = context.createState(initial, stateOptions);
-
-      options.allowEffects
-        ? nearestScopedDisposals?.add(state[2])
-        : // Immediately dispose the state.
-          state[2]();
-
-      return state;
-    },
-    createEffect(callback, dependencies) {
-      if (!options.allowEffects) return () => {};
-
-      const dispose = context.createEffect(callback, dependencies);
-
-      nearestScopedDisposals?.add(dispose);
-
-      return dispose;
-    },
-    createUrgentEffect(callback, dependencies = []) {
-      if (!options.allowEffects) {
-        const dispose = callback(
-          ...dependencies.map((dependency) => dependency()),
-        );
-
-        dispose instanceof Promise ? dispose.then((fn) => fn?.()) : dispose?.();
-
-        return () => {};
-      }
-
-      const dispose = context.createUrgentEffect(callback, dependencies);
-
-      nearestScopedDisposals?.add(dispose);
-
-      return dispose;
-    },
-  });
+  const result = tag(properties, componentContext);
 
   return result instanceof Promise
     ? createAsyncInstance(
         options,
-        context,
+        componentContext,
         parent,
         properties.fallback,
         result,
@@ -196,7 +155,7 @@ const renderComponent = (
       )
     : render(
         options,
-        context,
+        componentContext,
         parent,
         result,
         nearestScopedDisposals,

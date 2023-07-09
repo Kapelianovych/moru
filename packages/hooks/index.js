@@ -1,3 +1,8 @@
+import { isGetter } from "@moru/context";
+
+export const isDisposableGetter = (value) =>
+  isGetter(value) && "dispose" in value;
+
 export const useCache = (context, key, value) => context.useCache(key, value);
 
 export const createState = (context, initial, options) =>
@@ -18,8 +23,18 @@ export const createMemo = (context, callback, dependencies, options) => {
 
   const disposeEffect = createUrgentEffect(
     context,
-    (...parameters) =>
-      setValue((oldValue) => callback(oldValue, ...parameters)),
+    (...parameters) => {
+      const result = callback(value(), ...parameters);
+
+      if (isDisposableGetter(result)) {
+        const disposeEffect = createUrgentEffect(context, setValue, [result]);
+
+        return () => {
+          disposeEffect();
+          result.dispose();
+        };
+      } else setValue(result);
+    },
     dependencies,
   );
 
@@ -35,20 +50,24 @@ export const createMemo = (context, callback, dependencies, options) => {
 };
 
 export const createProvider = (initial) => {
-  let _value = initial;
+  const id = Symbol();
+
   let disposed;
   let disposeEffect;
 
+  const get = (context) =>
+    context[id] ?? (context.parent ? get(context.parent) : initial);
+
   return [
     ({ value, children }, context) => {
-      _value = value;
+      context[id] = value;
 
       disposed ||
-        (disposeEffect = createEffect(context, () => () => (_value = initial)));
+        (disposeEffect = createEffect(context, () => () => delete context[id]));
 
       return children;
     },
-    () => _value,
+    get,
     () => {
       disposed = true;
       disposeEffect?.();
