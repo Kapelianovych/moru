@@ -199,27 +199,16 @@ export const createContext = () => {
   };
 };
 
-const createChildContextState = (parent) => {
-  const state = {
-    parent,
-    disposes: new Set(),
-    disposed: parent.disposed,
-  };
-
-  parent.dispose.on(() => {
-    state.disposed = true;
-    // Disposes were already called by a parent context,
-    // so we have to just clean the holder up.
-    state.disposes.clear();
-  });
-
-  return state;
-};
+const createChildContextState = (parent) => ({
+  parent,
+  disposes: new Set(),
+  disposed: parent.disposed,
+});
 
 const createChildContextDisposer = (childContextState) => {
   const listeners = new Set();
 
-  return Object.assign(
+  const dispose = Object.assign(
     () => {
       if (childContextState.disposed) return;
 
@@ -235,6 +224,10 @@ const createChildContextDisposer = (childContextState) => {
       },
     },
   );
+
+  childContextState.parent.dispose.on(dispose);
+
+  return dispose;
 };
 
 const createDerivedWritableHook =
