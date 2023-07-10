@@ -27,13 +27,17 @@ export const createMemo = (context, callback, dependencies, options) => {
       const result = callback(value(), ...parameters);
 
       if (isDisposableGetter(result)) {
-        const disposeEffect = createUrgentEffect(context, setValue, [result]);
+        const disposeEffect = createUrgentEffect(
+          context,
+          (value) => setValue(() => value),
+          [result],
+        );
 
         return () => {
           disposeEffect();
           result.dispose();
         };
-      } else setValue(result);
+      } else setValue(() => result);
     },
     dependencies,
   );
