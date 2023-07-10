@@ -82,7 +82,6 @@ const createAsyncInstance = (
   parent,
   fallback,
   promise,
-  nearestScopedDisposals,
   position,
   isHydrating,
 ) => {
@@ -93,7 +92,6 @@ const createAsyncInstance = (
     context,
     parent,
     fallback,
-    nearestScopedDisposals,
     position,
     isHydrating,
   );
@@ -109,7 +107,6 @@ const createAsyncInstance = (
           context,
           parent,
           instance,
-          nearestScopedDisposals,
           position,
           isHydrating,
         );
@@ -132,7 +129,6 @@ const renderComponent = (
   context,
   parent,
   { tag, properties },
-  nearestScopedDisposals,
   position,
   isHydrating,
 ) => {
@@ -149,19 +145,10 @@ const renderComponent = (
         parent,
         properties.fallback,
         result,
-        nearestScopedDisposals,
         position,
         isHydrating,
       )
-    : render(
-        options,
-        componentContext,
-        parent,
-        result,
-        nearestScopedDisposals,
-        position,
-        isHydrating,
-      );
+    : render(options, componentContext, parent, result, position, isHydrating);
 };
 
 const renderIntrinsic = (
@@ -169,39 +156,28 @@ const renderIntrinsic = (
   context,
   parent,
   { tag, properties: { ref, children, ...attributes } },
-  nearestScopedDisposals,
   position,
   isHydrating,
 ) => {
   const instance = options.createInstance(parent, tag, position, isHydrating);
 
-  Object.entries(attributes).forEach(([name, value]) => {
-    if (isGetter(value))
-      if (options.allowEffects) {
-        const dispose = context.createUrgentEffect(
-          (value) => {
-            options.setProperty(instance, name, value, isHydrating);
-          },
-          [value],
-        );
-
-        nearestScopedDisposals?.add(dispose);
-      } else options.setProperty(instance, name, value(), isHydrating);
-    else options.setProperty(instance, name, value, isHydrating);
-  });
+  Object.entries(attributes).forEach(([name, value]) =>
+    isGetter(value)
+      ? options.allowEffects
+        ? context.createUrgentEffect(
+            (value) => {
+              options.setProperty(instance, name, value, isHydrating);
+            },
+            [value],
+          )
+        : options.setProperty(instance, name, value(), isHydrating)
+      : options.setProperty(instance, name, value, isHydrating),
+  );
 
   appendInstance(
     options,
     instance,
-    render(
-      options,
-      context,
-      instance,
-      children,
-      nearestScopedDisposals,
-      0,
-      isHydrating,
-    ),
+    render(options, context, instance, children, 0, isHydrating),
     isHydrating,
   );
 
@@ -210,39 +186,23 @@ const renderIntrinsic = (
   return instance;
 };
 
-const render = (
-  options,
-  context,
-  parent,
-  element,
-  nearestScopedDisposals,
-  position,
-  isHydrating,
-) => {
+const render = (options, context, parent, element, position, isHydrating) => {
   if (isGetter(element)) {
     if (!options.allowEffects)
-      return render(
-        options,
-        context,
-        parent,
-        element(),
-        null,
-        position,
-        isHydrating,
-      );
+      return render(options, context, parent, element(), position, isHydrating);
 
     let previousInstance;
-    const currentScopedDisposals = new Set();
 
-    const dispose = context.createUrgentEffect(
+    context.createUrgentEffect(
       (element) => {
+        const currentContext = createChildContext(context);
+
         if (previousInstance) {
           const instance = render(
             options,
-            context,
+            currentContext,
             parent,
             element,
-            currentScopedDisposals,
             position,
             isHydrating,
           );
@@ -259,56 +219,32 @@ const render = (
         } else
           previousInstance = render(
             options,
-            context,
+            currentContext,
             parent,
             element,
-            currentScopedDisposals,
             position,
             isHydrating,
           );
 
-        if (nearestScopedDisposals)
-          currentScopedDisposals.forEach((dispose) =>
-            nearestScopedDisposals.add(dispose),
-          );
-
-        return () => {
-          currentScopedDisposals.forEach((dispose) => {
-            dispose();
-            nearestScopedDisposals?.delete(dispose);
-          });
-          currentScopedDisposals.clear();
-        };
+        return currentContext.dispose;
       },
       [element],
     );
 
-    nearestScopedDisposals?.add(() => {
-      dispose();
-      removeInstance(options, parent, previousInstance);
-    });
+    context.dispose.on(() => removeInstance(options, parent, previousInstance));
 
     return previousInstance;
   }
 
   if (isElement(element))
     return isGetter(element.tag)
-      ? render(
-          options,
-          context,
-          parent,
-          element.tag,
-          nearestScopedDisposals,
-          position,
-          isHydrating,
-        )
+      ? render(options, context, parent, element.tag, position, isHydrating)
       : typeof element.tag === "string"
       ? renderIntrinsic(
           options,
           context,
           parent,
           element,
-          nearestScopedDisposals,
           position,
           isHydrating,
         )
@@ -317,22 +253,13 @@ const render = (
           context,
           parent,
           element,
-          nearestScopedDisposals,
           position,
           isHydrating,
         );
 
   if (Array.isArray(element)) {
     const renderedChildren = element.flatMap((child, index) =>
-      render(
-        options,
-        context,
-        parent,
-        child,
-        nearestScopedDisposals,
-        position + index,
-        isHydrating,
-      ),
+      render(options, context, parent, child, position + index, isHydrating),
     );
 
     return renderedChildren.length
@@ -351,7 +278,6 @@ export const createRenderer =
       context,
       root,
       element,
-      null,
       0,
       () => hydration,
     );

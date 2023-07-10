@@ -326,8 +326,9 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
       readonly spacer: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly span: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly span: HTMLSpanAttributes &
+        EventAttributes<HTMLSpanElement> &
+        IntrinsicProperties<HTMLSpanElement>;
       readonly strike: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly strong: {} & EventAttributes<HTMLAnchorElement> &
@@ -1141,6 +1142,10 @@ declare module "moru" {
     interface HTMLBodyAttributes
       extends WithChildren,
         HTMLCommonAttributes<HTMLBodyElement> {}
+
+    interface HTMLSpanAttributes
+      extends WithChildren,
+        HTMLCommonAttributes<HTMLSpanElement> {}
 
     interface SVGSVGAttributes
       extends WithChildren,
