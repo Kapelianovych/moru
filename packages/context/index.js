@@ -3,8 +3,7 @@ const GETTER = Symbol("context:getter");
 export const isGetter = (value) =>
   typeof value === "function" && GETTER in value;
 
-const whenIdle =
-  globalThis.requestIdleCallback ?? ((callback) => setTimeout(callback, 1));
+const whenIdle = globalThis.requestIdleCallback ?? setTimeout;
 
 const stopIdle = globalThis.cancelIdleCallback ?? clearTimeout;
 
