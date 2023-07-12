@@ -49,28 +49,15 @@ const createContextState = () => ({
   scheduler: createScheduler(),
 });
 
-const createContextDisposer = (contextState) => {
-  const listeners = new Set();
+const createContextDisposer = (contextState) => () => {
+  if (contextState.disposed) return;
 
-  return Object.assign(
-    () => {
-      if (contextState.disposed) return;
-
-      contextState.disposed = true;
-      contextState.scheduler.stop();
-      contextState.effects.clear();
-      contextState.cleanups.forEach((clean) => clean());
-      contextState.cleanups.clear();
-      contextState.cache.clear();
-      listeners.forEach((fn) => fn());
-      listeners.clear();
-    },
-    {
-      on(listen) {
-        !contextState.disposed && listeners.add(listen);
-      },
-    },
-  );
+  contextState.disposed = true;
+  contextState.scheduler.stop();
+  contextState.effects.clear();
+  contextState.cleanups.forEach((clean) => clean());
+  contextState.cleanups.clear();
+  contextState.cache.clear();
 };
 
 const createStateHook =
@@ -205,26 +192,15 @@ const createChildContextState = (parent) => ({
 });
 
 const createChildContextDisposer = (childContextState) => {
-  const listeners = new Set();
+  const dispose = () => {
+    if (childContextState.disposed) return;
 
-  const dispose = Object.assign(
-    () => {
-      if (childContextState.disposed) return;
+    childContextState.disposed = true;
+    childContextState.disposes.forEach((dispose) => dispose());
+    childContextState.disposes.clear();
+  };
 
-      childContextState.disposed = true;
-      childContextState.disposes.forEach((dispose) => dispose());
-      childContextState.disposes.clear();
-      listeners.forEach((fn) => fn());
-      listeners.clear();
-    },
-    {
-      on(listen) {
-        !childContextState.disposed && listeners.add(listen);
-      },
-    },
-  );
-
-  childContextState.parent.dispose.on(dispose);
+  childContextState.parent.createUrgentEffect(() => dispose);
 
   return dispose;
 };

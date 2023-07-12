@@ -231,7 +231,9 @@ const render = (options, context, parent, element, position, isHydrating) => {
       [element],
     );
 
-    context.dispose.on(() => removeInstance(options, parent, previousInstance));
+    context.createUrgentEffect(
+      () => () => removeInstance(options, parent, previousInstance),
+    );
 
     return previousInstance;
   }

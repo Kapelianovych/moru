@@ -24,14 +24,10 @@ export type EffectParameters<T extends readonly Getter<unknown>[]> = {
   readonly [K in keyof T]: ReturnType<T[K]>;
 };
 
-export type Disposer = {
-  (): void;
-  on(listen: VoidFunction): void;
-};
-
 export type Context = {
-  readonly dispose: Disposer;
   readonly disposed: boolean;
+
+  dispose(): void;
 
   useCache<K, T>(key: K, value: T): readonly [() => T, Setter<T>, VoidFunction];
 
