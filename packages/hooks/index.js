@@ -57,14 +57,17 @@ export const createProvider = (initial) => {
   const disposes = new Set();
 
   const get = (context) =>
-    context[id] ?? (context.parent ? get(context.parent) : initial);
+    disposed
+      ? initial
+      : context[id] ?? (context.parent ? get(context.parent) : initial);
 
   return [
     ({ value, children }, context) => {
+      if (disposed) return children;
+
       context[id] = value;
 
-      disposed ||
-        disposes.add(createEffect(context, () => () => delete context[id]));
+      disposes.add(createEffect(context, () => () => delete context[id]));
 
       return children;
     },
