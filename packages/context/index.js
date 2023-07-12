@@ -64,7 +64,6 @@ const createStateHook =
   (contextState) =>
   (current, { equals = Object.is } = {}) => {
     let stateDisposed = contextState.disposed;
-    const initial = current;
 
     const getter = Object.assign(() => current, { [GETTER]: null });
 
@@ -97,7 +96,6 @@ const createStateHook =
           contextState.cleanups.delete(effect);
         });
         contextState.effects.delete(getter);
-        current = initial;
       },
     ];
   };
@@ -138,7 +136,6 @@ const createEffectHook =
 
 const createCacheHook = (contextState) => (key, value) => {
   let cacheDisposed = contextState.disposed;
-  const initial = value;
 
   if (!cacheDisposed)
     contextState.cache.has(key)
@@ -159,7 +156,6 @@ const createCacheHook = (contextState) => (key, value) => {
 
       cacheDisposed = true;
       contextState.cache.delete(key);
-      value = initial;
     },
   ];
 };

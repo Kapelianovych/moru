@@ -42,21 +42,19 @@ export const createMemo = (context, callback, dependencies, options) => {
     dependencies,
   );
 
-  const initial = value();
-
   return Object.assign(value, {
     dispose() {
       disposeEffect();
       disposeState();
-      setValue(initial);
     },
   });
 };
 
 export const createProvider = (initial) => {
-  const id = Symbol();
+  let disposed;
 
-  let disposed, disposeEffect;
+  const id = Symbol();
+  const disposes = new Set();
 
   const get = (context) =>
     context[id] ?? (context.parent ? get(context.parent) : initial);
@@ -66,7 +64,7 @@ export const createProvider = (initial) => {
       context[id] = value;
 
       disposed ||
-        (disposeEffect = createEffect(context, () => () => delete context[id]));
+        disposes.add(createEffect(context, () => () => delete context[id]));
 
       return children;
     },
@@ -75,7 +73,8 @@ export const createProvider = (initial) => {
       if (disposed) return;
 
       disposed = true;
-      disposeEffect?.();
+      disposes.forEach((dispose) => dispose());
+      disposes.clear();
     },
   ];
 };
