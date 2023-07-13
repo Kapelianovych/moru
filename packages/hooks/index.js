@@ -3,8 +3,6 @@ import { isGetter } from "@moru/context";
 export const isDisposableGetter = (value) =>
   isGetter(value) && "dispose" in value;
 
-export const useCache = (context, key, value) => context.useCache(key, value);
-
 export const createState = (context, initial, options) =>
   context.createState(initial, options);
 

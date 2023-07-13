@@ -18,12 +18,6 @@ export function isDisposableGetter<V>(
   value: unknown,
 ): value is DisposableGetter<V>;
 
-export function useCache<K, V>(
-  context: Context,
-  key: K,
-  value: V,
-): readonly [() => V, Setter<V>, VoidFunction];
-
 export function createState<T>(
   context: Context,
 ): readonly [Getter<T | undefined>, Setter<T | undefined>, VoidFunction];

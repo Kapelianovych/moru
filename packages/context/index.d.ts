@@ -29,8 +29,6 @@ export type Context = {
 
   dispose(): void;
 
-  useCache<K, T>(key: K, value: T): readonly [() => T, Setter<T>, VoidFunction];
-
   createState<T>(): readonly [
     Getter<T | undefined>,
     Setter<T | undefined>,
