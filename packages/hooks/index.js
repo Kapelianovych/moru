@@ -57,7 +57,11 @@ export const createProvider = (initial) => {
   const get = (context) =>
     disposed
       ? initial
-      : context[id] ?? (context.parent ? get(context.parent) : initial);
+      : id in context
+      ? context[id]
+      : context.parent
+      ? get(context.parent)
+      : initial;
 
   return [
     ({ value, children }, context) => {
