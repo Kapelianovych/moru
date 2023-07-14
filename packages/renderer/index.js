@@ -134,7 +134,7 @@ const renderComponent = (
 ) => {
   const componentContext = createChildContext(context);
 
-  !options.allowEffects && componentContext.dispose();
+  options.allowEffects || componentContext.dispose();
 
   const result = tag(properties, componentContext);
 
