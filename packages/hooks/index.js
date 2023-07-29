@@ -91,41 +91,32 @@ const createResourceCache = (resource, parameters) => ({
   dependencies: JSON.stringify(parameters),
 });
 
-const normaliseCachedValue = async (value) => {
-  try {
-    value = await value;
-  } catch {
-    value = null;
-  }
-
-  return {
-    resource: value?.resource ?? loadingResource,
-    dependencies: value?.dependencies ?? "",
-  };
-};
-
 export const createResource = (
   context,
   fetcher,
   dependencies = [],
   { cache: [cachedValue, cacheValue, disposeCache] = [] } = {},
 ) => {
+  let maybeValueFromCache = cachedValue?.();
+
   const [resource, updateResource, disposeState] = createState(
     context,
-    loadingResource,
+    maybeValueFromCache?.resource ?? loadingResource,
   );
-
-  let firstCall = true;
 
   const disposeEffect = createEffect(
     context,
     async (...parameters) => {
-      if (firstCall) {
-        firstCall = false;
+      if (maybeValueFromCache) {
+        const fromCacheValue =
+          maybeValueFromCache instanceof Promise
+            ? await maybeValueFromCache
+            : maybeValueFromCache;
 
-        const fromCacheValue = await normaliseCachedValue(cachedValue?.());
+        maybeValueFromCache = null;
 
         if (
+          fromCacheValue &&
           fromCacheValue.resource !== loadingResource &&
           fromCacheValue.dependencies === JSON.stringify(parameters)
         )
