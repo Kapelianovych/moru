@@ -30,13 +30,13 @@ const createScheduler = () => {
       if (stopped) return;
 
       if (queue.size)
-        timer ??= whenIdle(() => {
-          queue.forEach((effect) => {
-            effect();
-            queue.delete(effect);
-          });
-          timer = null;
-        });
+        timer ??= whenIdle(
+          () =>
+            (timer = queue.forEach((effect) => {
+              effect();
+              queue.delete(effect);
+            })),
+        );
     },
   };
 };
