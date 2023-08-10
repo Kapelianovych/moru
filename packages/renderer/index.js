@@ -164,7 +164,7 @@ const renderIntrinsic = (
   Object.entries(attributes).forEach(([name, value]) =>
     isGetter(value)
       ? options.allowEffects
-        ? context.createUrgentEffect(
+        ? context.createEffect(
             (value) => {
               options.setProperty(instance, name, value, isHydrating);
             },
@@ -193,7 +193,7 @@ const render = (options, context, parent, element, position, isHydrating) => {
 
     let previousInstance;
 
-    context.createUrgentEffect(
+    context.createEffect(
       (element) => {
         const currentContext = createChildContext(context);
 
@@ -231,7 +231,7 @@ const render = (options, context, parent, element, position, isHydrating) => {
       [element],
     );
 
-    context.createUrgentEffect(
+    context.createEffect(
       () => () => removeInstance(options, parent, previousInstance),
     );
 

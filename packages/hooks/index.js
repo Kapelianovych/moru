@@ -6,11 +6,81 @@ export const isDisposableGetter = (value) =>
 export const createState = (context, initial, options) =>
   context.createState(initial, options);
 
-export const createEffect = (context, callback, dependencies) =>
+export const createUrgentEffect = (context, callback, dependencies) =>
   context.createEffect(callback, dependencies);
 
-export const createUrgentEffect = (context, callback, dependencies) =>
-  context.createUrgentEffect(callback, dependencies);
+const createEffectFactory = (request, revoke) => {
+  let timeout;
+
+  const queue = new Set();
+
+  return (context, callback, dependencies = []) => {
+    let callbackDispose;
+
+    const effect = () => {
+      callbackDispose?.();
+
+      const clear = callback(...dependencies.map((fn) => fn()));
+
+      callbackDispose = () =>
+        clear instanceof Promise ? clear.then((fn) => fn()) : clear();
+    };
+
+    const dispose = createUrgentEffect(
+      context,
+      () => {
+        queue.add(effect);
+
+        timeout ??= request(
+          () => (timeout = queue.forEach((fn) => (fn(), queue.delete(fn)))),
+        );
+
+        return () => {
+          if (context.disposed) {
+            timeout && revoke(timeout);
+            callbackDispose?.();
+            timeout = callbackDispose = queue.clear();
+          }
+        };
+      },
+      dependencies,
+    );
+
+    return () => {
+      queue.delete(effect);
+      dispose();
+      callbackDispose?.();
+      callbackDispose = null;
+    };
+  };
+};
+
+export const createEffect = createEffectFactory(
+  globalThis.requestIdleCallback ?? setTimeout,
+  globalThis.cancelIdleCallback ?? clearTimeout,
+);
+
+const requestMicrotask = (callback) => {
+  requestMicrotask.timeouts ??= new Set();
+
+  const id = Symbol();
+
+  requestMicrotask.timeouts.add(id);
+
+  queueMicrotask(() => {
+    requestMicrotask.timeouts.has(id) && callback();
+    requestMicrotask.timeouts.delete(id);
+  });
+
+  return id;
+};
+
+const revokeMicrotask = (id) => requestMicrotask.timeouts?.delete(id);
+
+export const createImportantEffect = createEffectFactory(
+  requestMicrotask,
+  revokeMicrotask,
+);
 
 export const createMemo = (context, callback, dependencies, options) => {
   const [value, setValue, disposeState] = createState(

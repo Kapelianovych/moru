@@ -44,12 +44,6 @@ export type Context = {
     callback: Effect<EffectParameters<T>>,
     dependencies: T,
   ): VoidFunction;
-
-  createUrgentEffect(callback: Effect<[]>): VoidFunction;
-  createUrgentEffect<const T extends readonly Getter<unknown>[]>(
-    callback: Effect<EffectParameters<T>>,
-    dependencies: T,
-  ): VoidFunction;
 };
 
 export type ChildContext = Context & {

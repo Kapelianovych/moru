@@ -47,6 +47,16 @@ export function createUrgentEffect<const T extends readonly Getter<unknown>[]>(
   dependencies: T,
 ): VoidFunction;
 
+export function createImportantEffect(
+  context: Context,
+  callback: Effect<[]>,
+): VoidFunction;
+export function createImportantEffect<const T extends readonly Getter<unknown>[]>(
+  context: Context,
+  callback: Effect<EffectParameters<T>>,
+  dependencies: T,
+): VoidFunction;
+
 export type CreateMemoOptions<A> = {
   equals?(previous: A | undefined, next: A): boolean;
 };
