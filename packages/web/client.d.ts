@@ -10,5 +10,5 @@ export const mount: Renderer<ParentNode, JSX.Node>;
 export function hydrate(
   context: Context,
   value: JSX.Node,
-  root: ParentNode,
+  root?: ParentNode,
 ): VoidFunction;
