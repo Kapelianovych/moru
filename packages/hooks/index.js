@@ -23,7 +23,7 @@ const createEffectFactory = (request, revoke) => {
       const clear = callback(...dependencies.map((fn) => fn()));
 
       callbackDispose = () =>
-        clear instanceof Promise ? clear.then((fn) => fn()) : clear();
+        clear instanceof Promise ? clear.then((fn) => fn?.()) : clear?.();
     };
 
     const dispose = createUrgentEffect(
