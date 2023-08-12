@@ -103,19 +103,14 @@ const createChildContextState = (parent) => ({
   disposed: parent.disposed,
 });
 
-const createChildContextDisposer = (childContextState) => {
-  const dispose = () => {
+const createChildContextDisposer = (childContextState) =>
+  childContextState.parent.createEffect(() => () => {
     if (childContextState.disposed) return;
 
     childContextState.disposed = true;
     childContextState.disposes.forEach((dispose) => dispose());
     childContextState.disposes.clear();
-  };
-
-  childContextState.parent.createEffect(() => dispose);
-
-  return dispose;
-};
+  });
 
 const createDerivedStateHook = (childContextState) => (value, options) => {
   const tuple = childContextState.parent.createState(value, options);

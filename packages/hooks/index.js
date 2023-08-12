@@ -139,7 +139,7 @@ export const createProvider = (initial) => {
 
       context[id] = value;
 
-      disposes.add(createEffect(context, () => () => delete context[id]));
+      disposes.add(createUrgentEffect(context, () => () => delete context[id]));
 
       return children;
     },

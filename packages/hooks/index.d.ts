@@ -51,7 +51,9 @@ export function createImportantEffect(
   context: Context,
   callback: Effect<[]>,
 ): VoidFunction;
-export function createImportantEffect<const T extends readonly Getter<unknown>[]>(
+export function createImportantEffect<
+  const T extends readonly Getter<unknown>[],
+>(
   context: Context,
   callback: Effect<EffectParameters<T>>,
   dependencies: T,
