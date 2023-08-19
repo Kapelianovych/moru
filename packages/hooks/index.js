@@ -9,77 +9,56 @@ export const createState = (context, initial, options) =>
 export const createUrgentEffect = (context, callback, dependencies) =>
   context.createEffect(callback, dependencies);
 
-const createEffectFactory = (request, revoke) => {
-  let timeout;
+export const createEffectFactory = (request) => {
+  let isScheduled;
 
   const queue = new Set();
 
   return (context, callback, dependencies = []) => {
-    let callbackDispose;
+    let disposeCallback;
 
     const effect = () => {
-      callbackDispose?.();
+      disposeCallback?.();
 
       const clear = callback(...dependencies.map((fn) => fn()));
 
-      callbackDispose = () =>
+      disposeCallback = () =>
         clear instanceof Promise ? clear.then((fn) => fn?.()) : clear?.();
     };
 
-    const dispose = createUrgentEffect(
+    const disposeArtifacts = () => {
+      disposeCallback?.();
+      disposeCallback = null;
+      queue.delete(effect);
+    };
+
+    const disposeEffect = createUrgentEffect(
       context,
       () => {
         queue.add(effect);
 
-        timeout ??= request(
-          () => (timeout = queue.forEach((fn) => (fn(), queue.delete(fn)))),
+        isScheduled ??= request(
+          () => (isScheduled = queue.forEach((fn) => (fn(), queue.delete(fn)))),
         );
 
-        return () => {
-          if (context.disposed) {
-            timeout && revoke(timeout);
-            callbackDispose?.();
-            timeout = callbackDispose = queue.clear();
-          }
-        };
+        return () => context.disposed && disposeArtifacts();
       },
       dependencies,
     );
 
     return () => {
-      queue.delete(effect);
-      dispose();
-      callbackDispose?.();
-      callbackDispose = null;
+      disposeEffect();
+      disposeArtifacts();
     };
   };
 };
 
 export const createEffect = createEffectFactory(
   globalThis.requestIdleCallback ?? setTimeout,
-  globalThis.cancelIdleCallback ?? clearTimeout,
 );
 
-const requestMicrotask = (callback) => {
-  requestMicrotask.timeouts ??= new Set();
-
-  const id = Symbol();
-
-  requestMicrotask.timeouts.add(id);
-
-  queueMicrotask(() => {
-    requestMicrotask.timeouts.has(id) && callback();
-    requestMicrotask.timeouts.delete(id);
-  });
-
-  return id;
-};
-
-const revokeMicrotask = (id) => requestMicrotask.timeouts?.delete(id);
-
 export const createImportantEffect = createEffectFactory(
-  requestMicrotask,
-  revokeMicrotask,
+  (callback) => (queueMicrotask(callback), 0),
 );
 
 export const createMemo = (context, callback, dependencies, options) => {

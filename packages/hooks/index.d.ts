@@ -27,37 +27,22 @@ export function createState<T>(
   options?: CreateStateOptions<T>,
 ): readonly [Getter<T>, Setter<T>, VoidFunction];
 
-export function createEffect(
-  context: Context,
-  callback: Effect<[]>,
-): VoidFunction;
-export function createEffect<const T extends readonly Getter<unknown>[]>(
-  context: Context,
-  callback: Effect<EffectParameters<T>>,
-  dependencies: T,
-): VoidFunction;
+export type Scheduler = (callback: VoidFunction) => unknown;
 
-export function createUrgentEffect(
-  context: Context,
-  callback: Effect<[]>,
-): VoidFunction;
-export function createUrgentEffect<const T extends readonly Getter<unknown>[]>(
-  context: Context,
-  callback: Effect<EffectParameters<T>>,
-  dependencies: T,
-): VoidFunction;
+export type EffectCreator = {
+  (context: Context, callback: Effect<[]>): VoidFunction;
+  <const T extends readonly Getter<unknown>[]>(
+    context: Context,
+    callback: Effect<EffectParameters<T>>,
+    dependencies: T,
+  ): VoidFunction;
+};
 
-export function createImportantEffect(
-  context: Context,
-  callback: Effect<[]>,
-): VoidFunction;
-export function createImportantEffect<
-  const T extends readonly Getter<unknown>[],
->(
-  context: Context,
-  callback: Effect<EffectParameters<T>>,
-  dependencies: T,
-): VoidFunction;
+export function createEffectFactory(schedule: Scheduler): EffectCreator;
+
+export const createEffect: EffectCreator;
+export const createUrgentEffect: EffectCreator;
+export const createImportantEffect: EffectCreator;
 
 export type CreateMemoOptions<A> = {
   equals?(previous: A | undefined, next: A): boolean;
