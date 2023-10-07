@@ -12,6 +12,7 @@
     "packages/moru",
     "packages/hooks",
     "packages/context",
-    "packages/renderer"
+    "packages/renderer",
+    "packages/components"
   ]
 }

@@ -121,3 +121,10 @@ export function createResource<
   dependencies: D,
   options?: CreateResourceOptions<R, L>,
 ): DisposableGetter<Resource<R, L>>;
+
+export type Ref<A> = {
+  (ref: A): void;
+  readonly current: A;
+};
+
+export function createRef<A>(initial?: A): Ref<A>;

@@ -195,3 +195,20 @@ export const createResource = (
     },
   });
 };
+
+export const createRef = (...initial) => {
+  const definition = (ref) => {
+    initial[0] = ref;
+  };
+
+  Reflect.defineProperty(definition, "current", {
+    get() {
+      if (initial.length) return initial[0];
+      else throw new Error("Ref is used before being assigned.");
+    },
+    enumerable: true,
+    configurable: false,
+  });
+
+  return definition;
+};
