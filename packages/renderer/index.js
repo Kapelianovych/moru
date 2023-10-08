@@ -48,7 +48,7 @@ const replaceInstance = (options, parent, previous, next) => {
     else {
       insertInstanceAfter(options, parent, previous.at(-1), next);
 
-      previous.forEach((child) => removeInstance(options, parent, child));
+      removeInstance(options, parent, previous);
     }
   } else if (previous !== next) {
     insertInstanceAfter(options, parent, previous, next);
