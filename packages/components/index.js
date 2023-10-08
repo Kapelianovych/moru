@@ -61,6 +61,9 @@ export const For = (
 
       previousItemsKeys = itemsKeys;
 
+      // Keep states strictly equal to elements discarding excessive ones.
+      indexStates.length = dataStates.length = mappedElements.length;
+
       setElements(mappedElements);
     },
     [each],
