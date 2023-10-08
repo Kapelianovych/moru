@@ -51,15 +51,14 @@ type AttributeValue<T extends AttributeLiteral = string> =
   | Mix<T, string, boolean>
   | Getter<Mix<T, string, boolean>>;
 
+export type ExtendedChildContext = ChildContext & {
+  readonly resolve: (node: JSX.Node) => Node | readonly Node[];
+};
+
 export type Component<T = {}> = (
   properties: T,
-  context: ChildContext,
+  context: ExtendedChildContext,
 ) => JSX.Node;
-
-export type AsyncComponent<T = {}> = (
-  properties: T & { readonly fallback?: JSX.Node },
-  context: ChildContext,
-) => Promise<JSX.Node>;
 
 type BaseJSXNode =
   | null

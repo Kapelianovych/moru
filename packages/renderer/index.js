@@ -1,34 +1,17 @@
 import { isElement } from "moru";
 import { createChildContext, isGetter } from "@moru/context";
 
-const ASYNC_INSTANCE = Symbol("moru:async_instance");
-
-const isAsyncInstance = (value) =>
-  value && typeof value === "object" && ASYNC_INSTANCE in value;
-
 const appendInstance = (options, parent, children, isHydrating) => {
   if (Array.isArray(children))
     children.forEach((child) =>
       appendInstance(options, parent, child, isHydrating),
     );
-  else if (isAsyncInstance(children)) {
-    appendInstance(options, parent, children.currentInstance, isHydrating);
-
-    options.allowEffects && children.continue();
-  } else options.appendInstance(parent, children, isHydrating);
+  else options.appendInstance(parent, children, isHydrating);
 };
 
-const insertInstanceAfter = (
-  options,
-  parent,
-  previousSibling,
-  instance,
-  updateInstance,
-) => {
+const insertInstanceAfter = (options, parent, previousSibling, instance) => {
   const lastSiblingInstance = Array.isArray(previousSibling)
-    ? previousSibling[previousSibling.length - 1]
-    : isAsyncInstance(previousSibling)
-    ? previousSibling.currentInstance
+    ? previousSibling.at(-1)
     : previousSibling;
 
   if (Array.isArray(instance)) {
@@ -38,90 +21,48 @@ const insertInstanceAfter = (
       insertInstanceAfter(options, parent, lastInsertedInstance, child);
       lastInsertedInstance = child;
     });
-  } else if (isAsyncInstance(instance)) {
-    insertInstanceAfter(
-      options,
-      parent,
-      lastSiblingInstance,
-      instance.currentInstance,
-    );
-
-    options.allowEffects && instance.continue(updateInstance);
   } else options.insertInstanceAfter(parent, lastSiblingInstance, instance);
 };
 
-const replaceInstance = (options, parent, previous, next, updateInstance) => {
+const replaceInstance = (options, parent, previous, next) => {
   let previousInstance;
 
-  if (Array.isArray(previous)) {
+  if (Array.isArray(previous) && Array.isArray(next)) {
+    const nextSet = new Set(next);
+    const previousSet = new Set(previous);
+
     previousInstance = previous[0];
 
-    previous
-      .slice(1)
-      .forEach((child) => removeInstance(options, parent, child));
-  } else if (isAsyncInstance(previous))
-    previousInstance = previous.currentInstance;
-  else previousInstance = previous;
+    next.forEach((instance) => {
+      previousSet.has(instance) ||
+        insertInstanceAfter(options, parent, previousInstance, instance);
 
-  insertInstanceAfter(options, parent, previousInstance, next, updateInstance);
+      previousInstance = instance;
+    });
 
-  removeInstance(options, parent, previousInstance);
+    previous.forEach(
+      (instance) =>
+        nextSet.has(instance) || removeInstance(options, parent, instance),
+    );
+  } else {
+    if (Array.isArray(previous)) {
+      previousInstance = previous[0];
+
+      previous
+        .slice(1)
+        .forEach((child) => removeInstance(options, parent, child));
+    } else previousInstance = previous;
+
+    insertInstanceAfter(options, parent, previousInstance, next);
+
+    removeInstance(options, parent, previousInstance);
+  }
 };
 
 const removeInstance = (options, parent, instance) => {
   if (Array.isArray(instance))
     instance.forEach((child) => removeInstance(options, parent, child));
-  else if (isAsyncInstance(instance))
-    removeInstance(options, parent, instance.currentInstance);
   else options.removeInstance(parent, instance);
-};
-
-const createAsyncInstance = (
-  options,
-  context,
-  parent,
-  fallback,
-  promise,
-  position,
-  isHydrating,
-) => {
-  let isFinished;
-
-  let currentInstance = render(
-    options,
-    context,
-    parent,
-    fallback,
-    position,
-    isHydrating,
-  );
-
-  return {
-    [ASYNC_INSTANCE]: null,
-    continue(updateInstance) {
-      promise.then((instance) => {
-        if (isFinished) return;
-
-        const nextInstance = render(
-          options,
-          context,
-          parent,
-          instance,
-          position,
-          isHydrating,
-        );
-
-        replaceInstance(options, parent, currentInstance, nextInstance);
-
-        currentInstance = nextInstance;
-        updateInstance?.(nextInstance);
-        isFinished = true;
-      });
-    },
-    get currentInstance() {
-      return currentInstance;
-    },
-  };
 };
 
 const renderComponent = (
@@ -134,21 +75,21 @@ const renderComponent = (
 ) => {
   const componentContext = createChildContext(context);
 
+  componentContext.resolve = (node) =>
+    render(options, componentContext, parent, node, 0, () => false);
+
   options.allowEffects || componentContext.dispose();
 
   const result = tag(properties, componentContext);
 
-  return result instanceof Promise
-    ? createAsyncInstance(
-        options,
-        componentContext,
-        parent,
-        properties.fallback,
-        result,
-        position,
-        isHydrating,
-      )
-    : render(options, componentContext, parent, result, position, isHydrating);
+  return render(
+    options,
+    componentContext,
+    parent,
+    result,
+    position,
+    isHydrating,
+  );
 };
 
 const renderIntrinsic = (
@@ -207,13 +148,7 @@ const render = (options, context, parent, element, position, isHydrating) => {
             isHydrating,
           );
 
-          replaceInstance(
-            options,
-            parent,
-            previousInstance,
-            instance,
-            (deferredInstance) => (previousInstance = deferredInstance),
-          );
+          replaceInstance(options, parent, previousInstance, instance);
 
           previousInstance = instance;
         } else

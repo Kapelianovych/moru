@@ -17,8 +17,8 @@ export const mount = createRenderer({
     if (instance != null)
       (isHydrating() && instance.isConnected) || parent.append(instance);
   },
-  removeInstance(_parent, instance) {
-    instance.remove();
+  removeInstance(parent, instance) {
+    parent.removeChild(instance);
   },
   createInstance(parent, tag, position, isHydrating) {
     return isHydrating()
