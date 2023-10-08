@@ -25,17 +25,13 @@ const insertInstanceAfter = (options, parent, previousSibling, instance) => {
 };
 
 const replaceInstance = (options, parent, previous, next) => {
-  let previousInstance;
-
   if (Array.isArray(previous) && Array.isArray(next)) {
     const nextSet = new Set(next);
-    const previousSet = new Set(previous);
 
-    previousInstance = previous[0];
+    let previousInstance = previous[0];
 
     next.forEach((instance) => {
-      previousSet.has(instance) ||
-        insertInstanceAfter(options, parent, previousInstance, instance);
+      insertInstanceAfter(options, parent, previousInstance, instance);
 
       previousInstance = instance;
     });
@@ -44,19 +40,22 @@ const replaceInstance = (options, parent, previous, next) => {
       (instance) =>
         nextSet.has(instance) || removeInstance(options, parent, instance),
     );
-  } else {
-    if (Array.isArray(previous)) {
-      previousInstance = previous[0];
+  } else if (Array.isArray(previous)) {
+    if (previous.includes(next))
+      previous.forEach(
+        (child) => child === next || removeInstance(options, parent, child),
+      );
+    else {
+      insertInstanceAfter(options, parent, previous.at(-1), next);
 
-      previous
-        .slice(1)
-        .forEach((child) => removeInstance(options, parent, child));
-    } else previousInstance = previous;
+      previous.forEach((child) => removeInstance(options, parent, child));
+    }
+  } else if (previous !== next) {
+    insertInstanceAfter(options, parent, previous, next);
 
-    insertInstanceAfter(options, parent, previousInstance, next);
-
-    removeInstance(options, parent, previousInstance);
+    removeInstance(options, parent, previous);
   }
+  // A previous and next nodes are the same node, don't do anything.
 };
 
 const removeInstance = (options, parent, instance) => {
