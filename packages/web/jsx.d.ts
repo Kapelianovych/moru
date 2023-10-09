@@ -52,7 +52,11 @@ type AttributeValue<T extends AttributeLiteral = string> =
   | Getter<Mix<T, string, boolean>>;
 
 export type ExtendedChildContext = ChildContext & {
-  readonly resolve: (node: JSX.Node) => Node | readonly Node[];
+  readonly resolve: (
+    node: JSX.Node,
+    positionOffset?: number,
+    ignoreHydration?: boolean,
+  ) => Node | readonly Node[];
 };
 
 export type Component<T = {}> = (

@@ -53,6 +53,7 @@ export const For = (
 
           mappedElements[index] = context.resolve(
             children(dataGetter, indexGetter),
+            index,
           );
         }
 

@@ -74,8 +74,19 @@ const renderComponent = (
 ) => {
   const componentContext = createChildContext(context);
 
-  componentContext.resolve = (node) =>
-    render(options, componentContext, parent, node, 0, () => false);
+  componentContext.resolve = (
+    node,
+    positionOffset = 0,
+    ignoreHydration = false,
+  ) =>
+    render(
+      options,
+      componentContext,
+      parent,
+      node,
+      position + positionOffset,
+      () => (ignoreHydration ? false : isHydrating()),
+    );
 
   options.allowEffects || componentContext.dispose();
 
