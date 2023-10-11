@@ -71,7 +71,7 @@ export const createMemo = (context, callback, dependencies, options) => {
   const disposeEffect = createUrgentEffect(
     context,
     (...parameters) => {
-      const result = callback(value(), ...parameters);
+      const result = callback(...parameters, value());
 
       if (isDisposableGetter(result)) {
         const disposeEffect = createUrgentEffect(

@@ -48,15 +48,16 @@ export type CreateMemoOptions<A> = {
   equals?(previous: A | undefined, next: A): boolean;
 };
 
-export function createMemo<T>(
+export function createMemo<T, const D extends readonly Getter<unknown>[]>(
   context: Context,
-  callback: (previous: T | undefined) => T | DisposableGetter<T>,
+  callback: (...parameters: EffectParameters<D>) => T | DisposableGetter<T>,
+  dependencies: D,
+  options?: CreateMemoOptions<T>,
 ): DisposableGetter<T>;
 export function createMemo<T, const D extends readonly Getter<unknown>[]>(
   context: Context,
   callback: (
-    previous: T | undefined,
-    ...parameters: EffectParameters<D>
+    ...parameters: readonly [...EffectParameters<D>, T | undefined]
   ) => T | DisposableGetter<T>,
   dependencies: D,
   options?: CreateMemoOptions<T>,
