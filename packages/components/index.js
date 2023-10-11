@@ -79,7 +79,7 @@ export const For = (
 
   const List = createMemo(
     context,
-    (_, elements) => (elements.length ? elements : fallback),
+    (elements) => (elements.length ? elements : fallback),
     [elements],
   );
 
