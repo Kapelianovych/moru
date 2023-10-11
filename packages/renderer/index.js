@@ -50,6 +50,12 @@ const replaceInstance = (options, parent, previous, next) => {
 
       removeInstance(options, parent, previous);
     }
+  } else if (Array.isArray(next)) {
+    const isOldNodeIncluded = next.includes(previous);
+
+    insertInstanceAfter(options, parent, previous, next);
+
+    isOldNodeIncluded || removeInstance(options, parent, previous);
   } else if (previous !== next) {
     insertInstanceAfter(options, parent, previous, next);
 
