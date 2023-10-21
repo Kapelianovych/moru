@@ -68,9 +68,23 @@ export const createMemo = (context, callback, dependencies, options) => {
     options,
   );
 
+  const result = callback(...dependencies.map((dependency) => dependency()));
+
+  if (isDisposableGetter(result)) {
+    setValue(result);
+    result.dispose();
+  } else setValue(() => result);
+
+  let skipFirstEffectExecution = true;
+
   const disposeEffect = createUrgentEffect(
     context,
     (...parameters) => {
+      if (skipFirstEffectExecution) {
+        skipFirstEffectExecution = false;
+        return;
+      }
+
       const result = callback(...parameters, value());
 
       if (isDisposableGetter(result)) {
