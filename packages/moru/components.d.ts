@@ -1,5 +1,5 @@
-import { JSX } from "moru";
-import { Getter } from "@moru/context";
+import { JSX } from "./element";
+import { Getter } from "./context";
 
 export type ForProperties<A> = {
   readonly key?: <K>(item: A) => K;

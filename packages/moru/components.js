@@ -1,5 +1,6 @@
-import { createElement } from "moru";
-import { createMemo, createState, createUrgentEffect } from "@moru/hooks";
+import { memo } from "./enhancers.js";
+import { immediately } from "./context.js";
+import { createElement } from "./element.js";
 
 export const For = (
   { each, children, fallback, key = (item) => item },
@@ -10,16 +11,15 @@ export const For = (
   const dataStates = [];
   const indexStates = [];
 
-  const [elements, setElements] = createState(context, []);
+  const [elements, setElements] = context.state([]);
 
-  createUrgentEffect(
-    context,
-    (items) => {
+  context.effect(
+    () => {
       let index = 0;
       const itemsKeys = [];
       const mappedElements = [];
 
-      for (const item of items) {
+      for (const item of each()) {
         const itemKey = key(item);
 
         itemsKeys.push(itemKey);
@@ -43,13 +43,11 @@ export const For = (
           mappedElements[index] = elements()[index];
           dataStates[index][1](() => item);
         } else {
-          const [dataGetter] = (dataStates[index] = createState(context, item, {
-            equals: (previous, next) => key(previous) === key(next),
-          }));
-          const [indexGetter] = (indexStates[index] = createState(
-            context,
-            index,
+          const [dataGetter] = (dataStates[index] = context.state(
+            item,
+            (previous, next) => key(previous) === key(next),
           ));
+          const [indexGetter] = (indexStates[index] = context.state(index));
 
           mappedElements[index] = context.resolve(
             children(dataGetter, indexGetter),
@@ -75,11 +73,16 @@ export const For = (
       setElements(mappedElements);
     },
     [each],
+    immediately,
   );
 
-  const List = createMemo(
+  const List = memo(
     context,
-    (elements) => (elements.length ? elements : fallback),
+    () => {
+      const items = elements();
+
+      return items.length ? items : fallback;
+    },
     [elements],
   );
 

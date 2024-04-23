@@ -1,7 +1,7 @@
-import { JSX } from "moru";
-import { Context, Getter } from "@moru/context";
+import { JSX } from "./element.js";
+import { Context, Getter } from "./context.js";
 
-export type RendererMethods<I, E> = {
+export type RendererMethods<I> = {
   readonly defaultRoot?: I;
   readonly allowEffects?: boolean;
 
@@ -22,19 +22,20 @@ export type RendererMethods<I, E> = {
   insertInstanceAfter(parent: I, sibling: I, instance: I): void;
   createDefaultInstance(
     parent: I,
-    element: Exclude<E, JSX.Element | Getter<unknown> | readonly unknown[]>,
+    element: Exclude<
+      JSX.Node,
+      JSX.Element | Getter<unknown> | readonly unknown[]
+    >,
     position: number,
     isHydrating: () => boolean,
   ): I;
 };
 
-export type Renderer<I, E> = (
+export type Renderer<I> = (
   context: Context,
-  value: E,
+  value: JSX.Node,
   root?: I,
   hydration?: boolean,
 ) => VoidFunction;
 
-export function createRenderer<I, E>(
-  options: RendererMethods<I, E>,
-): Renderer<I, E>;
+export function renderer<I>(options: RendererMethods<I>): Renderer<I>;

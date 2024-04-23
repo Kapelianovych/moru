@@ -1,5 +1,6 @@
-import { isElement } from "moru";
-import { createChildContext, isGetter } from "@moru/context";
+import { isElement } from "./element.js";
+import { isGetter, context, immediately } from "./context.js";
+import { currentContext, setCurrentContext } from "./enhancers.js";
 
 const appendInstance = (options, parent, children, isHydrating) => {
   if (Array.isArray(children))
@@ -72,16 +73,18 @@ const removeInstance = (options, parent, instance) => {
 
 const renderComponent = (
   options,
-  context,
+  passedContext,
   parent,
   { tag, properties },
   position,
   isHydrating,
 ) => {
-  const componentContext = createChildContext(context);
+  const currentGlobalContext = currentContext;
+
+  const componentContext = context(passedContext);
 
   componentContext.resolve = (
-    node,
+    element,
     positionOffset = 0,
     ignoreHydration = false,
   ) =>
@@ -89,14 +92,18 @@ const renderComponent = (
       options,
       componentContext,
       parent,
-      node,
+      element,
       position + positionOffset,
-      () => (ignoreHydration ? false : isHydrating()),
+      ignoreHydration ? () => false : isHydrating,
     );
 
   options.allowEffects || componentContext.dispose();
 
+  setCurrentContext(componentContext);
+
   const result = tag(properties, componentContext);
+
+  setCurrentContext(currentGlobalContext);
 
   return render(
     options,
@@ -118,18 +125,19 @@ const renderIntrinsic = (
 ) => {
   const instance = options.createInstance(parent, tag, position, isHydrating);
 
-  Object.entries(attributes).forEach(([name, value]) =>
+  for (const name in attributes) {
+    const value = attributes[name];
+
     isGetter(value)
       ? options.allowEffects
-        ? context.createEffect(
-            (value) => {
-              options.setProperty(instance, name, value, isHydrating);
-            },
+        ? context.effect(
+            () => options.setProperty(instance, name, value(), isHydrating),
             [value],
+            immediately,
           )
         : options.setProperty(instance, name, value(), isHydrating)
-      : options.setProperty(instance, name, value, isHydrating),
-  );
+      : options.setProperty(instance, name, value, isHydrating);
+  }
 
   appendInstance(
     options,
@@ -143,23 +151,37 @@ const renderIntrinsic = (
   return instance;
 };
 
-const render = (options, context, parent, element, position, isHydrating) => {
+const render = (
+  options,
+  passedContext,
+  parent,
+  element,
+  position,
+  isHydrating,
+) => {
   if (isGetter(element)) {
     if (!options.allowEffects)
-      return render(options, context, parent, element(), position, isHydrating);
+      return render(
+        options,
+        passedContext,
+        parent,
+        element(),
+        position,
+        isHydrating,
+      );
 
     let previousInstance;
 
-    context.createEffect(
-      (element) => {
-        const currentContext = createChildContext(context);
+    passedContext.effect(
+      () => {
+        const currentContext = context(passedContext);
 
         if (previousInstance) {
           const instance = render(
             options,
             currentContext,
             parent,
-            element,
+            element(),
             position,
             isHydrating,
           );
@@ -172,7 +194,7 @@ const render = (options, context, parent, element, position, isHydrating) => {
             options,
             currentContext,
             parent,
-            element,
+            element(),
             position,
             isHydrating,
           );
@@ -180,10 +202,13 @@ const render = (options, context, parent, element, position, isHydrating) => {
         return currentContext.dispose;
       },
       [element],
+      immediately,
     );
 
-    context.createEffect(
+    passedContext.effect(
       () => () => removeInstance(options, parent, previousInstance),
+      undefined,
+      immediately,
     );
 
     return previousInstance;
@@ -191,28 +216,42 @@ const render = (options, context, parent, element, position, isHydrating) => {
 
   if (isElement(element))
     return isGetter(element.tag)
-      ? render(options, context, parent, element.tag, position, isHydrating)
-      : typeof element.tag === "string"
-      ? renderIntrinsic(
+      ? render(
           options,
-          context,
+          passedContext,
           parent,
-          element,
+          element.tag,
           position,
           isHydrating,
         )
-      : renderComponent(
-          options,
-          context,
-          parent,
-          element,
-          position,
-          isHydrating,
-        );
+      : typeof element.tag === "string"
+        ? renderIntrinsic(
+            options,
+            passedContext,
+            parent,
+            element,
+            position,
+            isHydrating,
+          )
+        : renderComponent(
+            options,
+            passedContext,
+            parent,
+            element,
+            position,
+            isHydrating,
+          );
 
   if (Array.isArray(element)) {
     const renderedChildren = element.flatMap((child, index) =>
-      render(options, context, parent, child, position + index, isHydrating),
+      render(
+        options,
+        passedContext,
+        parent,
+        child,
+        position + index,
+        isHydrating,
+      ),
     );
 
     return renderedChildren.length
@@ -223,7 +262,7 @@ const render = (options, context, parent, element, position, isHydrating) => {
   return options.createDefaultInstance(parent, element, position, isHydrating);
 };
 
-export const createRenderer =
+export const renderer =
   (options) =>
   (context, element, root = options.defaultRoot, hydration) => {
     const instance = render(

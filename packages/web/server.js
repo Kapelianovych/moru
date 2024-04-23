@@ -1,4 +1,4 @@
-import { createRenderer } from "@moru/renderer";
+import { renderer } from "moru";
 
 import { SelfClosedElements } from "./constants.js";
 
@@ -6,7 +6,7 @@ const OPEN_TAG_RE = /^<[\w-]+/;
 const CLOSE_TAG_RE = /<\/[\w-]+>$/;
 const DEFAULT_PARENT_TAG = "__parent__";
 
-const stringRenderer = createRenderer({
+const stringRenderer = renderer({
   allowEffects: false,
 
   appendInstance(parent, instance, _isHydrating) {
@@ -47,7 +47,7 @@ const stringRenderer = createRenderer({
   },
 });
 
-export const renderToString = (context, element) => {
+export const toString = (context, element) => {
   const root = { html: `<${DEFAULT_PARENT_TAG}></${DEFAULT_PARENT_TAG}>` };
 
   const _ = stringRenderer(context, element, root);

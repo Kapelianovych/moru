@@ -1,5 +1,4 @@
-import { JSX } from "moru";
-import { ChildContext, Getter } from "@moru/context";
+import { JSX, Getter } from "moru";
 
 type Replace<
   O,
@@ -35,34 +34,21 @@ type Event<
 type EventOf<E extends globalThis.Element, Name> = E extends HTMLElement
   ? Event<E, HTMLElementEventMap[Cast<Name, keyof HTMLElementEventMap>]>
   : E extends SVGElement
-  ? Event<E, SVGElementEventMap[Cast<Name, keyof SVGElementEventMap>]>
-  : Event<E, globalThis.Event>;
+    ? Event<E, SVGElementEventMap[Cast<Name, keyof SVGElementEventMap>]>
+    : Event<E>;
 
 type ElementOf<T extends keyof JSX.IntrinsicElements> =
   T extends keyof HTMLElementTagNameMap
     ? HTMLElementTagNameMap[T]
     : T extends keyof SVGElementEventMap
-    ? SVGElementEventMap[T]
-    : HTMLUnknownElement;
+      ? SVGElementEventMap[T]
+      : HTMLUnknownElement;
 
 type AttributeLiteral = string | number | bigint | boolean;
 
 type AttributeValue<T extends AttributeLiteral = string> =
   | Mix<T, string, boolean>
   | Getter<Mix<T, string, boolean>>;
-
-export type ExtendedChildContext = ChildContext & {
-  readonly resolve: (
-    node: JSX.Node,
-    positionOffset?: number,
-    ignoreHydration?: boolean,
-  ) => Node | readonly Node[];
-};
-
-export type Component<T = {}> = (
-  properties: T,
-  context: ExtendedChildContext,
-) => JSX.Node;
 
 type BaseJSXNode =
   | null
@@ -77,6 +63,12 @@ type BaseJSXNode =
 
 export type WithChildren<A = {}> = A & {
   readonly children?: JSX.Node;
+};
+
+type EventAttributes<T extends globalThis.Element> = {
+  readonly [K in keyof T as K extends `on${infer Name}`
+      ? `on:${Name}` | `on:${Capitalize<Name>}${"" | EventListenerModifiers}`
+      : never]?: (event: EventOf<T, Replace<K, "on", "">>) => void;
 };
 
 declare module "moru" {
@@ -758,7 +750,7 @@ declare module "moru" {
       readonly "aria-valuenow"?: AttributeValue<
         Exclude<AttributeLiteral, boolean>
       >;
-      /** Defines the human readable text alternative of aria-valuenow for a range widget. */
+      /** Defines the human-readable text alternative of aria-valuenow for a range widget. */
       readonly "aria-valuetext"?: AttributeValue<string>;
       readonly role?: AttributeValue<
         | "alert"
@@ -1183,8 +1175,3 @@ declare module "moru" {
   }
 }
 
-type EventAttributes<T extends globalThis.Element> = {
-  readonly [K in keyof T as K extends `on${infer Name}`
-    ? `on:${Name}` | `on:${Capitalize<Name>}${"" | EventListenerModifiers}`
-    : never]?: (event: EventOf<T, Replace<K, "on", "">>) => void;
-};

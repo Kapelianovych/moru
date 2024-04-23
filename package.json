@@ -7,12 +7,5 @@
   "scripts": {
     "test": "npm test --workspaces --if-present"
   },
-  "workspaces": [
-    "packages/web",
-    "packages/moru",
-    "packages/hooks",
-    "packages/context",
-    "packages/renderer",
-    "packages/components"
-  ]
+  "workspaces": ["packages/web", "packages/moru"]
 }

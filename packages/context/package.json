@@ -1,9 +1,0 @@
-{
-  "name": "@moru/context",
-  "version": "0.0.1",
-  "type": "module",
-  "author": "Yevhen Kapelianovych",
-  "exports": {
-    ".": "./index.js"
-  }
-}

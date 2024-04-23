@@ -1,4 +1,4 @@
-import { createRenderer } from "@moru/renderer";
+import { renderer } from "moru";
 
 import { SVG_NAMESPACE, HTML_NAMESPACE } from "./constants.js";
 
@@ -8,7 +8,7 @@ const endsAt = (once, capture, passive, noPassive) =>
   (capture ? -7 : 0) +
   (noPassive ? -9 : passive ? -7 : 0);
 
-export const mount = createRenderer({
+export const mount = renderer({
   defaultRoot: document.body,
   allowEffects: true,
 
@@ -27,11 +27,11 @@ export const mount = createRenderer({
           tag === "svg"
             ? SVG_NAMESPACE
             : // This SVG element requires children to have a non-SVG namespace.
-            // For a browser it is the most likely HTML namespace.
-            parent.tagName === "foreignObject"
-            ? HTML_NAMESPACE
-            : // Otherwise just inherit the parent's namespace.
-              parent.namespaceURI,
+              // For a browser it is the most likely HTML namespace.
+              parent.tagName === "foreignObject"
+              ? HTML_NAMESPACE
+              : // Otherwise just inherit the parent's namespace.
+                parent.namespaceURI,
           tag,
         );
   },

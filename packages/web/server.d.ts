@@ -1,7 +1,6 @@
-import { JSX } from "moru";
-import { Context } from "@moru/context";
+import { JSX, Context } from "moru";
 
 // Import types so TS will merge namespaces.
-import "./jsx.js";
+import "./jsx";
 
-export function renderToString(context: Context, value: JSX.Node): string;
+export function toString(context: Context, value: JSX.Node): string;
