@@ -60,15 +60,8 @@ export const For = (
 
       previousItemsKeys = itemsKeys;
 
-      if (mappedElements.length < dataStates.length) {
-        for (let i = mappedElements.length; i < dataStates.length; i++) {
-          dataStates[i][2]();
-          indexStates[i][2]();
-        }
-
-        // Keep states strictly equal to elements discarding excessive ones.
-        indexStates.length = dataStates.length = mappedElements.length;
-      }
+      // Keep states strictly equal to elements discarding excessive ones.
+      indexStates.length = dataStates.length = mappedElements.length;
 
       setElements(mappedElements);
     },
