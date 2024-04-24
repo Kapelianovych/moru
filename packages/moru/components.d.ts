@@ -1,5 +1,5 @@
-import { JSX } from "./element";
 import { Getter } from "./context";
+import { JSX, WithChildren } from "./element";
 
 export type ForProperties<A> = {
   readonly key?: <K>(item: A) => K;
@@ -9,3 +9,10 @@ export type ForProperties<A> = {
 };
 
 export function For<A>(properties: ForProperties<A>): JSX.Node;
+
+export type ShowProperties<A> = WithChildren<{
+  readonly when: Getter<A>;
+  readonly fallback?: JSX.Node;
+}>;
+
+export function Show<A>(properties: ShowProperties<A>): JSX.Node;

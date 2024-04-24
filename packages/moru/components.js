@@ -88,3 +88,19 @@ export const For = (
 
   return createElement(List, {});
 };
+
+export const Show = ({ when, fallback, children }, context) => {
+  let renderedChildren;
+  let renderedFallback;
+
+  const Conditional = memo(
+    context,
+    () =>
+      when()
+        ? (renderedChildren ??= context.resolve(children))
+        : (renderedFallback ??= context.resolve(fallback)),
+    [when],
+  );
+
+  return createElement(Conditional, {});
+};

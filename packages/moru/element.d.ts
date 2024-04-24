@@ -1,5 +1,9 @@
 import { Context } from "./context.js";
 
+export type WithChildren<A = {}> = A & {
+  readonly children?: JSX.Node;
+};
+
 export interface ComponentContext extends Context {
   resolve<A>(
     element: JSX.Node,
@@ -38,9 +42,7 @@ export const Fragment: unique symbol;
 
 export function createElement<const Children>(
   tag: typeof Fragment,
-  properties: {
-    readonly children: Children;
-  },
+  properties: WithChildren,
 ): Children;
 export function createElement<
   const Tag extends string,

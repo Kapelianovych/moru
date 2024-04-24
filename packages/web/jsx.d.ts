@@ -1,4 +1,4 @@
-import { JSX, Getter } from "moru";
+import { JSX, Getter, WithChildren } from "moru";
 
 type Replace<
   O,
@@ -61,14 +61,10 @@ type BaseJSXNode =
   | JSX.Element
   | readonly JSX.Node[];
 
-export type WithChildren<A = {}> = A & {
-  readonly children?: JSX.Node;
-};
-
 type EventAttributes<T extends globalThis.Element> = {
   readonly [K in keyof T as K extends `on${infer Name}`
-      ? `on:${Name}` | `on:${Capitalize<Name>}${"" | EventListenerModifiers}`
-      : never]?: (event: EventOf<T, Replace<K, "on", "">>) => void;
+    ? `on:${Name}` | `on:${Capitalize<Name>}${"" | EventListenerModifiers}`
+    : never]?: (event: EventOf<T, Replace<K, "on", "">>) => void;
 };
 
 declare module "moru" {
@@ -1174,4 +1170,3 @@ declare module "moru" {
     }
   }
 }
-
