@@ -21,7 +21,7 @@ export type State<T> = readonly [Getter<T>, Setter<T>];
 export type Context = {
   readonly parent?: Context;
   readonly disposed: boolean;
-  readonly [CONTEXT]: null;
+  readonly [CONTEXT]: object;
 
   dispose(): void;
 
@@ -35,7 +35,7 @@ export type Context = {
   ): VoidFunction;
 };
 
-export function context(): Context;
+export function context(parent?: Context): Context;
 
 export function isGetter<T>(value: Getter<T>): true;
 export function isGetter<T>(value: unknown): value is Getter<T>;

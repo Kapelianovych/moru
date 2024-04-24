@@ -6,7 +6,7 @@ export const For = (
   { each, children, fallback, key = (item) => item },
   context,
 ) => {
-  let previousItemsKeys = [];
+  let previousItemKeys = [];
 
   const dataStates = [];
   const indexStates = [];
@@ -16,15 +16,22 @@ export const For = (
   context.effect(
     () => {
       let index = 0;
-      const itemsKeys = [];
+      const itemKeys = [];
+      const itemKeysSet = new Set();
       const mappedElements = [];
 
       for (const item of each()) {
-        const itemKey = key(item);
+        let itemKey = key(item);
 
-        itemsKeys.push(itemKey);
+        if (itemKeysSet.has(itemKey))
+          // Unfortunately a duplicate key has been found, fallback to the index
+          // as a unique part of the key.
+          itemKey = String(itemKey) + index;
 
-        const previousItemIndex = previousItemsKeys.indexOf(itemKey);
+        itemKeys.push(itemKey);
+        itemKeysSet.add(itemKey);
+
+        const previousItemIndex = previousItemKeys.indexOf(itemKey);
 
         if (previousItemIndex > -1) {
           mappedElements[index] = elements()[previousItemIndex];
@@ -58,7 +65,7 @@ export const For = (
         index++;
       }
 
-      previousItemsKeys = itemsKeys;
+      previousItemKeys = itemKeys;
 
       // Keep states strictly equal to elements discarding excessive ones.
       indexStates.length = dataStates.length = mappedElements.length;

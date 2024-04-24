@@ -18,7 +18,7 @@ export const mount = renderer({
       (isHydrating() && instance.isConnected) || parent.append(instance);
   },
   removeInstance(parent, instance) {
-    parent.removeChild(instance);
+    if (instance.isConnected) parent.removeChild(instance);
   },
   createInstance(parent, tag, position, isHydrating) {
     return isHydrating()

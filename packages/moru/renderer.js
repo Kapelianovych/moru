@@ -25,43 +25,17 @@ const insertInstanceAfter = (options, parent, previousSibling, instance) => {
   } else options.insertInstanceAfter(parent, lastSiblingInstance, instance);
 };
 
-const replaceInstance = (options, parent, previous, next) => {
-  if (Array.isArray(previous) && Array.isArray(next)) {
-    const nextSet = new Set(next);
+const replaceInstance = (options, parent, marker, previous, next) => {
+  const nextSet = Array.isArray(next) ? new Set(next) : new Set([next]);
 
-    let previousInstance = previous[0];
-
-    next.forEach((instance) => {
-      insertInstanceAfter(options, parent, previousInstance, instance);
-
-      previousInstance = instance;
-    });
-
+  if (Array.isArray(previous))
     previous.forEach(
       (instance) =>
         nextSet.has(instance) || removeInstance(options, parent, instance),
     );
-  } else if (Array.isArray(previous)) {
-    if (previous.includes(next))
-      previous.forEach(
-        (child) => child === next || removeInstance(options, parent, child),
-      );
-    else {
-      insertInstanceAfter(options, parent, previous.at(-1), next);
+  else nextSet.has(previous) || removeInstance(options, parent, previous);
 
-      removeInstance(options, parent, previous);
-    }
-  } else if (Array.isArray(next)) {
-    const isOldNodeIncluded = next.includes(previous);
-
-    insertInstanceAfter(options, parent, previous, next);
-
-    isOldNodeIncluded || removeInstance(options, parent, previous);
-  } else if (previous !== next) {
-    insertInstanceAfter(options, parent, previous, next);
-
-    removeInstance(options, parent, previous);
-  }
+  insertInstanceAfter(options, parent, marker, next);
   // A previous and next nodes are the same node, don't do anything.
 };
 
@@ -160,13 +134,22 @@ const render = (
   isHydrating,
 ) => {
   if (isGetter(element)) {
+    const marker = render(
+      options,
+      passedContext,
+      parent,
+      null,
+      position,
+      isHydrating,
+    );
+
     if (!options.allowEffects)
       return render(
         options,
         passedContext,
         parent,
         element(),
-        position,
+        position + 1,
         isHydrating,
       );
 
@@ -182,11 +165,11 @@ const render = (
             currentContext,
             parent,
             element(),
-            position,
+            position + 1,
             isHydrating,
           );
 
-          replaceInstance(options, parent, previousInstance, instance);
+          replaceInstance(options, parent, marker, previousInstance, instance);
 
           previousInstance = instance;
         } else
@@ -195,7 +178,7 @@ const render = (
             currentContext,
             parent,
             element(),
-            position,
+            position + 1,
             isHydrating,
           );
 
@@ -206,12 +189,15 @@ const render = (
     );
 
     passedContext.effect(
-      () => () => removeInstance(options, parent, previousInstance),
+      () => () => {
+        removeInstance(options, parent, marker);
+        removeInstance(options, parent, previousInstance);
+      },
       undefined,
       immediately,
     );
 
-    return previousInstance;
+    return [marker, previousInstance];
   }
 
   if (isElement(element))

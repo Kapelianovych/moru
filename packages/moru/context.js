@@ -10,10 +10,10 @@ export const isContext = (value) =>
   value && typeof value === "object" && CONTEXT in value;
 
 const createContextState = (parent) => ({
+  queues: parent?.[CONTEXT].queues ?? new Map(),
   parent,
+  effects: parent?.[CONTEXT].effects ?? new Map(),
   disposed: false,
-  queues: parent?.queues ?? new Map(),
-  effects: parent?.effects ?? new Map(),
   cleanups: new Map(),
 });
 
@@ -22,15 +22,11 @@ const createContextDisposer = (contextState) => {
     if (contextState.disposed) return;
 
     contextState.disposed = true;
-    if (!contextState.parent) {
-      contextState.queues.clear();
-      contextState.effects.clear();
-    }
     contextState.cleanups.forEach(({ dispose }) => dispose());
     contextState.cleanups.clear();
   };
 
-  contextState.parent?.effect(() => dispose);
+  contextState.parent?.effect(() => dispose, undefined, immediately);
 
   return dispose;
 };
@@ -47,7 +43,7 @@ const createState =
 
         if (contextState.disposed) return;
 
-        contextState.effects.get(state)?.forEach(immediately);
+        contextState.effects.get(getter)?.forEach(immediately);
       }
     };
 
@@ -71,9 +67,11 @@ const createEffect =
       contextState.queues.set(schedule, new Set());
 
     const dispose = () => {
-      dependencies.forEach((state) =>
-        contextState.effects.get(state).delete(scheduleEffect),
-      );
+      dependencies.forEach((getter) => {
+        const getterEffects = contextState.effects.get(getter);
+        getterEffects.delete(scheduleEffect);
+        if (!getterEffects.size) contextState.effects.delete(getter);
+      });
       contextState.queues.get(schedule).delete(effect);
       contextState.cleanups.get(effect)();
       contextState.cleanups.delete(effect);
@@ -93,6 +91,8 @@ const createEffect =
     };
 
     const scheduleEffect = () => {
+      if (schedule === immediately) return effect();
+
       const queue = contextState.queues.get(schedule);
 
       const shouldSchedule = !queue.size;
@@ -104,9 +104,9 @@ const createEffect =
     };
 
     dependencies.forEach(
-      (state) =>
-        contextState.effects.get(state)?.add(scheduleEffect) ??
-        contextState.effects.set(state, new Set().add(scheduleEffect)),
+      (getter) =>
+        contextState.effects.get(getter)?.add(scheduleEffect) ??
+        contextState.effects.set(getter, new Set().add(scheduleEffect)),
     );
 
     scheduleEffect();
@@ -118,11 +118,9 @@ export const context = (parent) => {
   return {
     state: createState(contextState),
     effect: createEffect(contextState),
+    parent,
     dispose: createContextDisposer(contextState),
-    [CONTEXT]: null,
-    get parent() {
-      return contextState.parent;
-    },
+    [CONTEXT]: contextState,
     get disposed() {
       return contextState.disposed;
     },
