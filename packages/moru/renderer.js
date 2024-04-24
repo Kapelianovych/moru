@@ -143,14 +143,17 @@ const render = (
     );
 
     if (!options.allowEffects)
-      return render(
-        options,
-        passedContext,
-        parent,
-        element(),
-        position + 1,
-        isHydrating,
-      );
+      return [
+        marker,
+        render(
+          options,
+          passedContext,
+          parent,
+          element(),
+          position + 1,
+          isHydrating,
+        ),
+      ];
 
     let previousInstance;
 
