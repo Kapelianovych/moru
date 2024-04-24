@@ -56,21 +56,17 @@ const createState =
 
 const createEffect =
   (contextState) =>
-  (
-    callback,
-    dependencies = [],
-    schedule = self.requestIdleCallback ?? setTimeout,
-  ) => {
+  (callback, dependencies = [], schedule = queueMicrotask) => {
     if (contextState.disposed) return;
 
-    if (!contextState.queues.has(schedule))
+    contextState.queues.has(schedule) ||
       contextState.queues.set(schedule, new Set());
 
     const dispose = () => {
       dependencies.forEach((getter) => {
         const getterEffects = contextState.effects.get(getter);
         getterEffects.delete(scheduleEffect);
-        if (!getterEffects.size) contextState.effects.delete(getter);
+        getterEffects.size || contextState.effects.delete(getter);
       });
       contextState.queues.get(schedule).delete(effect);
       contextState.cleanups.get(effect)();
@@ -99,7 +95,7 @@ const createEffect =
 
       queue.add(effect);
 
-      if (shouldSchedule)
+      shouldSchedule &&
         schedule(() => queue.forEach((fn) => (fn(), queue.delete(fn))));
     };
 

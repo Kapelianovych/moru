@@ -36,7 +36,6 @@ const replaceInstance = (options, parent, marker, previous, next) => {
   else nextSet.has(previous) || removeInstance(options, parent, previous);
 
   insertInstanceAfter(options, parent, marker, next);
-  // A previous and next nodes are the same node, don't do anything.
 };
 
 const removeInstance = (options, parent, instance) => {

@@ -7,13 +7,10 @@ export const setCurrentContext = (context) => {
 };
 
 export const ref =
-  (...initial) =>
+  (initial) =>
   (...params) => {
-    if (params.length) initial[0] = params[0];
-    else {
-      if (initial.length) return initial[0];
-      else throw new Error("Ref is used before being assigned.");
-    }
+    if (params.length) initial = params[0];
+    else return initial;
   };
 
 export const state = (contextOrValue, valueOrEquals, maybeEquals) => {
