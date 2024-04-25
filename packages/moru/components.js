@@ -1,6 +1,5 @@
 import { memo } from "./enhancers.js";
 import { immediately } from "./context.js";
-import { createElement } from "./element.js";
 
 export const For = (
   { each, children, fallback, key = (item) => item },
@@ -76,7 +75,7 @@ export const For = (
     immediately,
   );
 
-  const List = memo(
+  return memo(
     context,
     () => {
       const items = elements();
@@ -85,15 +84,13 @@ export const For = (
     },
     [elements],
   );
-
-  return createElement(List, {});
 };
 
 export const Show = ({ when, fallback, children }, context) => {
   let renderedChildren;
   let renderedFallback;
 
-  const Conditional = memo(
+  return memo(
     context,
     () =>
       when()
@@ -101,6 +98,4 @@ export const Show = ({ when, fallback, children }, context) => {
         : (renderedFallback ??= context.resolve(fallback)),
     [when],
   );
-
-  return createElement(Conditional, {});
 };
