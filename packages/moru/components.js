@@ -1,3 +1,4 @@
+import { createElement } from "./element.js";
 import { context, immediately } from "./context.js";
 import { memo, cached, discard } from "./enhancers.js";
 
@@ -92,3 +93,31 @@ export const For = (
 
 export const Show = ({ when, fallback, children }, context) =>
   memo(context, () => (when() ? children : fallback), [when]);
+
+export const Await = (props, context) => {
+  const [idle, setIdle] = context.state(false);
+  const [error, setError] = context.state();
+  const [result, setResult] = context.state();
+
+  context.effect(() => {
+    (props.transition && !error()) || setIdle(false);
+
+    props
+      .for()
+      .then((result) => {
+        setResult(result);
+        setError(undefined);
+      }, setError)
+      .finally(() => setIdle(true));
+  }, props.on);
+
+  return createElement(Show, {
+    when: idle,
+    fallback: props.pending,
+    children: createElement(Show, {
+      when: error,
+      fallback: props.children(result),
+      children: props.catch?.(error),
+    }),
+  });
+};
