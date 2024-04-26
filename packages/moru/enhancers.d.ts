@@ -1,9 +1,23 @@
-import { JSX, Component, ComponentContext } from "./element.js";
-import { State, Context, Effect, Getter, StateComparator } from "./context.js";
+import { JSX, Component } from "./element";
+import { State, Context, Effect, Getter, StateComparator } from "./context";
 
-export let currentContext: Context;
+export interface CurrentContext {
+  ref?: Context;
+  (context: Context): void;
+}
 
-export function setCurrentContext(context: Context): void;
+export const currentContext: CurrentContext;
+
+export type CachedNode<I> = {
+  node: JSX.Node;
+  context: Context;
+  instance?: I;
+};
+
+export function cached<I>(node: JSX.Node): CachedNode<I>;
+export function cached<I>(context: Context, node: JSX.Node): CachedNode<I>;
+
+export function discard<I>(node: CachedNode<I>): void;
 
 export type Ref<A> = {
   (): A;
@@ -46,18 +60,6 @@ export function effect(
   dependencies?: readonly Getter<unknown>[],
   schedule?: (callback: VoidFunction) => void,
 ): VoidFunction;
-
-export function resolve<A>(
-  element: JSX.Node,
-  positionOffset?: number,
-  ignoreHydration?: boolean,
-): A;
-export function resolve<A>(
-  context: ComponentContext,
-  element: JSX.Node,
-  positionOffset?: number,
-  ignoreHydration?: boolean,
-): A;
 
 export type Provider<A> = readonly [
   Component<{ readonly value: A; readonly children: JSX.Node }>,

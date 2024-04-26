@@ -1,9 +1,24 @@
-import { immediately, isContext } from "./context.js";
+import { context, immediately, isContext } from "./context.js";
 
-export let currentContext;
+export const currentContext = (context) => {
+  currentContext.ref = context;
+};
 
-export const setCurrentContext = (context) => {
-  currentContext = context;
+export const cached = (contextOrNode, maybeNode) => {
+  if (!isContext(contextOrNode)) {
+    maybeNode = contextOrNode;
+    contextOrNode = context();
+  }
+
+  return { node: maybeNode, context: contextOrNode };
+};
+
+export const discard = (cached) => {
+  if (cached) {
+    delete cached.instance;
+    cached.context?.dispose();
+    delete cached.context;
+  }
 };
 
 export const ref =
@@ -17,7 +32,7 @@ export const state = (contextOrValue, valueOrEquals, maybeEquals) => {
   if (!isContext(contextOrValue)) {
     maybeEquals = valueOrEquals;
     valueOrEquals = contextOrValue;
-    contextOrValue = currentContext;
+    contextOrValue = currentContext.ref;
   }
 
   return contextOrValue.state(valueOrEquals, maybeEquals);
@@ -33,7 +48,7 @@ export const memo = (
     maybeEquals = dependenciesOrEquals;
     dependenciesOrEquals = callbackOrDependencies;
     callbackOrDependencies = contextOrCallback;
-    contextOrCallback = currentContext;
+    contextOrCallback = currentContext.ref;
   }
 
   const [get, set] = contextOrCallback.state(undefined, maybeEquals);
@@ -57,7 +72,7 @@ export const effect = (
     maybeSchedule = dependenciesOrSchedule;
     dependenciesOrSchedule = callbackOrDependencies;
     callbackOrDependencies = contextOrCallback;
-    contextOrCallback = currentContext;
+    contextOrCallback = currentContext.ref;
   }
 
   contextOrCallback.effect(
@@ -67,30 +82,10 @@ export const effect = (
   );
 };
 
-export const resolve = (
-  contextOrElement,
-  elementOrPositionOffset,
-  positionOffsetOrIgnoreHydration,
-  maybeIgnoreHydration,
-) => {
-  if (!isContext(contextOrElement)) {
-    maybeIgnoreHydration = positionOffsetOrIgnoreHydration;
-    positionOffsetOrIgnoreHydration = elementOrPositionOffset;
-    elementOrPositionOffset = contextOrElement;
-    contextOrElement = currentContext;
-  }
-
-  return contextOrElement.resolve(
-    elementOrPositionOffset,
-    positionOffsetOrIgnoreHydration,
-    maybeIgnoreHydration,
-  );
-};
-
 export const provider = (initial) => {
   const id = Symbol();
 
-  const get = (context = currentContext) =>
+  const get = (context = currentContext.ref) =>
     id in context
       ? context[id]
       : context.parent

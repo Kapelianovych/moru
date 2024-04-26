@@ -1,39 +1,40 @@
-import { memo } from "./enhancers.js";
-import { immediately } from "./context.js";
+import { context, immediately } from "./context.js";
+import { memo, cached, discard } from "./enhancers.js";
 
 export const For = (
   { each, children, fallback, key = (item) => item },
-  context,
+  forContext,
 ) => {
   let previousItemKeys = [];
 
   const dataStates = [];
   const indexStates = [];
 
-  const [elements, setElements] = context.state([]);
+  const [cachedNodes, setCachedNodes] = forContext.state([]);
 
-  context.effect(
+  forContext.effect(
     () => {
       let index = 0;
-      const itemKeys = [];
-      const itemKeysSet = new Set();
-      const mappedElements = [];
+      const itemKeys = new Set();
+      const mappedNodes = [];
+      const reusedNodeIndexes = new Set();
 
       for (const item of each()) {
         let itemKey = key(item);
 
-        if (itemKeysSet.has(itemKey))
+        if (itemKeys.has(itemKey))
           // Unfortunately a duplicate key has been found, fallback to the index
           // as a unique part of the key.
           itemKey = String(itemKey) + index;
 
-        itemKeys.push(itemKey);
-        itemKeysSet.add(itemKey);
+        itemKeys.add(itemKey);
 
         const previousItemIndex = previousItemKeys.indexOf(itemKey);
 
         if (previousItemIndex > -1) {
-          mappedElements[index] = elements()[previousItemIndex];
+          reusedNodeIndexes.add(previousItemIndex);
+          mappedNodes[index] = cachedNodes()[previousItemIndex];
+
           dataStates.splice(
             index,
             0,
@@ -44,58 +45,50 @@ export const For = (
             0,
             ...indexStates.splice(previousItemIndex, 1),
           );
+
           indexStates[index][1](index);
         } else if (index < dataStates.length) {
-          mappedElements[index] = elements()[index];
+          reusedNodeIndexes.add(index);
+          mappedNodes[index] = cachedNodes()[index];
           dataStates[index][1](() => item);
         } else {
-          const [dataGetter] = (dataStates[index] = context.state(
+          const itemContext = context();
+
+          const [dataGetter] = (dataStates[index] = itemContext.state(
             item,
             (previous, next) => key(previous) === key(next),
           ));
-          const [indexGetter] = (indexStates[index] = context.state(index));
+          const [indexGetter] = (indexStates[index] = itemContext.state(index));
 
-          mappedElements[index] = context.resolve(
+          mappedNodes[index] = cached(
+            itemContext,
             children(dataGetter, indexGetter),
-            index,
           );
         }
 
         index++;
       }
 
-      previousItemKeys = itemKeys;
-
+      previousItemKeys = [...itemKeys];
+      cachedNodes().forEach(
+        (cachedNode, index) =>
+          reusedNodeIndexes.has(index) || discard(cachedNode),
+      );
       // Keep states strictly equal to elements discarding excessive ones.
-      indexStates.length = dataStates.length = mappedElements.length;
+      indexStates.length = dataStates.length = mappedNodes.length;
 
-      setElements(mappedElements);
+      setCachedNodes(mappedNodes);
     },
     [each],
     immediately,
   );
 
   return memo(
-    context,
-    () => {
-      const items = elements();
-
-      return items.length ? items : fallback;
-    },
-    [elements],
+    forContext,
+    () => (cachedNodes().length ? cachedNodes() : fallback),
+    [cachedNodes],
   );
 };
 
-export const Show = ({ when, fallback, children }, context) => {
-  let renderedChildren;
-  let renderedFallback;
-
-  return memo(
-    context,
-    () =>
-      when()
-        ? (renderedChildren ??= context.resolve(children))
-        : (renderedFallback ??= context.resolve(fallback)),
-    [when],
-  );
-};
+export const Show = ({ when, fallback, children }, context) =>
+  memo(context, () => (when() ? children : fallback), [when]);

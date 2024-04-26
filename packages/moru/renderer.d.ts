@@ -1,5 +1,5 @@
-import { JSX } from "./element.js";
-import { Context, Getter } from "./context.js";
+import { JSX } from "./element";
+import { Context, Getter } from "./context";
 
 export type RendererMethods<I> = {
   readonly defaultRoot?: I;

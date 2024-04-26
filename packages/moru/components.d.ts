@@ -1,4 +1,4 @@
-import { Getter } from "./context";
+import { Getter, Context } from "./context";
 import { JSX, WithChildren } from "./element";
 
 export type ForProperties<A> = {
@@ -8,11 +8,17 @@ export type ForProperties<A> = {
   readonly fallback?: JSX.Node;
 };
 
-export function For<A>(properties: ForProperties<A>): JSX.Node;
+export function For<A>(
+  properties: ForProperties<A>,
+  context: Context,
+): JSX.Node;
 
 export type ShowProperties<A> = WithChildren<{
   readonly when: Getter<A>;
   readonly fallback?: JSX.Node;
 }>;
 
-export function Show<A>(properties: ShowProperties<A>): JSX.Node;
+export function Show<A>(
+  properties: ShowProperties<A>,
+  context: Context,
+): JSX.Node;

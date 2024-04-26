@@ -1,20 +1,13 @@
-import { Context } from "./context.js";
+import { Context } from "./context";
+import { CachedNode } from "./enhancers";
 
 export type WithChildren<A = {}> = A & {
   readonly children?: JSX.Node;
 };
 
-export interface ComponentContext extends Context {
-  resolve<A>(
-    element: JSX.Node,
-    positionOffset?: number,
-    ignoreHydration?: boolean,
-  ): A | readonly A[];
-}
-
 export type Component<Properties extends object> = (
   properties: Properties,
-  context: ComponentContext,
+  context: Context,
 ) => JSX.Node;
 
 declare const ELEMENT: unique symbol;
@@ -60,7 +53,10 @@ export namespace JSX {
   // which will describe values that are allowed as children
   // of the Element instance.
 
-  type Element = IntrinsicElement<string, object> | ComponentElement<object>;
+  type Element =
+    | IntrinsicElement<string, object>
+    | ComponentElement<object>
+    | CachedNode<unknown>;
 
   type ElementType = string | Component<object>;
 
