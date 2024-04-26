@@ -1,5 +1,5 @@
 import { isElement } from "./element.js";
-import { currentContext } from "./enhancers.js";
+import { currentContext, discard } from "./enhancers.js";
 import { isGetter, context, immediately } from "./context.js";
 
 const appendInstance = (options, parent, children, isHydrating) => {
@@ -237,6 +237,8 @@ const render = (
   isHydrating,
 ) => {
   if (maybeCachedNode?.instance) return maybeCachedNode.instance;
+
+  options.allowEffects || discard(maybeCachedNode);
 
   const instance = renderNonCached(
     options,
