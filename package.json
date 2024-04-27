@@ -9,6 +9,7 @@
   },
   "workspaces": [
     "packages/web",
-    "packages/moru"
+    "packages/moru",
+    "packages/store"
   ]
 }
