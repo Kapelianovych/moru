@@ -95,12 +95,14 @@ export const Show = ({ when, fallback, children }, context) =>
   memo(context, () => (when() ? children : fallback), [when]);
 
 export const Await = (props, context) => {
-  const [idle, setIdle] = context.state(false);
   const [error, setError] = context.state();
   const [result, setResult] = context.state();
+  const [pending, setPending] = context.state();
+  const [showContent, setShowContent] = context.state();
 
   context.effect(() => {
-    (props.transition && !error()) || setIdle(false);
+    setPending(true);
+    props.transition || setShowContent(false);
 
     props
       .for()
@@ -108,16 +110,19 @@ export const Await = (props, context) => {
         setResult(result);
         setError(undefined);
       }, setError)
-      .finally(() => setIdle(true));
+      .finally(() => {
+        setPending(false);
+        setShowContent(true);
+      });
   }, props.on);
 
   return createElement(Show, {
-    when: idle,
+    when: showContent,
     fallback: props.pending,
     children: createElement(Show, {
       when: error,
-      fallback: props.children(result),
-      children: props.catch?.(error),
+      fallback: props.children(result, pending),
+      children: props.catch?.(error, pending),
     }),
   });
 };

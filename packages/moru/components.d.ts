@@ -26,9 +26,9 @@ export function Show<A>(
 export type AwaitProperties<A, E = unknown> = {
   readonly on?: readonly Getter<unknown>[];
   readonly for: () => Promise<A>;
-  readonly catch?: (error: Getter<E>) => JSX.Node;
+  readonly catch?: (error: Getter<E>, pending: Getter<boolean>) => JSX.Node;
   readonly pending?: JSX.Node;
-  readonly children: (result: Getter<A>) => JSX.Node;
+  readonly children: (result: Getter<A>, pending: Getter<boolean>) => JSX.Node;
   readonly transition?: boolean;
 };
 
