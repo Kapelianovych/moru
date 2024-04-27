@@ -176,10 +176,7 @@ const renderNonCached = (
     );
 
     passedContext.effect(
-      () => () => {
-        removeInstance(options, parent, marker);
-        removeInstance(options, parent, previousInstance);
-      },
+      () => () => removeInstance(options, parent, [marker, previousInstance]),
       undefined,
       immediately,
     );

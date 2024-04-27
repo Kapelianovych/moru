@@ -13,7 +13,7 @@ const createContextState = (parent) => ({
   queues: parent?.[CONTEXT].queues ?? new Map(),
   parent,
   effects: parent?.[CONTEXT].effects ?? new Map(),
-  disposed: false,
+  disposed: parent?.disposed,
   cleanups: new Map(),
 });
 

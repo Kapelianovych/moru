@@ -4,7 +4,11 @@
   "version": "0.0.5",
   "author": "Yevhen Kapelianovych",
   "license": "MIT",
-  "keywords": ["moru", "jsx", "web"],
+  "keywords": [
+    "moru",
+    "jsx",
+    "web"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/Kapelianovych/moru.git"

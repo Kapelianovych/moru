@@ -5,7 +5,11 @@
   "type": "module",
   "license": "MIT",
   "author": "Yevhen Kapelianovych",
-  "keywords": ["ui", "jsx", "moru"],
+  "keywords": [
+    "ui",
+    "jsx",
+    "moru"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/Kapelianovych/moru.git"
