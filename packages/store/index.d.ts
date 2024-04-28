@@ -1,21 +1,19 @@
-import { Component, Context, Getter, MemoComparator, WithChildren } from "moru";
+import { Component, Getter, Context, MemoComparator, WithChildren } from "moru";
 
 export type Dispatch<E> = (event: E) => void;
 
-export type Dispatcher<E> = (context?: Context) => Dispatch<E>;
-
-export type Select<A> = {
-  <K>(selector: (state: A) => K, equals?: MemoComparator<K>): Getter<K>;
-  <K>(
-    context: Context,
-    selector: (state: A) => K,
-    equals?: MemoComparator<K>,
-  ): Getter<K>;
-};
+export type Select<A> = <K>(
+  selector: (state: A) => K,
+  equals?: MemoComparator<K>,
+) => Getter<K>;
 
 export type StoreProvider = Component<WithChildren>;
 
-export type Store<A, E> = [StoreProvider, Select<A>, Dispatcher<E>];
+export type UseStore<A, E> = (
+  context?: Context,
+) => readonly [Select<A>, Dispatch<E>];
+
+export type Store<A, E> = readonly [StoreProvider, UseStore<A, E>];
 
 export function store<A, E>(
   initial: A,

@@ -1,4 +1,4 @@
-import { memo, provider, isContext, createElement, currentContext } from "moru";
+import { memo, provider, createElement, currentContext } from "moru";
 
 export const store = (initial, reducer) => {
   const [HandlesProvider, getHandles] = provider();
@@ -6,20 +6,8 @@ export const store = (initial, reducer) => {
   const StoreProvider = ({ children }, context) => {
     const [getStore, setStore] = context.state(initial, () => false);
 
-    const select = (contextOrMap, selectorOrEquals, maybeEquals) => {
-      if (!isContext(contextOrMap)) {
-        maybeEquals = selectorOrEquals;
-        selectorOrEquals = contextOrMap;
-        contextOrMap = currentContext.ref;
-      }
-
-      return memo(
-        contextOrMap,
-        () => getStore(selectorOrEquals),
-        [getStore],
-        maybeEquals,
-      );
-    };
+    const select = (context, selector, equals) =>
+      memo(context, () => getStore(selector), [getStore], equals);
 
     const dispatch = (event) =>
       setStore((store) => {
@@ -34,14 +22,11 @@ export const store = (initial, reducer) => {
     });
   };
 
-  const select = (context, selector, equals) =>
-    getHandles(isContext(context) ? context : currentContext.ref)[0](
-      context,
-      selector,
-      equals,
-    );
+  const use = (context = currentContext.ref) => {
+    const [select, dispatch] = getHandles(context);
 
-  const dispatcher = (context = currentContext.ref) => getHandles(context)[1];
+    return [select.bind(null, context), dispatch];
+  };
 
-  return [StoreProvider, select, dispatcher];
+  return [StoreProvider, use];
 };
