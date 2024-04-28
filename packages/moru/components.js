@@ -68,7 +68,8 @@ export const For = (
 
       previousItemKeys = [...itemKeys];
       cachedNodes.forEach(
-        (cachedNode) => itemKeys.has(cachedNode.itemKey) || discard(cachedNode),
+        (cachedNode) =>
+          itemKeys.has(cachedNode?.itemKey) || discard(cachedNode),
       );
       // Keep states strictly equal to elements discarding excessive ones.
       indexStates.length = dataStates.length = mappedNodes.length;
