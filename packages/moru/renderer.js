@@ -118,9 +118,7 @@ const renderNonCached = (
   isHydrating,
 ) => {
   if (isGetter(node)) {
-    const marker = render(
-      options,
-      passedContext,
+    const marker = options.createDefaultInstance(
       parent,
       null,
       position,
