@@ -53,7 +53,7 @@ export const For = (
           mappedNodes[index] = cachedNodes()[index];
           dataStates[index][1](() => item);
         } else {
-          const itemContext = context();
+          const itemContext = context(forContext);
 
           const [dataGetter] = (dataStates[index] = itemContext.state(
             item,
