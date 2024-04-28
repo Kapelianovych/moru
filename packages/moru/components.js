@@ -1,5 +1,5 @@
+import { context } from "./context.js";
 import { createElement } from "./element.js";
-import { context, immediately } from "./context.js";
 import { memo, cached, discard } from "./enhancers.js";
 
 export const For = (
@@ -11,14 +11,12 @@ export const For = (
   const dataStates = [];
   const indexStates = [];
 
-  const [cachedNodes, setCachedNodes] = forContext.state([]);
-
-  forContext.effect(
-    () => {
+  return memo(
+    forContext,
+    (cachedNodes = []) => {
       let index = 0;
       const itemKeys = new Set();
       const mappedNodes = [];
-      const reusedNodeIndexes = new Set();
 
       for (const item of each()) {
         let itemKey = key(item);
@@ -33,8 +31,7 @@ export const For = (
         const previousItemIndex = previousItemKeys.indexOf(itemKey);
 
         if (previousItemIndex > -1) {
-          reusedNodeIndexes.add(previousItemIndex);
-          mappedNodes[index] = cachedNodes()[previousItemIndex];
+          mappedNodes[index] = cachedNodes[previousItemIndex];
 
           dataStates.splice(
             index,
@@ -49,8 +46,7 @@ export const For = (
 
           indexStates[index][1](index);
         } else if (index < dataStates.length) {
-          reusedNodeIndexes.add(index);
-          mappedNodes[index] = cachedNodes()[index];
+          mappedNodes[index] = cachedNodes[index];
           dataStates[index][1](() => item);
         } else {
           const itemContext = context(forContext);
@@ -61,33 +57,25 @@ export const For = (
           ));
           const [indexGetter] = (indexStates[index] = itemContext.state(index));
 
-          mappedNodes[index] = cached(
+          (mappedNodes[index] = cached(
             itemContext,
             children(dataGetter, indexGetter),
-          );
+          )).itemKey = itemKey;
         }
 
         index++;
       }
 
       previousItemKeys = [...itemKeys];
-      cachedNodes().forEach(
-        (cachedNode, index) =>
-          reusedNodeIndexes.has(index) || discard(cachedNode),
+      cachedNodes.forEach(
+        (cachedNode) => itemKeys.has(cachedNode.itemKey) || discard(cachedNode),
       );
       // Keep states strictly equal to elements discarding excessive ones.
       indexStates.length = dataStates.length = mappedNodes.length;
 
-      setCachedNodes(mappedNodes);
+      return mappedNodes.length ? mappedNodes : [fallback];
     },
     [each],
-    immediately,
-  );
-
-  return memo(
-    forContext,
-    () => (cachedNodes().length ? cachedNodes() : fallback),
-    [cachedNodes],
   );
 };
 

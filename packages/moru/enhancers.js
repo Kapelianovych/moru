@@ -53,11 +53,13 @@ export const memo = (
 
   const [get, set] = contextOrCallback.state(undefined, maybeEquals);
 
-  contextOrCallback.effect(
-    () => set(callbackOrDependencies),
-    dependenciesOrEquals,
-    immediately,
-  );
+  contextOrCallback.disposed
+    ? set(callbackOrDependencies)
+    : contextOrCallback.effect(
+        () => set(callbackOrDependencies),
+        dependenciesOrEquals,
+        immediately,
+      );
 
   return get;
 };
