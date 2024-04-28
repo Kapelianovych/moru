@@ -7,8 +7,6 @@ const CLOSE_TAG_RE = /<\/[\w-]+>$/;
 const DEFAULT_PARENT_TAG = "__parent__";
 
 const stringRenderer = renderer({
-  allowEffects: false,
-
   appendInstance(parent, instance, _isHydrating) {
     parent.html = parent.html.replace(CLOSE_TAG_RE, `${instance.html}$&`);
   },
@@ -50,7 +48,7 @@ const stringRenderer = renderer({
 export const toString = (context, element) => {
   const root = { html: `<${DEFAULT_PARENT_TAG}></${DEFAULT_PARENT_TAG}>` };
 
-  const _ = stringRenderer(context, element, root);
+  stringRenderer(context, element, root);
 
   return root.html
     .replace(`<${DEFAULT_PARENT_TAG}>`, "")

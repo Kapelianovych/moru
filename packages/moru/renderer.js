@@ -146,28 +146,19 @@ const renderNonCached = (
       () => {
         const currentContext = context(passedContext);
 
-        if (previousInstance) {
-          const instance = render(
-            options,
-            currentContext,
-            parent,
-            node(),
-            position + 1,
-            isHydrating,
-          );
+        const instance = render(
+          options,
+          currentContext,
+          parent,
+          node(),
+          position + 1,
+          isHydrating,
+        );
 
+        if (previousInstance)
           replaceInstance(options, parent, marker, previousInstance, instance);
 
-          previousInstance = instance;
-        } else
-          previousInstance = render(
-            options,
-            currentContext,
-            parent,
-            node(),
-            position + 1,
-            isHydrating,
-          );
+        previousInstance = instance;
 
         return currentContext.dispose;
       },
@@ -187,23 +178,14 @@ const renderNonCached = (
   if (isElement(node))
     return isGetter(node.tag)
       ? render(options, passedContext, parent, node.tag, position, isHydrating)
-      : typeof node.tag === "string"
-        ? renderIntrinsic(
-            options,
-            passedContext,
-            parent,
-            node,
-            position,
-            isHydrating,
-          )
-        : renderComponent(
-            options,
-            passedContext,
-            parent,
-            node,
-            position,
-            isHydrating,
-          );
+      : (typeof node.tag === "string" ? renderIntrinsic : renderComponent)(
+          options,
+          passedContext,
+          parent,
+          node,
+          position,
+          isHydrating,
+        );
 
   if (Array.isArray(node)) {
     const renderedChildren = node.flatMap((child, index) =>

@@ -66,4 +66,4 @@ export type Provider<A> = readonly [
   (context?: Context) => A,
 ];
 
-export function provider<A>(initial: A): Provider<A>;
+export function provider<A>(initial?: A): Provider<A>;
