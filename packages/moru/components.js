@@ -27,16 +27,6 @@ const createChild = (
   )).itemKey = itemKey;
 };
 
-const swapKeys = (map, previousIndex, nextIndex) => {
-  const previousKey = map.get(previousIndex);
-  const nextKey = map.get(nextIndex);
-
-  map.set(previousIndex, nextKey);
-  map.set(nextIndex, previousKey);
-  map.set(previousKey, nextIndex);
-  map.set(nextKey, previousIndex);
-};
-
 const swapArray = (array, previousIndex, nextIndex) => {
   const previousItem = array[previousIndex];
   array[previousIndex] = array[nextIndex];
@@ -65,6 +55,21 @@ const createKeysFor = (items, generateKey) => {
   return keys;
 };
 
+const discardUnusedNodes = (cachedNodes, unusedKeys) => {
+  const { done, value } = unusedKeys.keys().next();
+
+  // In a Map when iteration is completed only `done` property is present.
+  if (done) return;
+
+  const index = Number.isFinite(value) ? value : unusedKeys.get(value);
+
+  discard(cachedNodes[index]);
+  unusedKeys.delete(unusedKeys.get(index));
+  unusedKeys.delete(index);
+
+  discardUnusedNodes(cachedNodes, unusedKeys);
+};
+
 export const For = (
   { each, children, fallback, key = (item) => item },
   forContext,
@@ -86,19 +91,31 @@ export const For = (
         if (previousKeys.has(itemKey)) {
           const previousIndex = previousKeys.get(itemKey);
 
-          swapArray(dataStates, previousIndex, index);
-          swapArray(indexStates, previousIndex, index);
-          swapKeys(previousKeys, previousIndex, index);
-          swapArray(cachedNodes, previousIndex, index);
+          if (index !== previousIndex) {
+            swapArray(dataStates, previousIndex, index);
+            swapArray(indexStates, previousIndex, index);
+            swapArray(cachedNodes, previousIndex, index);
+
+            previousKeys.set(previousIndex, previousKeys.get(index));
+            previousKeys.set(previousKeys.get(index), previousIndex);
+          }
+
+          previousKeys.delete(itemKey);
+          previousKeys.delete(index);
 
           mappedNodes[index] = cachedNodes[index];
           indexStates[index][1](index);
         } else if (index < dataStates.length) {
           if (nextKeys.has(previousKeys.get(index))) {
-            swapArray(dataStates, index, cachedNodes.length);
-            swapArray(indexStates, index, cachedNodes.length);
-            swapKeys(previousKeys, index, cachedNodes.length);
-            swapArray(cachedNodes, index, cachedNodes.length);
+            const nextIndex = cachedNodes.length;
+
+            swapArray(dataStates, index, nextIndex);
+            swapArray(indexStates, index, nextIndex);
+            swapArray(cachedNodes, index, nextIndex);
+
+            previousKeys.set(nextIndex, previousKeys.get(index));
+            previousKeys.set(previousKeys.get(index), nextIndex);
+            previousKeys.delete(index);
 
             createChild(
               forContext,
@@ -112,6 +129,9 @@ export const For = (
               mappedNodes,
             );
           } else {
+            previousKeys.delete(previousKeys.get(index));
+            previousKeys.delete(index);
+
             (mappedNodes[index] = cachedNodes[index]).itemKey = itemKey;
             dataStates[index][1](() => item);
           }
@@ -129,11 +149,8 @@ export const For = (
           );
       }
 
+      discardUnusedNodes(cachedNodes, previousKeys);
       previousKeys = nextKeys;
-      cachedNodes.forEach(
-        (cachedNode) =>
-          nextKeys.has(cachedNode?.itemKey) || discard(cachedNode),
-      );
       // Keep states strictly equal to elements discarding excessive ones.
       indexStates.length = dataStates.length = mappedNodes.length;
 
