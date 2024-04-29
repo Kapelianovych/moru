@@ -2,74 +2,126 @@ import { context } from "./context.js";
 import { createElement } from "./element.js";
 import { memo, cached, discard } from "./enhancers.js";
 
+const createChild = (
+  forContext,
+  key,
+  item,
+  index,
+  itemKey,
+  children,
+  dataStates,
+  indexStates,
+  mappedNodes,
+) => {
+  const itemContext = context(forContext);
+
+  const [dataGetter] = (dataStates[index] = itemContext.state(
+    item,
+    (previous, next) => key(previous) === key(next),
+  ));
+  const [indexGetter] = (indexStates[index] = itemContext.state(index));
+
+  (mappedNodes[index] = cached(
+    itemContext,
+    children(dataGetter, indexGetter),
+  )).itemKey = itemKey;
+};
+
+const swap = (array, previousIndex, nextIndex) => {
+  const previousItem = array[previousIndex];
+  array[previousIndex] = array[nextIndex];
+  array[nextIndex] = previousItem;
+};
+
+const createKeysFor = (items, generateKey) => {
+  const keysSet = new Set();
+  const keysArray = new Array(items.length);
+
+  for (let index = 0; index < items.length; index++) {
+    let key = generateKey(items[index]);
+
+    if (keysSet.has(key))
+      // Unfortunately a duplicate key has been found, fallback to the index
+      // as a unique part of the key.
+      key = String(key) + index;
+
+    keysSet.add(key);
+    keysArray[index] = key;
+  }
+
+  return [keysSet, keysArray];
+};
+
 export const For = (
   { each, children, fallback, key = (item) => item },
   forContext,
 ) => {
-  let previousItemKeys = [];
-
   const dataStates = [];
   const indexStates = [];
+  let previousKeysArray = [];
 
   return memo(
     forContext,
     (cachedNodes = []) => {
-      let index = 0;
-      const itemKeys = new Set();
-      const mappedNodes = [];
+      const mappedNodes = new Array(each().length);
+      const [nextKeysSet, nextKeysArray] = createKeysFor(each(), key);
 
-      for (const item of each()) {
-        let itemKey = key(item);
+      for (let index = 0; index < each().length; index++) {
+        const item = each()[index];
+        const itemKey = nextKeysArray[index];
 
-        if (itemKeys.has(itemKey))
-          // Unfortunately a duplicate key has been found, fallback to the index
-          // as a unique part of the key.
-          itemKey = String(itemKey) + index;
+        const previousIndex = previousKeysArray.indexOf(itemKey);
 
-        itemKeys.add(itemKey);
+        if (previousIndex > -1) {
+          swap(dataStates, previousIndex, index);
+          swap(indexStates, previousIndex, index);
+          swap(previousKeysArray, previousIndex, index);
+          swap(cachedNodes, previousIndex, index);
 
-        const previousItemIndex = previousItemKeys.indexOf(itemKey);
-
-        if (previousItemIndex > -1) {
-          mappedNodes[index] = cachedNodes[previousItemIndex];
-
-          dataStates.splice(
-            index,
-            0,
-            ...dataStates.splice(previousItemIndex, 1),
-          );
-          indexStates.splice(
-            index,
-            0,
-            ...indexStates.splice(previousItemIndex, 1),
-          );
-
+          mappedNodes[index] = cachedNodes[index];
           indexStates[index][1](index);
         } else if (index < dataStates.length) {
-          mappedNodes[index] = cachedNodes[index];
-          dataStates[index][1](() => item);
-        } else {
-          const itemContext = context(forContext);
+          const previousCachedNodeItemKey = previousKeysArray[index];
 
-          const [dataGetter] = (dataStates[index] = itemContext.state(
+          if (nextKeysSet.has(previousCachedNodeItemKey)) {
+            swap(dataStates, index, cachedNodes.length);
+            swap(indexStates, index, cachedNodes.length);
+            swap(previousKeysArray, index, cachedNodes.length);
+            swap(cachedNodes, index, cachedNodes.length);
+
+            createChild(
+              forContext,
+              key,
+              item,
+              index,
+              itemKey,
+              children,
+              dataStates,
+              indexStates,
+              mappedNodes,
+            );
+          } else {
+            (mappedNodes[index] = cachedNodes[index]).itemKey = itemKey;
+            dataStates[index][1](() => item);
+          }
+        } else
+          createChild(
+            forContext,
+            key,
             item,
-            (previous, next) => key(previous) === key(next),
-          ));
-          const [indexGetter] = (indexStates[index] = itemContext.state(index));
-
-          (mappedNodes[index] = cached(
-            itemContext,
-            children(dataGetter, indexGetter),
-          )).itemKey = itemKey;
-        }
-
-        index++;
+            index,
+            itemKey,
+            children,
+            dataStates,
+            indexStates,
+            mappedNodes,
+          );
       }
 
-      previousItemKeys = [...itemKeys];
+      previousKeysArray = nextKeysArray;
       cachedNodes.forEach(
         (cachedNode) =>
-          itemKeys.has(cachedNode?.itemKey) || discard(cachedNode),
+          nextKeysSet.has(cachedNode?.itemKey) || discard(cachedNode),
       );
       // Keep states strictly equal to elements discarding excessive ones.
       indexStates.length = dataStates.length = mappedNodes.length;
