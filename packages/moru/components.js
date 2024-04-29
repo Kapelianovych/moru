@@ -27,29 +27,42 @@ const createChild = (
   )).itemKey = itemKey;
 };
 
-const swap = (array, previousIndex, nextIndex) => {
+const swapKeys = (map, previousIndex, nextIndex) => {
+  const previousKey = map.get(previousIndex);
+  const nextKey = map.get(nextIndex);
+
+  map.set(previousIndex, nextKey);
+  map.set(nextIndex, previousKey);
+  map.set(previousKey, nextIndex);
+  map.set(nextKey, previousIndex);
+};
+
+const swapArray = (array, previousIndex, nextIndex) => {
   const previousItem = array[previousIndex];
   array[previousIndex] = array[nextIndex];
   array[nextIndex] = previousItem;
 };
 
 const createKeysFor = (items, generateKey) => {
-  const keysSet = new Set();
-  const keysArray = new Array(items.length);
+  const keys = new Map();
 
   for (let index = 0; index < items.length; index++) {
     let key = generateKey(items[index]);
 
-    if (keysSet.has(key))
-      // Unfortunately a duplicate key has been found, fallback to the index
-      // as a unique part of the key.
+    if (Number.isFinite(key))
+      // Don't allow keys as numbers to avoid resetting some index.
+      key = String(key);
+
+    if (keys.has(key))
+      // Unfortunately a duplicate key has been found.
+      // Try make the key unique.
       key = String(key) + index;
 
-    keysSet.add(key);
-    keysArray[index] = key;
+    keys.set(key, index);
+    keys.set(index, key);
   }
 
-  return [keysSet, keysArray];
+  return keys;
 };
 
 export const For = (
@@ -58,36 +71,34 @@ export const For = (
 ) => {
   const dataStates = [];
   const indexStates = [];
-  let previousKeysArray = [];
+  let previousKeys = new Map();
 
   return memo(
     forContext,
     (cachedNodes = []) => {
+      const nextKeys = createKeysFor(each(), key);
       const mappedNodes = new Array(each().length);
-      const [nextKeysSet, nextKeysArray] = createKeysFor(each(), key);
 
       for (let index = 0; index < each().length; index++) {
         const item = each()[index];
-        const itemKey = nextKeysArray[index];
+        const itemKey = nextKeys.get(index);
 
-        const previousIndex = previousKeysArray.indexOf(itemKey);
+        if (previousKeys.has(itemKey)) {
+          const previousIndex = previousKeys.get(itemKey);
 
-        if (previousIndex > -1) {
-          swap(dataStates, previousIndex, index);
-          swap(indexStates, previousIndex, index);
-          swap(previousKeysArray, previousIndex, index);
-          swap(cachedNodes, previousIndex, index);
+          swapArray(dataStates, previousIndex, index);
+          swapArray(indexStates, previousIndex, index);
+          swapKeys(previousKeys, previousIndex, index);
+          swapArray(cachedNodes, previousIndex, index);
 
           mappedNodes[index] = cachedNodes[index];
           indexStates[index][1](index);
         } else if (index < dataStates.length) {
-          const previousCachedNodeItemKey = previousKeysArray[index];
-
-          if (nextKeysSet.has(previousCachedNodeItemKey)) {
-            swap(dataStates, index, cachedNodes.length);
-            swap(indexStates, index, cachedNodes.length);
-            swap(previousKeysArray, index, cachedNodes.length);
-            swap(cachedNodes, index, cachedNodes.length);
+          if (nextKeys.has(previousKeys.get(index))) {
+            swapArray(dataStates, index, cachedNodes.length);
+            swapArray(indexStates, index, cachedNodes.length);
+            swapKeys(previousKeys, index, cachedNodes.length);
+            swapArray(cachedNodes, index, cachedNodes.length);
 
             createChild(
               forContext,
@@ -118,10 +129,10 @@ export const For = (
           );
       }
 
-      previousKeysArray = nextKeysArray;
+      previousKeys = nextKeys;
       cachedNodes.forEach(
         (cachedNode) =>
-          nextKeysSet.has(cachedNode?.itemKey) || discard(cachedNode),
+          nextKeys.has(cachedNode?.itemKey) || discard(cachedNode),
       );
       // Keep states strictly equal to elements discarding excessive ones.
       indexStates.length = dataStates.length = mappedNodes.length;
