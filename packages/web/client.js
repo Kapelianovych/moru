@@ -64,7 +64,8 @@ export const mount = renderer({
         : instance.setAttribute(name, value);
   },
   insertInstanceAfter(_parent, previousSibling, nextSibling) {
-    previousSibling.after(nextSibling);
+    previousSibling.nextSibling === nextSibling ||
+      previousSibling.after(nextSibling);
   },
   createDefaultInstance(parent, element, position, isHydrating) {
     if (element instanceof Node) {
