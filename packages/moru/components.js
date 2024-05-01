@@ -7,7 +7,6 @@ const createChild = (
   key,
   item,
   index,
-  itemKey,
   children,
   dataStates,
   indexStates,
@@ -21,10 +20,7 @@ const createChild = (
   ));
   const [indexGetter] = (indexStates[index] = itemContext.state(index));
 
-  (mappedNodes[index] = cached(
-    itemContext,
-    children(dataGetter, indexGetter),
-  )).itemKey = itemKey;
+  mappedNodes[index] = cached(itemContext, children(dataGetter, indexGetter));
 };
 
 const swapArray = (array, previousIndex, nextIndex) => {
@@ -44,8 +40,8 @@ const createKeysFor = (items, generateKey) => {
       key = String(key);
 
     if (keys.has(key))
-      // Unfortunately a duplicate key has been found.
-      // Try make the key unique.
+      // Unfortunately, a duplicate key has been found.
+      // Try to make the key unique.
       key = String(key) + index;
 
     keys.set(key, index);
@@ -58,7 +54,7 @@ const createKeysFor = (items, generateKey) => {
 const discardUnusedNodes = (cachedNodes, unusedKeys) => {
   const { done, value } = unusedKeys.keys().next();
 
-  // In a Map when iteration is completed only `done` property is present.
+  // In a Map when iteration is completed, only `done` property is present.
   if (done) return;
 
   const index = Number.isFinite(value) ? value : unusedKeys.get(value);
@@ -122,7 +118,6 @@ export const For = (
               key,
               item,
               index,
-              itemKey,
               children,
               dataStates,
               indexStates,
@@ -132,7 +127,7 @@ export const For = (
             previousKeys.delete(previousKeys.get(index));
             previousKeys.delete(index);
 
-            (mappedNodes[index] = cachedNodes[index]).itemKey = itemKey;
+            mappedNodes[index] = cachedNodes[index];
             dataStates[index][1](() => item);
           }
         } else
@@ -141,7 +136,6 @@ export const For = (
             key,
             item,
             index,
-            itemKey,
             children,
             dataStates,
             indexStates,
