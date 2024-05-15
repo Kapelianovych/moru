@@ -1,5 +1,5 @@
-import { JSX } from "./element";
-import { Context, Getter } from "./context";
+import { JSX } from "./element.js";
+import { Context, Getter } from "./context.js";
 
 export type RendererMethods<I> = {
   readonly defaultRoot?: I;
@@ -23,8 +23,12 @@ export type RendererMethods<I> = {
   createDefaultInstance(
     parent: I,
     element: Exclude<
-      JSX.Node,
-      JSX.Element | Getter<unknown> | readonly unknown[]
+      JSX.Element,
+      | JSX.ElementVariants[0]
+      | JSX.ElementVariants[1]
+      | JSX.ElementVariants[2]
+      | Getter<unknown>
+      | readonly unknown[]
     >,
     position: number,
     isHydrating: () => boolean,
@@ -33,7 +37,7 @@ export type RendererMethods<I> = {
 
 export type Renderer<I> = (
   context: Context,
-  value: JSX.Node,
+  value: JSX.Element,
   root?: I,
   hydration?: boolean,
 ) => VoidFunction;

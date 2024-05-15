@@ -53,10 +53,21 @@ const renderComponent = (
   isHydrating,
 ) => {
   currentContext(context);
+
   const result = element.tag(element.properties, context);
+
+  const rendered = render(
+    options,
+    currentContext.ref,
+    parent,
+    result,
+    position,
+    isHydrating,
+  );
+
   delete currentContext.ref;
 
-  return render(options, context, parent, result, position, isHydrating);
+  return rendered;
 };
 
 const renderIntrinsic = (

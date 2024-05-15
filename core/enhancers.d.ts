@@ -1,5 +1,5 @@
-import { JSX, Component } from "./element";
-import { State, Context, Effect, Getter, StateComparator } from "./context";
+import { JSX, Component, WithChildren } from "./element.js";
+import { State, Context, Effect, Getter, StateComparator } from "./context.js";
 
 export interface CurrentContext {
   ref?: Context;
@@ -9,13 +9,13 @@ export interface CurrentContext {
 export const currentContext: CurrentContext;
 
 export type CachedNode<I> = {
-  node: JSX.Node;
+  node: JSX.Element;
   context: Context;
   instance?: I;
 };
 
-export function cached<I>(node: JSX.Node): CachedNode<I>;
-export function cached<I>(context: Context, node: JSX.Node): CachedNode<I>;
+export function cached<I>(node: JSX.Element): CachedNode<I>;
+export function cached<I>(context: Context, node: JSX.Element): CachedNode<I>;
 
 export function discard<I>(node: CachedNode<I>): void;
 
@@ -62,7 +62,7 @@ export function effect(
 ): VoidFunction;
 
 export type Provider<A> = readonly [
-  Component<{ readonly value: A; readonly children: JSX.Node }>,
+  Component<WithChildren<{ readonly value: A }>>,
   (context?: Context) => A,
 ];
 

@@ -8,8 +8,8 @@
     "test": "npm test --workspaces --if-present"
   },
   "workspaces": [
-    "packages/web",
-    "packages/moru",
-    "packages/store"
+    "web",
+    "core",
+    "store"
   ]
 }

@@ -95,10 +95,18 @@ export const provider = (initial) => {
         : initial;
 
   return [
-    ({ value, children }, context) => {
-      context[id] = value;
+    ({ value, children }, componentContext) => {
+      const providerContext = context(componentContext);
 
-      context.effect(() => () => delete context[id], undefined, immediately);
+      currentContext(providerContext);
+
+      providerContext[id] = value;
+
+      providerContext.effect(
+        () => () => delete providerContext[id],
+        undefined,
+        immediately,
+      );
 
       return children;
     },

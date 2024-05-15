@@ -1,4 +1,4 @@
-import { JSX, Getter, WithChildren } from "moru";
+import { JSX, Getter, WithChildren, WithRef } from "moru";
 
 type Replace<
   O,
@@ -50,17 +50,6 @@ type AttributeValue<T extends AttributeLiteral = string> =
   | Mix<T, string, boolean>
   | Getter<Mix<T, string, boolean>>;
 
-type BaseJSXNode =
-  | null
-  | string
-  | number
-  | bigint
-  | boolean
-  | undefined
-  | globalThis.Node
-  | JSX.Element
-  | readonly JSX.Node[];
-
 type EventAttributes<T extends globalThis.Element> = {
   readonly [K in keyof T as K extends `on${infer Name}`
     ? `on:${Name}` | `on:${Capitalize<Name>}${"" | EventListenerModifiers}`
@@ -69,7 +58,15 @@ type EventAttributes<T extends globalThis.Element> = {
 
 declare module "moru" {
   export namespace JSX {
-    export type Node = BaseJSXNode | Getter<BaseJSXNode>;
+    interface ElementVariants {
+      3: null;
+      4: string;
+      5: number;
+      6: bigint;
+      7: boolean;
+      8: undefined;
+      9: globalThis.Node;
+    }
 
     interface IntrinsicElements {
       // HTML + SVG
@@ -89,7 +86,8 @@ declare module "moru" {
       readonly area: HTMLAreaAttributes &
         EventAttributes<HTMLAreaElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly article: {} & EventAttributes<HTMLElement> &
+      readonly article: HTMLArticleAttributes &
+        EventAttributes<HTMLElement> &
         IntrinsicProperties<HTMLElement>;
       readonly aside: {} & EventAttributes<HTMLElement> &
         IntrinsicProperties<HTMLElement>;
@@ -303,7 +301,8 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
       readonly script: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly section: {} & EventAttributes<HTMLAnchorElement> &
+      readonly section: HTMLSectionAttributes &
+        EventAttributes<HTMLElement> &
         IntrinsicProperties<HTMLElement>;
       readonly select: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
@@ -503,9 +502,8 @@ declare module "moru" {
         | Getter<E[K]>;
     };
 
-    interface CustomAttributes<B extends globalThis.Element> {
-      readonly ref?: (node: B) => void;
-    }
+    interface CustomAttributes<B extends globalThis.Element>
+      extends WithRef<B> {}
 
     // All the WAI-ARIA 1.1 attributes from https://www.w3.org/TR/wai-aria-1.1/
     interface AriaAttributes {
@@ -1137,6 +1135,14 @@ declare module "moru" {
     interface HTMLSpanAttributes
       extends WithChildren,
         HTMLCommonAttributes<HTMLSpanElement> {}
+
+    interface HTMLSectionAttributes
+      extends WithChildren,
+        HTMLCommonAttributes<HTMLElement> {}
+
+    interface HTMLArticleAttributes
+      extends WithChildren,
+        HTMLCommonAttributes<HTMLElement> {}
 
     interface SVGSVGAttributes
       extends WithChildren,

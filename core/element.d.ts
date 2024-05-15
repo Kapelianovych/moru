@@ -1,14 +1,18 @@
-import { Context } from "./context";
-import { CachedNode } from "./enhancers";
+import { Context } from "./context.js";
+import { CachedNode } from "./enhancers.js";
+
+export type WithRef<R, P = {}> = P & {
+  readonly ref?: (ref: R) => void;
+};
 
 export type WithChildren<A = {}> = A & {
-  readonly children?: JSX.Node;
+  readonly children?: JSX.Element;
 };
 
 export type Component<Properties extends object> = (
   properties: Properties,
   context: Context,
-) => JSX.Node;
+) => JSX.Element;
 
 declare const ELEMENT: unique symbol;
 
@@ -49,16 +53,23 @@ export function createElement<const Properties extends object>(
 export { createElement as jsx, createElement as jsxs, createElement as jsxDEV };
 
 export namespace JSX {
-  // Runtimes for the moru has to declare the "Node" type
+  // Runtimes for the moru has to extend the "ElementVariants" interface
   // which will describe values that are allowed as children
   // of the Element instance.
+  interface ElementVariants {
+    0: IntrinsicElement<string, object>;
+    1: ComponentElement<object>;
+    2: CachedNode<unknown>;
+  }
 
   type Element =
-    | IntrinsicElement<string, object>
-    | ComponentElement<object>
-    | CachedNode<unknown>;
+    | ElementVariants[keyof ElementVariants]
+    | readonly Element[]
+    // This is effectively the Getter, but TS does not allow
+    // circular type applications :(
+    | (() => Element);
 
-  type ElementType = string | Component<object>;
+  type ElementType = string | Component<any>;
 
   interface IntrinsicElements {}
 

@@ -1,20 +1,21 @@
 {
-  "name": "@moru/store",
-  "version": "0.0.5",
-  "description": "Simple store implementation for the moru.",
+  "name": "@moru/web",
   "type": "module",
-  "license": "MIT",
+  "version": "0.0.1",
   "author": "Yevhen Kapelianovych",
+  "license": "MIT",
   "keywords": [
     "moru",
-    "store"
+    "jsx",
+    "web"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/Kapelianovych/moru.git"
   },
   "exports": {
-    ".": "./index.js"
+    "./client": "./client.js",
+    "./server": "./server.js"
   },
   "peerDependencies": {
     "moru": "0.0.5"
