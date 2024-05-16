@@ -11,7 +11,7 @@ export const store = (initial, reducer) => {
 
     const dispatch = (event) =>
       setStore((store) => {
-        const reduced = reducer(store, event) ?? store;
+        const reduced = reducer(store, event, dispatch) ?? store;
 
         return store === reduced ? store : Object.assign(store, reduced);
       });

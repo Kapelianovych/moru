@@ -18,6 +18,7 @@ export type Store<A, E> = readonly [StoreProvider, UseStore<A, E>];
 export type Reducer<A, E> = (
   state: A,
   event: E,
+  dispatch: Dispatch<E>,
 ) => Partial<A> | null | undefined | void;
 
 export function store<A, E>(initial: A, reducer: Reducer<A, E>): Store<A, E>;
