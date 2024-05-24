@@ -1,14 +1,12 @@
 import { JSX, Getter, WithChildren, WithRef } from "moru";
 
+type Cast<A, B> = A extends B ? A : B;
+
 type Replace<
   O,
   P extends string,
   F extends string,
 > = O extends `${infer A}${P}${infer B}` ? Replace<`${A}${F}${B}`, P, F> : O;
-
-type Cast<A, B> = A extends B ? A : B;
-
-type Mix<To, What, IfNot> = IfNot extends To ? To : To | What;
 
 type EventListenerModifiers =
   | "Once"
@@ -23,19 +21,11 @@ type EventListenerModifiers =
   | "OnceCapturePassive"
   | "OnceCaptureNoPassive";
 
-type Event<
-  T extends Element,
-  E extends globalThis.Event = globalThis.Event,
-> = E & {
-  readonly target: Element;
-  readonly currentTarget: T;
-};
-
 type EventOf<E extends globalThis.Element, Name> = E extends HTMLElement
-  ? Event<E, HTMLElementEventMap[Cast<Name, keyof HTMLElementEventMap>]>
+  ? JSX.Event<E, HTMLElementEventMap[Cast<Name, keyof HTMLElementEventMap>]>
   : E extends SVGElement
-    ? Event<E, SVGElementEventMap[Cast<Name, keyof SVGElementEventMap>]>
-    : Event<E>;
+    ? JSX.Event<E, SVGElementEventMap[Cast<Name, keyof SVGElementEventMap>]>
+    : JSX.Event<E>;
 
 type ElementOf<T extends keyof JSX.IntrinsicElements> =
   T extends keyof HTMLElementTagNameMap
@@ -44,17 +34,27 @@ type ElementOf<T extends keyof JSX.IntrinsicElements> =
       ? SVGElementEventMap[T]
       : HTMLUnknownElement;
 
-type AttributeLiteral = string | number | bigint | boolean;
+type NumericAttributeLiteral = number | bigint;
 
-type AttributeValue<T extends AttributeLiteral = string> =
-  | Mix<T, string, boolean>
-  | Getter<Mix<T, string, boolean>>;
+type AttributeLiteral = string | boolean | NumericAttributeLiteral;
+
+type WithStringIfNonBooleanAttribute<T> = boolean extends T
+  ? T
+  : T extends Exclude<T, string>
+    ? T | string
+    : T;
+
+type AttributeValue<T extends AttributeLiteral> =
+  | WithStringIfNonBooleanAttribute<T>
+  | Getter<WithStringIfNonBooleanAttribute<T>>;
 
 type EventAttributes<T extends globalThis.Element> = {
   readonly [K in keyof T as K extends `on${infer Name}`
     ? `on:${Name}` | `on:${Capitalize<Name>}${"" | EventListenerModifiers}`
     : never]?: (event: EventOf<T, Replace<K, "on", "">>) => void;
 };
+
+type CreateCSSDistance<Unit extends string> = `${number}${Unit}`;
 
 declare module "moru" {
   export namespace JSX {
@@ -70,30 +70,18 @@ declare module "moru" {
 
     interface IntrinsicElements {
       // HTML + SVG
-      readonly a:
-        | (HTMLAnchorAttributes &
-            EventAttributes<HTMLAnchorElement> &
-            IntrinsicProperties<HTMLAnchorElement>)
-        | (SVGAnchorAttributes &
-            EventAttributes<SVGElement> &
-            IntrinsicProperties<SVGElement>);
+      readonly a: HTMLAnchorAttributes | SVGAnchorAttributes;
 
       // HTML
       readonly abbr: {} & EventAttributes<HTMLElement> &
         IntrinsicProperties<HTMLElement>;
       readonly address: {} & EventAttributes<HTMLElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly area: HTMLAreaAttributes &
-        EventAttributes<HTMLAreaElement> &
-        IntrinsicProperties<HTMLElement>;
-      readonly article: HTMLArticleAttributes &
-        EventAttributes<HTMLElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly area: HTMLAreaAttributes;
+      readonly article: HTMLArticleAttributes;
       readonly aside: {} & EventAttributes<HTMLElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly audio: HTMLAudioAttributes &
-        EventAttributes<HTMLAudioElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly audio: HTMLAudioAttributes;
       readonly b: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly base: {} & EventAttributes<HTMLAnchorElement> &
@@ -112,14 +100,10 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
       readonly blockquote: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly body: HTMLBodyAttributes &
-        EventAttributes<HTMLBodyElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly body: HTMLBodyAttributes;
       readonly br: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly button: HTMLButtonAttributes &
-        EventAttributes<HTMLButtonElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly button: HTMLButtonAttributes;
       readonly canvas: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly caption: {} & EventAttributes<HTMLAnchorElement> &
@@ -128,8 +112,7 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
       readonly cite: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly code: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly code: HTMLCodeAttributes;
       readonly col: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly colgroup: {} & EventAttributes<HTMLAnchorElement> &
@@ -152,9 +135,7 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
       readonly dir: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly div: HTMLDivAttributes &
-        EventAttributes<HTMLDivElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly div: HTMLDivAttributes;
       readonly dl: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly dt: {} & EventAttributes<HTMLAnchorElement> &
@@ -171,68 +152,43 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
       readonly font: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly footer: HTMLFooterAttributes &
-        EventAttributes<HTMLElement> &
-        IntrinsicProperties<HTMLElement>;
-      readonly form: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly footer: HTMLFooterAttributes;
+      readonly form: HTMLFormAttributes;
       readonly frame: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly frameset: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly h1: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
-      readonly h2: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
-      readonly h3: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
-      readonly h4: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
-      readonly h5: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
-      readonly h6: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
-      readonly head: HTMLHeadAttributes &
-        EventAttributes<HTMLHeadElement> &
-        IntrinsicProperties<HTMLElement>;
-      readonly header: HTMLHeaderAttributes &
-        EventAttributes<HTMLElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly h1: HTMLHeadingAttributes;
+      readonly h2: HTMLHeadingAttributes;
+      readonly h3: HTMLHeadingAttributes;
+      readonly h4: HTMLHeadingAttributes;
+      readonly h5: HTMLHeadingAttributes;
+      readonly h6: HTMLHeadingAttributes;
+      readonly head: HTMLHeadAttributes;
+      readonly header: HTMLHeaderAttributes;
       readonly hgroup: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly hr: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
-      readonly html: HTMLHtmlAttributes &
-        EventAttributes<HTMLHtmlElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly hr: HTMLHrAttributes;
+      readonly html: HTMLHtmlAttributes;
       readonly i: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly iframe: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly img: HTMLImageAttributes &
-        EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
-      readonly input: HTMLInputAttributes &
-        EventAttributes<HTMLInputElement> &
-        IntrinsicProperties<HTMLInputElement>;
+      readonly img: HTMLImageAttributes;
+      readonly input: HTMLInputAttributes;
       readonly ins: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly kbd: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly keygen: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly label: HTMLLabelAttributes &
-        EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
-      readonly legend: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly label: HTMLLabelAttributes;
+      readonly legend: HTMLLegendAttributes;
       readonly li: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly link: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly main: HTMLMainAttributes &
-        EventAttributes<HTMLElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly main: HTMLMainAttributes;
       readonly map: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly mark: {} & EventAttributes<HTMLAnchorElement> &
@@ -245,9 +201,7 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
       readonly menuitem: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly meta: HTMLMetaAttributes &
-        EventAttributes<HTMLMetaElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly meta: HTMLMetaAttributes;
       readonly meter: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly nav: {} & EventAttributes<HTMLAnchorElement> &
@@ -268,9 +222,7 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
       readonly output: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly p: HTMLParagraphAttributes &
-        EventAttributes<HTMLParagraphElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly p: HTMLParagraphAttributes;
       readonly param: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly picture: {} & EventAttributes<HTMLAnchorElement> &
@@ -301,9 +253,7 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
       readonly script: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly section: HTMLSectionAttributes &
-        EventAttributes<HTMLElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly section: HTMLSectionAttributes;
       readonly select: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly shadow: {} & EventAttributes<HTMLAnchorElement> &
@@ -316,9 +266,7 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
       readonly spacer: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly span: HTMLSpanAttributes &
-        EventAttributes<HTMLSpanElement> &
-        IntrinsicProperties<HTMLSpanElement>;
+      readonly span: HTMLSpanAttributes;
       readonly strike: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly strong: {} & EventAttributes<HTMLAnchorElement> &
@@ -349,9 +297,7 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
       readonly time: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly title: HTMLTitleAttributes &
-        EventAttributes<HTMLTitleElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly title: HTMLTitleAttributes;
       readonly tr: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly track: {} & EventAttributes<HTMLAnchorElement> &
@@ -372,9 +318,7 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
 
       // SVG
-      readonly svg: SVGSVGAttributes &
-        EventAttributes<SVGSVGElement> &
-        IntrinsicProperties<SVGSVGElement>;
+      readonly svg: SVGSVGAttributes;
       readonly animate: {} & EventAttributes<SVGElement> &
         IntrinsicProperties<SVGElement>;
       readonly animateColor: {} & EventAttributes<SVGElement> &
@@ -445,8 +389,7 @@ declare module "moru" {
         IntrinsicProperties<SVGElement>;
       readonly filter: {} & EventAttributes<SVGElement> &
         IntrinsicProperties<SVGElement>;
-      readonly foreignObject: {} & EventAttributes<SVGElement> &
-        IntrinsicProperties<SVGElement>;
+      readonly foreignObject: SVGForeignObjectAttributes;
       readonly g: {} & EventAttributes<SVGElement> &
         IntrinsicProperties<SVGElement>;
       readonly image: {} & EventAttributes<SVGElement> &
@@ -463,9 +406,7 @@ declare module "moru" {
         IntrinsicProperties<SVGElement>;
       readonly mpath: {} & EventAttributes<SVGElement> &
         IntrinsicProperties<SVGElement>;
-      readonly path: SVGPathAttributes &
-        EventAttributes<SVGPathElement> &
-        IntrinsicProperties<SVGPathElement>;
+      readonly path: SVGPathAttributes;
       readonly pattern: {} & EventAttributes<SVGElement> &
         IntrinsicProperties<SVGElement>;
       readonly polygon: {} & EventAttributes<SVGElement> &
@@ -496,11 +437,87 @@ declare module "moru" {
         IntrinsicProperties<SVGElement>;
     }
 
+    type Event<
+      CurrentTarget extends EventTarget,
+      NativeEvent extends globalThis.Event = globalThis.Event,
+      Target extends EventTarget = globalThis.Element,
+    > = NativeEvent & {
+      readonly target: Target;
+      readonly currentTarget: CurrentTarget;
+    };
+
     type IntrinsicProperties<E extends globalThis.Element> = {
       readonly [K in keyof E as K extends string ? `prop:${K}` : never]?:
         | E[K]
         | Getter<E[K]>;
     };
+
+    type CSSRelativeInheritedFontLengthUnit =
+      | "cap"
+      | "ch"
+      | "em"
+      | "ex"
+      | "ic"
+      | "lh";
+    type CSSRelativeRootFontLengthUnit =
+      `r${CSSRelativeInheritedFontLengthUnit}`;
+    type CSSRelativeInheritedFontLength =
+      CreateCSSDistance<CSSRelativeInheritedFontLengthUnit>;
+    type CSSRelativeRootFontLength =
+      CreateCSSDistance<CSSRelativeRootFontLengthUnit>;
+    type CSSRelativeFontLength =
+      | CSSRelativeRootFontLength
+      | CSSRelativeInheritedFontLength;
+
+    type CSSRelativeDefaultViewportLengthUnit =
+      | "vh"
+      | "vw"
+      | "vmax"
+      | "vmin"
+      | "vb"
+      | "vi";
+    type CSSRelativeSmallViewportLengthUnit =
+      `s${CSSRelativeDefaultViewportLengthUnit}`;
+    type CSSRelativeLargeViewportLengthUnit =
+      `l${CSSRelativeDefaultViewportLengthUnit}`;
+    type CSSRelativeDynamicViewportLengthUnit =
+      `d${CSSRelativeDefaultViewportLengthUnit}`;
+    type CSSRelativeSmallViewportLength =
+      CreateCSSDistance<CSSRelativeSmallViewportLengthUnit>;
+    type CSSRelativeLargeViewportLength =
+      CreateCSSDistance<CSSRelativeLargeViewportLengthUnit>;
+    type CSSRelativeDynamicViewportLength =
+      CreateCSSDistance<CSSRelativeDynamicViewportLengthUnit>;
+    type CSSRelativeDefaultViewportLength =
+      CreateCSSDistance<CSSRelativeDefaultViewportLengthUnit>;
+    type CSSRelativeViewportLength =
+      | CSSRelativeSmallViewportLength
+      | CSSRelativeLargeViewportLength
+      | CSSRelativeDynamicViewportLength
+      | CSSRelativeDefaultViewportLength;
+
+    type CSSRelativeContainerLengthUnit =
+      | "cqw"
+      | "cqh"
+      | "cqi"
+      | "cqb"
+      | "cqmin"
+      | "cqmax";
+    type CSSRelativeContainerLength =
+      CreateCSSDistance<CSSRelativeContainerLengthUnit>;
+
+    type CSSAbsoluteLengthUnit = "px" | "cm" | "mm" | "Q" | "in" | "pc" | "pt";
+    type CSSAbsoluteLength = CreateCSSDistance<CSSAbsoluteLengthUnit>;
+
+    type CSSRelativeLength =
+      | CSSRelativeFontLength
+      | CSSRelativeViewportLength
+      | CSSRelativeContainerLength;
+    type CSSLength = CSSRelativeLength | CSSAbsoluteLength;
+
+    type CSSPercentage = CreateCSSDistance<"%">;
+
+    type CSSLengthPercentage = CSSLength | CSSPercentage;
 
     interface CustomAttributes<B extends globalThis.Element>
       extends WithRef<B> {}
@@ -820,17 +837,19 @@ declare module "moru" {
       >;
     }
 
-    interface SVGCommonAttributes<E extends globalThis.Element>
+    interface SVGCommonAttributes<E extends SVGElement>
       extends CustomAttributes<E> {
       readonly id?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
       readonly lang?: AttributeValue<string>;
-      readonly tabindex?: AttributeValue<number | bigint>;
+      readonly tabindex?: AttributeValue<NumericAttributeLiteral>;
       // Styling attributes
       readonly class?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
       readonly style?: AttributeValue<string>;
+      readonly fill?: AttributeValue<string>;
+      readonly [key: `data-${string}`]: AttributeValue<AttributeLiteral>;
     }
 
-    interface HTMLCommonAttributes<E extends globalThis.Element>
+    interface HTMLCommonAttributes<E extends HTMLElement>
       extends CustomAttributes<E>,
         AriaAttributes {
       readonly accesskey?: AttributeValue<string>;
@@ -840,7 +859,7 @@ declare module "moru" {
       readonly autofocus?: AttributeValue<boolean>;
       readonly class?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
       readonly contenteditable?: AttributeValue<boolean | "true" | "false">;
-      readonly [key: `data-${string}`]: AttributeValue;
+      readonly [key: `data-${string}`]: AttributeValue<AttributeLiteral>;
       readonly dir?: AttributeValue<"ltr" | "rtl" | "auto">;
       readonly draggable?: AttributeValue<"true" | "false">;
       readonly enterkeyhint?: AttributeValue<
@@ -871,7 +890,7 @@ declare module "moru" {
       readonly slot?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
       readonly spellcheck?: AttributeValue<boolean | "true" | "false">;
       readonly style?: AttributeValue<string>;
-      readonly tabindex?: AttributeValue<number | bigint>;
+      readonly tabindex?: AttributeValue<NumericAttributeLiteral>;
       readonly title?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
       readonly translate?: AttributeValue<boolean | "yes" | "no">;
     }
@@ -880,11 +899,13 @@ declare module "moru" {
 
     interface HTMLAnchorAttributes
       extends WithChildren,
-        HTMLCommonAttributes<HTMLAnchorElement> {
+        HTMLCommonAttributes<HTMLAnchorElement>,
+        EventAttributes<HTMLAnchorElement>,
+        IntrinsicProperties<HTMLAnchorElement> {
       readonly href: AttributeValue<string>;
       readonly target?: AttributeValue<Target>;
       readonly download?: AttributeValue<
-        Exclude<AttributeLiteral, number | bigint>
+        Exclude<AttributeLiteral, NumericAttributeLiteral>
       >;
       readonly hreflang?: AttributeValue<string>;
       readonly ping?: AttributeValue<string>;
@@ -897,11 +918,13 @@ declare module "moru" {
 
     interface SVGAnchorAttributes
       extends WithChildren,
-        SVGCommonAttributes<SVGElement> {
+        SVGCommonAttributes<SVGElement>,
+        EventAttributes<SVGElement>,
+        IntrinsicProperties<SVGElement> {
       readonly href: AttributeValue<string>;
       readonly target?: AttributeValue<Target>;
       readonly download?: AttributeValue<
-        Exclude<AttributeLiteral, number | bigint>
+        Exclude<AttributeLiteral, NumericAttributeLiteral>
       >;
       readonly hreflang?: AttributeValue<string>;
       readonly ping?: AttributeValue<string>;
@@ -912,7 +935,10 @@ declare module "moru" {
       readonly type?: AttributeValue<string>;
     }
 
-    interface HTMLAreaAttributes extends HTMLCommonAttributes<HTMLAreaElement> {
+    interface HTMLAreaAttributes
+      extends HTMLCommonAttributes<HTMLAreaElement>,
+        EventAttributes<HTMLAreaElement>,
+        IntrinsicProperties<HTMLAreaElement> {
       readonly alt?: AttributeValue<string>;
       readonly coords?: AttributeValue<
         | `${number},${number},${number}`
@@ -920,7 +946,7 @@ declare module "moru" {
         | string
       >;
       readonly download?: AttributeValue<
-        Exclude<AttributeLiteral, number | bigint>
+        Exclude<AttributeLiteral, NumericAttributeLiteral>
       >;
       readonly href?: AttributeValue<string>;
       readonly ping?: AttributeValue<string>;
@@ -932,27 +958,34 @@ declare module "moru" {
 
     type Crossorigin = "anonymous" | "use-credentials";
 
-    type HTMLAudioAttributes = {
-      readonly autoplay: AttributeValue<boolean>;
-      readonly controls: AttributeValue<boolean>;
-      readonly controlslist: AttributeValue<
+    interface HTMLAudioAttributes
+      extends HTMLCommonAttributes<HTMLAudioElement>,
+        EventAttributes<HTMLAudioElement>,
+        IntrinsicProperties<HTMLAudioElement> {
+      readonly autoplay?: AttributeValue<boolean>;
+      readonly controls?: AttributeValue<boolean>;
+      readonly controlslist?: AttributeValue<
         "nodownload" | "nofullscreen" | "noremoteplayback"
       >;
-      readonly crossorigin: AttributeValue<Crossorigin>;
-      readonly disableremoteplayback: AttributeValue<boolean>;
-      readonly loop: AttributeValue<boolean>;
-      readonly muted: AttributeValue<boolean>;
-      readonly preload: AttributeValue<"none" | "metadata" | "auto">;
-      readonly src: AttributeValue<string>;
-    };
+      readonly crossorigin?: AttributeValue<Crossorigin>;
+      readonly disableremoteplayback?: AttributeValue<boolean>;
+      readonly loop?: AttributeValue<boolean>;
+      readonly muted?: AttributeValue<boolean>;
+      readonly preload?: AttributeValue<"none" | "metadata" | "auto">;
+      readonly src?: AttributeValue<string>;
+    }
 
     type FormEncType =
       | "application/x-www-form-urlencoded"
       | "multipart/form-data"
       | "text/plain";
 
+    type FormMethod = "get" | "post" | "dialog";
+
     interface HTMLInputAttributes
-      extends HTMLCommonAttributes<HTMLInputElement> {
+      extends HTMLCommonAttributes<HTMLInputElement>,
+        EventAttributes<HTMLInputElement>,
+        IntrinsicProperties<HTMLInputElement> {
       readonly accept?: AttributeValue<string>;
       readonly alt?: AttributeValue<string>;
       readonly autocomplete?: AttributeValue<string>;
@@ -964,10 +997,10 @@ declare module "moru" {
       readonly form?: AttributeValue<string>;
       readonly formaction?: AttributeValue<string>;
       readonly formenctype?: AttributeValue<FormEncType>;
-      readonly formmethod?: AttributeValue<"get" | "post" | "dialog">;
+      readonly formmethod?: AttributeValue<FormMethod>;
       readonly formnovalidate?: AttributeValue<boolean>;
       readonly formtarget?: AttributeValue<Target>;
-      readonly height?: AttributeValue<number | bigint>;
+      readonly height?: AttributeValue<NumericAttributeLiteral>;
       readonly inputmode?: AttributeValue<
         | "none"
         | "text"
@@ -979,19 +1012,19 @@ declare module "moru" {
         | "search"
       >;
       readonly list?: AttributeValue<string>;
-      readonly max?: AttributeValue<number | bigint>;
-      readonly min?: AttributeValue<number | bigint>;
-      readonly maxlength?: AttributeValue<number | bigint>;
-      readonly minlength?: AttributeValue<number | bigint>;
+      readonly max?: AttributeValue<NumericAttributeLiteral>;
+      readonly min?: AttributeValue<NumericAttributeLiteral>;
+      readonly maxlength?: AttributeValue<NumericAttributeLiteral>;
+      readonly minlength?: AttributeValue<NumericAttributeLiteral>;
       readonly multiple?: AttributeValue<boolean>;
       readonly name?: AttributeValue<string>;
       readonly pattern?: AttributeValue<string>;
       readonly placeholder?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
       readonly readonly?: AttributeValue<boolean>;
       readonly required?: AttributeValue<boolean>;
-      readonly size?: AttributeValue<number | bigint>;
+      readonly size?: AttributeValue<NumericAttributeLiteral>;
       readonly src?: AttributeValue<string>;
-      readonly step?: AttributeValue<"any" | number | bigint>;
+      readonly step?: AttributeValue<"any" | NumericAttributeLiteral>;
       readonly type: AttributeValue<
         | "button"
         | "checkbox"
@@ -1017,11 +1050,13 @@ declare module "moru" {
         | "week"
       >;
       readonly value?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
-      readonly width?: AttributeValue<number | bigint>;
+      readonly width?: AttributeValue<NumericAttributeLiteral>;
     }
 
     interface HTMLImageAttributes
-      extends HTMLCommonAttributes<HTMLImageElement> {
+      extends HTMLCommonAttributes<HTMLImageElement>,
+        EventAttributes<HTMLImageElement>,
+        IntrinsicProperties<HTMLImageElement> {
       readonly alt: AttributeValue<string>;
       readonly crossorigin?: AttributeValue<Crossorigin>;
       readonly decoding?: AttributeValue<"sync" | "async" | "auto">;
@@ -1039,21 +1074,29 @@ declare module "moru" {
 
     interface HTMLLabelAttributes
       extends WithChildren,
-        HTMLCommonAttributes<HTMLLabelElement> {
-      readonly for: AttributeValue<Exclude<AttributeLiteral, boolean>>;
+        HTMLCommonAttributes<HTMLLabelElement>,
+        EventAttributes<HTMLLabelElement>,
+        IntrinsicProperties<HTMLLabelElement> {
+      readonly for?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
     }
 
     interface HTMLDivAttributes
       extends WithChildren,
-        HTMLCommonAttributes<HTMLDivElement> {}
+        HTMLCommonAttributes<HTMLDivElement>,
+        EventAttributes<HTMLDivElement>,
+        IntrinsicProperties<HTMLDivElement> {}
 
     interface HTMLHeaderAttributes
       extends WithChildren,
-        HTMLCommonAttributes<HTMLElement> {}
+        HTMLCommonAttributes<HTMLElement>,
+        EventAttributes<HTMLElement>,
+        IntrinsicProperties<HTMLElement> {}
 
     interface HTMLButtonAttributes
       extends WithChildren,
-        HTMLCommonAttributes<HTMLButtonElement> {
+        HTMLCommonAttributes<HTMLButtonElement>,
+        EventAttributes<HTMLButtonElement>,
+        IntrinsicProperties<HTMLButtonElement> {
       readonly autofocus?: AttributeValue<boolean>;
       readonly disabled?: AttributeValue<boolean>;
       readonly form?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
@@ -1073,34 +1116,89 @@ declare module "moru" {
 
     interface HTMLMainAttributes
       extends WithChildren,
-        HTMLCommonAttributes<HTMLElement> {}
+        HTMLCommonAttributes<HTMLElement>,
+        EventAttributes<HTMLElement>,
+        IntrinsicProperties<HTMLElement> {}
 
     interface HTMLFooterAttributes
       extends WithChildren,
-        HTMLCommonAttributes<HTMLElement> {}
+        HTMLCommonAttributes<HTMLElement>,
+        EventAttributes<HTMLElement>,
+        IntrinsicProperties<HTMLElement> {}
 
     interface HTMLParagraphAttributes
       extends WithChildren,
-        HTMLCommonAttributes<HTMLParagraphElement> {}
+        HTMLCommonAttributes<HTMLParagraphElement>,
+        EventAttributes<HTMLParagraphElement>,
+        IntrinsicProperties<HTMLParagraphElement> {}
+
+    interface HTMLCodeAttributes
+      extends WithChildren,
+        HTMLCommonAttributes<HTMLElement>,
+        EventAttributes<HTMLElement>,
+        IntrinsicProperties<HTMLElement> {}
+
+    interface HTMLHeadingAttributes
+      extends WithChildren,
+        HTMLCommonAttributes<HTMLElement>,
+        EventAttributes<HTMLElement>,
+        IntrinsicProperties<HTMLElement> {}
+
+    interface HTMLLegendAttributes
+      extends WithChildren,
+        HTMLCommonAttributes<HTMLLegendElement>,
+        EventAttributes<HTMLLegendElement>,
+        IntrinsicProperties<HTMLLegendElement> {}
+
+    interface HTMLFormAttributes
+      extends WithChildren,
+        HTMLCommonAttributes<HTMLFormElement>,
+        EventAttributes<HTMLFormElement>,
+        IntrinsicProperties<HTMLFormElement> {
+      readonly "accept-charset"?: AttributeValue<string>;
+      readonly autocomplete?: AttributeValue<boolean>;
+      readonly name?: AttributeValue<string>;
+      // TODO: describe more precisely rel types.
+      readonly rel?: AttributeValue<string>;
+      readonly action?: AttributeValue<string>;
+      readonly enctype?: AttributeValue<FormEncType>;
+      readonly method?: AttributeValue<FormMethod>;
+      readonly novalidate?: AttributeValue<boolean>;
+      readonly target?: AttributeValue<Target | "_unfencedTop">;
+    }
 
     interface HTMLHtmlAttributes
       extends WithChildren,
-        HTMLCommonAttributes<HTMLHtmlElement> {
+        HTMLCommonAttributes<HTMLHtmlElement>,
+        EventAttributes<HTMLHtmlElement>,
+        IntrinsicProperties<HTMLHtmlElement> {
       readonly lang?: AttributeValue<string>;
       readonly xmlns?: AttributeValue<string>;
     }
 
+    interface HTMLHrAttributes
+      extends WithChildren,
+        HTMLCommonAttributes<HTMLHRElement>,
+        EventAttributes<HTMLHRElement>,
+        IntrinsicProperties<HTMLHRElement> {}
+
     interface HTMLHeadAttributes
       extends WithChildren,
-        HTMLCommonAttributes<HTMLHeadElement> {}
+        HTMLCommonAttributes<HTMLHeadElement>,
+        EventAttributes<HTMLHeadElement>,
+        IntrinsicProperties<HTMLHeadElement> {}
 
     interface HTMLTitleAttributes
       extends WithChildren,
-        HTMLCommonAttributes<HTMLTitleElement> {}
+        HTMLCommonAttributes<HTMLTitleElement>,
+        EventAttributes<HTMLTitleElement>,
+        IntrinsicProperties<HTMLTitleElement> {}
 
     interface HTMLMetaAttributes
       extends WithChildren,
-        HTMLCommonAttributes<HTMLMetaElement> {
+        HTMLCommonAttributes<HTMLMetaElement>,
+        EventAttributes<HTMLMetaElement>,
+        IntrinsicProperties<HTMLMetaElement> {
       readonly charset?: AttributeValue<string>;
       // TODO: improve content values depending on the name or http-equiv attribute.
       readonly content?: AttributeValue<string>;
@@ -1130,24 +1228,34 @@ declare module "moru" {
 
     interface HTMLBodyAttributes
       extends WithChildren,
-        HTMLCommonAttributes<HTMLBodyElement> {}
+        HTMLCommonAttributes<HTMLBodyElement>,
+        EventAttributes<HTMLBodyElement>,
+        IntrinsicProperties<HTMLBodyElement> {}
 
     interface HTMLSpanAttributes
       extends WithChildren,
-        HTMLCommonAttributes<HTMLSpanElement> {}
+        HTMLCommonAttributes<HTMLSpanElement>,
+        EventAttributes<HTMLSpanElement>,
+        IntrinsicProperties<HTMLSpanElement> {}
 
     interface HTMLSectionAttributes
       extends WithChildren,
-        HTMLCommonAttributes<HTMLElement> {}
+        HTMLCommonAttributes<HTMLElement>,
+        EventAttributes<HTMLElement>,
+        IntrinsicProperties<HTMLElement> {}
 
     interface HTMLArticleAttributes
       extends WithChildren,
-        HTMLCommonAttributes<HTMLElement> {}
+        HTMLCommonAttributes<HTMLElement>,
+        EventAttributes<HTMLElement>,
+        IntrinsicProperties<HTMLElement> {}
 
     interface SVGSVGAttributes
       extends WithChildren,
-        SVGCommonAttributes<SVGSVGElement> {
-      readonly height?: AttributeValue<"auto" | number | `${number}%`>;
+        SVGCommonAttributes<SVGSVGElement>,
+        EventAttributes<SVGSVGElement>,
+        IntrinsicProperties<SVGSVGElement> {
+      readonly height?: AttributeValue<"auto" | CSSLengthPercentage>;
       readonly preserveAspectRatio?: AttributeValue<
         | "none"
         | `${
@@ -1162,17 +1270,29 @@ declare module "moru" {
             | "xMaxYMax"} ${"meet" | "slice"}`
       >;
       readonly viewBox?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
-      readonly width?: AttributeValue<"auto" | number | `${number}%`>;
-      readonly x?: AttributeValue<number | `${number}%`>;
-      readonly y?: AttributeValue<number | `${number}%`>;
+      readonly width?: AttributeValue<"auto" | CSSLengthPercentage>;
+      readonly x?: AttributeValue<CSSLengthPercentage>;
+      readonly y?: AttributeValue<CSSLengthPercentage>;
       readonly xmlns?: AttributeValue<string>;
     }
 
-    interface SVGPathAttributes extends SVGCommonAttributes<SVGPathElement> {
+    interface SVGPathAttributes
+      extends SVGCommonAttributes<SVGPathElement>,
+        EventAttributes<SVGPathElement>,
+        IntrinsicProperties<SVGPathElement> {
       readonly d?: AttributeValue<string>;
-      readonly pathLength?: AttributeValue<
-        Exclude<AttributeLiteral, string | boolean>
-      >;
+      readonly pathLength?: AttributeValue<NumericAttributeLiteral>;
+    }
+
+    interface SVGForeignObjectAttributes
+      extends WithChildren,
+        SVGCommonAttributes<SVGForeignObjectElement>,
+        IntrinsicProperties<SVGForeignObjectElement>,
+        EventAttributes<SVGForeignObjectElement> {
+      readonly width?: AttributeValue<"auto" | CSSLengthPercentage>;
+      readonly height?: AttributeValue<"auto" | CSSLengthPercentage>;
+      readonly x?: AttributeValue<CSSLengthPercentage>;
+      readonly y?: AttributeValue<CSSLengthPercentage>;
     }
   }
 }
