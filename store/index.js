@@ -11,9 +11,11 @@ export const store = (initial, reducer) => {
 
     const dispatch = (event) =>
       setStore((store) => {
-        const reduced = reducer(store, event, dispatch) ?? store;
+        const reduced = reducer(store, event, dispatch);
 
-        return store === reduced ? store : Object.assign(store, reduced);
+        reduced && Object.assign(store, reduced);
+
+        return store;
       });
 
     return createElement(HandlesProvider, {

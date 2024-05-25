@@ -25,7 +25,7 @@ export function Show<A>(
 
 export type AwaitProperties<A, E = unknown> = {
   readonly on?: readonly Getter<unknown>[];
-  readonly for: () => Promise<A>;
+  readonly for: () => PromiseLike<A>;
   readonly catch?: (error: Getter<E>, pending: Getter<boolean>) => JSX.Element;
   readonly pending?: JSX.Element;
   readonly children: (

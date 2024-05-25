@@ -1,13 +1,9 @@
 const GETTER = Symbol("moru:getter");
 const CONTEXT = Symbol("moru:context");
 
+export const isGetter = (value) => !!value?.[GETTER];
+export const isContext = (value) => !!value?.[CONTEXT];
 export const immediately = (callback) => callback();
-
-export const isGetter = (value) =>
-  value && typeof value === "function" && GETTER in value;
-
-export const isContext = (value) =>
-  value && typeof value === "object" && CONTEXT in value;
 
 const createContextState = (parent) => ({
   queues: parent?.[CONTEXT].queues ?? new Map(),
@@ -49,7 +45,7 @@ const createState =
 
     const getter = (map = (value) => value) => map(current);
 
-    getter[GETTER] = null;
+    getter[GETTER] = GETTER;
 
     return [getter, setter];
   };
@@ -59,16 +55,17 @@ const createEffect =
   (callback, dependencies = [], schedule = queueMicrotask) => {
     if (contextState.disposed) return;
 
-    contextState.queues.has(schedule) ||
+    schedule === immediately ||
+      contextState.queues.has(schedule) ||
       contextState.queues.set(schedule, new Set());
 
     const dispose = () => {
       dependencies.forEach((getter) => {
-        const getterEffects = contextState.effects.get(getter);
-        getterEffects.delete(scheduleEffect);
-        getterEffects.size || contextState.effects.delete(getter);
+        const getterDependentEffects = contextState.effects.get(getter);
+        getterDependentEffects.delete(scheduleEffect);
+        getterDependentEffects.size || contextState.effects.delete(getter);
       });
-      contextState.queues.get(schedule).delete(effect);
+      contextState.queues.get(schedule)?.delete(effect);
       contextState.cleanups.get(effect)();
       contextState.cleanups.delete(effect);
     };
@@ -77,9 +74,10 @@ const createEffect =
       contextState.cleanups.get(effect)?.();
 
       const clear = callback();
-
       const cleanup = () =>
-        clear instanceof Promise ? clear.then((fn) => fn?.()) : clear?.();
+        typeof clear?.then === "function"
+          ? clear.then((fn) => fn?.())
+          : clear?.();
 
       cleanup.dispose = dispose;
 
@@ -90,7 +88,6 @@ const createEffect =
       if (schedule === immediately) return effect();
 
       const queue = contextState.queues.get(schedule);
-
       const shouldSchedule = !queue.size;
 
       queue.add(effect);

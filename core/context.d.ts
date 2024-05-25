@@ -1,4 +1,7 @@
-export type Effect = () => void | VoidFunction | Promise<void | VoidFunction>;
+export type Effect = () =>
+  | void
+  | VoidFunction
+  | PromiseLike<void | VoidFunction>;
 
 export type StateComparator<T> = (previous: T, next: T) => boolean;
 
@@ -8,7 +11,7 @@ declare const CONTEXT: unique symbol;
 export type Getter<T> = {
   (): T;
   <A>(map: (value: T) => A): A;
-  readonly [GETTER]: null;
+  readonly [GETTER]: typeof GETTER;
 };
 
 export type Setter<T> = {

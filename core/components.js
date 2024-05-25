@@ -173,7 +173,7 @@ export const Await = (props, context) => {
         setResult(result);
         setError(undefined);
       }, setError)
-      .finally(() => {
+      .then(() => {
         setPending(false);
         setShowContent(true);
       });
