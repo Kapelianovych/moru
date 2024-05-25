@@ -16,24 +16,26 @@ export type Component<Properties extends object> = (
 
 declare const ELEMENT: unique symbol;
 
-export type IntrinsicElement<Tag extends string, Properties extends object> = {
+export interface Element<
+  Tag extends string | Component<object>,
+  Properties extends object,
+> {
   readonly tag: Tag;
   readonly properties: Properties;
-  readonly [ELEMENT]: null;
-};
+  readonly [ELEMENT]: typeof ELEMENT;
+}
 
-export type ComponentElement<Properties extends object> = {
-  readonly tag: Component<Properties>;
-  readonly properties: Properties;
-  readonly [ELEMENT]: null;
-};
+export interface IntrinsicElement<Tag extends string, Properties extends object>
+  extends Element<Tag, Properties> {}
 
-export function isElement<Tag extends string, Properties extends object>(
-  value: unknown,
-): value is IntrinsicElement<Tag, Properties>;
-export function isElement<Properties extends object>(
-  value: unknown,
-): value is ComponentElement<Properties>;
+export interface ComponentElement<Properties extends object>
+  extends Element<Component<Properties>, Properties> {}
+
+export function isElement<
+  Tag extends string | Component<object>,
+  Properties extends object,
+>(value: Element<Tag, Properties>): true;
+export function isElement(value: unknown): boolean;
 
 export const Fragment: unique symbol;
 

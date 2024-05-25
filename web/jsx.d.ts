@@ -65,7 +65,7 @@ declare module "moru" {
       6: bigint;
       7: boolean;
       8: undefined;
-      9: globalThis.Node;
+      9: Node;
     }
 
     interface IntrinsicElements {

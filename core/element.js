@@ -1,16 +1,11 @@
 const ELEMENT = Symbol("moru:element");
 
-export const isElement = (value) =>
-  value && typeof value === "object" && ELEMENT in value;
+export const isElement = (value) => !!value?.[ELEMENT];
 
 export const createElement = (tag, properties) =>
   tag === Fragment
     ? properties.children
-    : {
-        tag,
-        properties,
-        [ELEMENT]: null,
-      };
+    : { tag, properties, [ELEMENT]: ELEMENT };
 
 export const Fragment = Symbol("moru:fragment");
 
