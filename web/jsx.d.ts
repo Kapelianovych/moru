@@ -101,8 +101,7 @@ declare module "moru" {
       readonly blockquote: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly body: HTMLBodyAttributes;
-      readonly br: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly br: HTMLBrAttributes;
       readonly button: HTMLButtonAttributes;
       readonly canvas: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
@@ -197,10 +196,7 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
       readonly math: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly menu: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
-      readonly menuitem: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly menu: HTMLMenuAttributes;
       readonly meta: HTMLMetaAttributes;
       readonly meter: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
@@ -306,8 +302,7 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
       readonly u: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly ul: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly ul: HTMLUlAttributes;
       readonly var: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly video: {} & EventAttributes<HTMLAnchorElement> &
@@ -327,14 +322,12 @@ declare module "moru" {
         IntrinsicProperties<SVGElement>;
       readonly animateTransform: {} & EventAttributes<SVGElement> &
         IntrinsicProperties<SVGElement>;
-      readonly circle: {} & EventAttributes<SVGElement> &
-        IntrinsicProperties<SVGElement>;
+      readonly circle: SVGCircleAttributes;
       readonly clipPath: {} & EventAttributes<SVGElement> &
         IntrinsicProperties<SVGElement>;
       readonly "color-profile": {} & EventAttributes<SVGElement> &
         IntrinsicProperties<SVGElement>;
-      readonly defs: {} & EventAttributes<SVGElement> &
-        IntrinsicProperties<SVGElement>;
+      readonly defs: SVGDefsAttributes;
       readonly desc: {} & EventAttributes<SVGElement> &
         IntrinsicProperties<SVGElement>;
       readonly ellipse: {} & EventAttributes<SVGElement> &
@@ -396,8 +389,7 @@ declare module "moru" {
         IntrinsicProperties<SVGElement>;
       readonly line: {} & EventAttributes<SVGElement> &
         IntrinsicProperties<SVGElement>;
-      readonly linearGradient: {} & EventAttributes<SVGElement> &
-        IntrinsicProperties<SVGElement>;
+      readonly linearGradient: SVGLinearGradientAttributes;
       readonly marker: {} & EventAttributes<SVGElement> &
         IntrinsicProperties<SVGElement>;
       readonly mask: {} & EventAttributes<SVGElement> &
@@ -415,12 +407,10 @@ declare module "moru" {
         IntrinsicProperties<SVGElement>;
       readonly radialGradient: {} & EventAttributes<SVGElement> &
         IntrinsicProperties<SVGElement>;
-      readonly rect: {} & EventAttributes<SVGElement> &
-        IntrinsicProperties<SVGElement>;
+      readonly rect: SVGRectAttributes;
       readonly set: {} & EventAttributes<SVGElement> &
         IntrinsicProperties<SVGElement>;
-      readonly stop: {} & EventAttributes<SVGElement> &
-        IntrinsicProperties<SVGElement>;
+      readonly stop: SVGStopAttributes;
       readonly switch: {} & EventAttributes<SVGElement> &
         IntrinsicProperties<SVGElement>;
       readonly symbol: {} & EventAttributes<SVGElement> &
@@ -519,23 +509,37 @@ declare module "moru" {
 
     type CSSLengthPercentage = CSSLength | CSSPercentage;
 
+    type SVGLength = number | CSSRelativeLength | CSSAbsoluteLength;
+
+    type SVGLengthPercentage = SVGLength | CSSPercentage;
+
     interface CustomAttributes<B extends globalThis.Element>
       extends WithRef<B> {}
 
     // All the WAI-ARIA 1.1 attributes from https://www.w3.org/TR/wai-aria-1.1/
     interface AriaAttributes {
-      /** Identifies the currently active element when DOM focus is on a composite widget, textbox, group, or application. */
+      /**
+       * Identifies the currently active element when DOM focus is on a composite
+       * widget, textbox, group, or application.
+       */
       readonly "aria-activedescendant"?: AttributeValue<string>;
-      /** Indicates whether assistive technologies will present all, or only parts of, the changed region based on the change notifications defined by the aria-relevant attribute. */
+      /**
+       * Indicates whether assistive technologies will present all, or only parts of,
+       * the changed region based on the change notifications defined by the aria-relevant attribute.
+       */
       readonly "aria-atomic"?: AttributeValue<boolean | "false" | "true">;
       /**
-       * Indicates whether inputting text could trigger display of one or more predictions of the user's intended value for an input and specifies how predictions would be
+       * Indicates whether inputting text could trigger display of one or more predictions
+       * of the user's intended value for an input and specifies how predictions would be
        * presented if they are made.
        */
       readonly "aria-autocomplete"?: AttributeValue<
         "none" | "inline" | "list" | "both"
       >;
-      /** Indicates an element is being modified and that assistive technologies MAY want to wait until the modifications are complete before exposing them to the user. */
+      /**
+       * Indicates an element is being modified and that assistive technologies MAY want
+       * to wait until the modifications are complete before exposing them to the user.
+       */
       readonly "aria-busy"?: AttributeValue<boolean | "false" | "true">;
       /**
        * Indicates the current "checked" state of checkboxes, radio buttons, and other widgets.
@@ -552,8 +556,10 @@ declare module "moru" {
         Exclude<AttributeLiteral, boolean>
       >;
       /**
-       * Defines an element's column index or position with respect to the total number of columns within a table, grid, or treegrid.
-       * @see aria-colcount @see aria-colspan.
+       * Defines an element's column index or position with respect to the total number
+       * of columns within a table, grid, or treegrid.
+       * @see aria-colcount
+       * @see aria-colspan.
        */
       readonly "aria-colindex"?: AttributeValue<
         Exclude<AttributeLiteral, boolean>
@@ -1250,12 +1256,29 @@ declare module "moru" {
         EventAttributes<HTMLElement>,
         IntrinsicProperties<HTMLElement> {}
 
+    interface HTMLBrAttributes
+      extends HTMLCommonAttributes<HTMLBRElement>,
+        EventAttributes<HTMLBRElement>,
+        IntrinsicProperties<HTMLBRElement> {}
+
+    interface HTMLMenuAttributes
+      extends WithChildren,
+        HTMLCommonAttributes<HTMLMenuElement>,
+        EventAttributes<HTMLMenuElement>,
+        IntrinsicProperties<HTMLMenuElement> {}
+
+    interface HTMLUlAttributes
+      extends WithChildren,
+        HTMLCommonAttributes<HTMLUListElement>,
+        EventAttributes<HTMLUListElement>,
+        IntrinsicProperties<HTMLUListElement> {}
+
     interface SVGSVGAttributes
       extends WithChildren,
         SVGCommonAttributes<SVGSVGElement>,
         EventAttributes<SVGSVGElement>,
         IntrinsicProperties<SVGSVGElement> {
-      readonly height?: AttributeValue<"auto" | CSSLengthPercentage>;
+      readonly height?: AttributeValue<"auto" | SVGLengthPercentage>;
       readonly preserveAspectRatio?: AttributeValue<
         | "none"
         | `${
@@ -1270,9 +1293,9 @@ declare module "moru" {
             | "xMaxYMax"} ${"meet" | "slice"}`
       >;
       readonly viewBox?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
-      readonly width?: AttributeValue<"auto" | CSSLengthPercentage>;
-      readonly x?: AttributeValue<CSSLengthPercentage>;
-      readonly y?: AttributeValue<CSSLengthPercentage>;
+      readonly width?: AttributeValue<"auto" | SVGLengthPercentage>;
+      readonly x?: AttributeValue<SVGLengthPercentage>;
+      readonly y?: AttributeValue<SVGLengthPercentage>;
       readonly xmlns?: AttributeValue<string>;
     }
 
@@ -1289,10 +1312,66 @@ declare module "moru" {
         SVGCommonAttributes<SVGForeignObjectElement>,
         IntrinsicProperties<SVGForeignObjectElement>,
         EventAttributes<SVGForeignObjectElement> {
-      readonly width?: AttributeValue<"auto" | CSSLengthPercentage>;
-      readonly height?: AttributeValue<"auto" | CSSLengthPercentage>;
-      readonly x?: AttributeValue<CSSLengthPercentage>;
-      readonly y?: AttributeValue<CSSLengthPercentage>;
+      readonly x?: AttributeValue<SVGLengthPercentage>;
+      readonly y?: AttributeValue<SVGLengthPercentage>;
+      readonly width?: AttributeValue<"auto" | SVGLengthPercentage>;
+      readonly height?: AttributeValue<"auto" | SVGLengthPercentage>;
+    }
+
+    interface SVGRectAttributes
+      extends SVGCommonAttributes<SVGRectElement>,
+        IntrinsicProperties<SVGRectElement>,
+        EventAttributes<SVGRectElement> {
+      readonly x?: AttributeValue<SVGLengthPercentage>;
+      readonly y?: AttributeValue<SVGLengthPercentage>;
+      readonly rx?: AttributeValue<"auto" | SVGLengthPercentage>;
+      readonly ry?: AttributeValue<"auto" | SVGLengthPercentage>;
+      readonly width?: AttributeValue<"auto" | SVGLengthPercentage>;
+      readonly height?: AttributeValue<"auto" | SVGLengthPercentage>;
+      readonly pathLength?: AttributeValue<"none" | number>;
+    }
+
+    interface SVGDefsAttributes
+      extends WithChildren,
+        SVGCommonAttributes<SVGDefsElement>,
+        IntrinsicProperties<SVGDefsElement>,
+        EventAttributes<SVGDefsElement> {}
+
+    interface SVGLinearGradientAttributes
+      extends WithChildren,
+        SVGCommonAttributes<SVGLinearGradientElement>,
+        IntrinsicProperties<SVGLinearGradientElement>,
+        EventAttributes<SVGLinearGradientElement> {
+      readonly gradientUnits?: AttributeValue<
+        "userSpaceOnUse" | "objectBoundingBox"
+      >;
+      readonly gradientTransform?: AttributeValue<string>;
+      readonly href?: AttributeValue<string>;
+      readonly spreadMethod?: AttributeValue<"pad" | "reflect" | "repeat">;
+      readonly x1?: AttributeValue<SVGLengthPercentage>;
+      readonly x2?: AttributeValue<SVGLengthPercentage>;
+      readonly y1?: AttributeValue<SVGLengthPercentage>;
+      readonly y2?: AttributeValue<SVGLengthPercentage>;
+    }
+
+    interface SVGStopAttributes
+      extends WithChildren,
+        SVGCommonAttributes<SVGStopElement>,
+        IntrinsicProperties<SVGStopElement>,
+        EventAttributes<SVGStopElement> {
+      readonly offset?: AttributeValue<SVGLengthPercentage>;
+      readonly "stop-color"?: AttributeValue<string>;
+      readonly "stop-opacity"?: AttributeValue<NumericAttributeLiteral>;
+    }
+
+    interface SVGCircleAttributes
+      extends SVGCommonAttributes<SVGCircleElement>,
+        IntrinsicProperties<SVGCircleElement>,
+        EventAttributes<SVGCircleElement> {
+      readonly cx?: AttributeValue<SVGLengthPercentage>;
+      readonly cy?: AttributeValue<SVGLengthPercentage>;
+      readonly r?: AttributeValue<SVGLengthPercentage>;
+      readonly pathLength?: AttributeValue<"none" | number>;
     }
   }
 }
