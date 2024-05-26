@@ -1355,8 +1355,7 @@ declare module "moru" {
     }
 
     interface SVGStopAttributes
-      extends WithChildren,
-        SVGCommonAttributes<SVGStopElement>,
+      extends SVGCommonAttributes<SVGStopElement>,
         IntrinsicProperties<SVGStopElement>,
         EventAttributes<SVGStopElement> {
       readonly offset?: AttributeValue<SVGLengthPercentage>;

@@ -53,13 +53,13 @@ export function effect(
   callback: Effect,
   dependencies?: readonly Getter<unknown>[],
   schedule?: (callback: VoidFunction) => void,
-): VoidFunction;
+): void;
 export function effect(
   context: Context,
   callback: Effect,
   dependencies?: readonly Getter<unknown>[],
   schedule?: (callback: VoidFunction) => void,
-): VoidFunction;
+): void;
 
 export type Provider<A> = readonly [
   Component<WithChildren<{ readonly value: A }>>,

@@ -35,7 +35,7 @@ export type Context = {
     callback: Effect,
     dependencies?: readonly Getter<unknown>[],
     schedule?: (callback: VoidFunction) => void,
-  ): VoidFunction;
+  ): void;
 };
 
 export function context(parent?: Context): Context;
