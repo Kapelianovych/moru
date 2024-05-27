@@ -183,8 +183,7 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
       readonly label: HTMLLabelAttributes;
       readonly legend: HTMLLegendAttributes;
-      readonly li: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly li: HTMLLiAttributes;
       readonly link: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly main: HTMLMainAttributes;
@@ -210,8 +209,7 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
       readonly object: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly ol: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly ol: HTMLOlAttributes;
       readonly optgroup: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly option: {} & EventAttributes<HTMLAnchorElement> &
@@ -1272,6 +1270,24 @@ declare module "moru" {
         HTMLCommonAttributes<HTMLUListElement>,
         EventAttributes<HTMLUListElement>,
         IntrinsicProperties<HTMLUListElement> {}
+
+    interface HTMLOlAttributes
+      extends WithChildren,
+        HTMLCommonAttributes<HTMLOListElement>,
+        EventAttributes<HTMLOListElement>,
+        IntrinsicProperties<HTMLOListElement> {
+      readonly reversed?: AttributeValue<boolean>;
+      readonly start?: AttributeValue<NumericAttributeLiteral>;
+      readonly type?: AttributeValue<"a" | "A" | "i" | "I" | 1 | "1">;
+    }
+
+    interface HTMLLiAttributes
+      extends WithChildren,
+        HTMLCommonAttributes<HTMLLIElement>,
+        EventAttributes<HTMLLIElement>,
+        IntrinsicProperties<HTMLLIElement> {
+      readonly value?: AttributeValue<NumericAttributeLiteral>;
+    }
 
     interface SVGSVGAttributes
       extends WithChildren,
