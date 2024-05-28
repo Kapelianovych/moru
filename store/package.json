@@ -17,6 +17,6 @@
     ".": "./index.js"
   },
   "peerDependencies": {
-    "moru": "0.0.5"
+    "moru": "*"
   }
 }
