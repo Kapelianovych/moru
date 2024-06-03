@@ -281,8 +281,7 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
       readonly template: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly textarea: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly textarea: HTMLTextAriaAttributes;
       readonly tfoot: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly th: {} & EventAttributes<HTMLAnchorElement> &
@@ -1287,6 +1286,29 @@ declare module "moru" {
         EventAttributes<HTMLLIElement>,
         IntrinsicProperties<HTMLLIElement> {
       readonly value?: AttributeValue<NumericAttributeLiteral>;
+    }
+
+    type TextDirection = "ltr" | "rtl";
+
+    interface HTMLTextAriaAttributes
+      extends WithChildren,
+        HTMLCommonAttributes<HTMLTextAreaElement>,
+        EventAttributes<HTMLTextAreaElement>,
+        IntrinsicProperties<HTMLTextAreaElement> {
+      readonly autocomplete?: AttributeValue<"on" | "off">;
+      readonly autofocus?: AttributeValue<boolean>;
+      readonly cols?: AttributeValue<NumericAttributeLiteral>;
+      readonly rows?: AttributeValue<NumericAttributeLiteral>;
+      readonly dirname?: AttributeValue<TextDirection>;
+      readonly disabled?: AttributeValue<boolean>;
+      readonly form?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
+      readonly maxlength?: AttributeValue<NumericAttributeLiteral>;
+      readonly minlength?: AttributeValue<NumericAttributeLiteral>;
+      readonly name?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
+      readonly placeholder?: AttributeValue<Exclude<AttributeLiteral, boolean>>;
+      readonly readonly?: AttributeValue<boolean>;
+      readonly required?: AttributeValue<boolean>;
+      readonly wrap?: AttributeValue<"hard" | "soft">;
     }
 
     interface SVGSVGAttributes
