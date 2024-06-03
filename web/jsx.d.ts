@@ -265,8 +265,7 @@ declare module "moru" {
         IntrinsicProperties<HTMLElement>;
       readonly strong: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
-      readonly style: {} & EventAttributes<HTMLAnchorElement> &
-        IntrinsicProperties<HTMLElement>;
+      readonly style: HTMLStyleAttributes;
       readonly sub: {} & EventAttributes<HTMLAnchorElement> &
         IntrinsicProperties<HTMLElement>;
       readonly summary: {} & EventAttributes<HTMLAnchorElement> &
@@ -1309,6 +1308,15 @@ declare module "moru" {
       readonly readonly?: AttributeValue<boolean>;
       readonly required?: AttributeValue<boolean>;
       readonly wrap?: AttributeValue<"hard" | "soft">;
+    }
+
+    interface HTMLStyleAttributes
+      extends WithChildren,
+        HTMLCommonAttributes<HTMLStyleElement>,
+        EventAttributes<HTMLStyleElement>,
+        IntrinsicProperties<HTMLStyleElement> {
+      readonly media?: AttributeValue<string>;
+      readonly nonce?: AttributeValue<string>;
     }
 
     interface SVGSVGAttributes
