@@ -17,3 +17,12 @@ export const SelfClosedElements = new Set([
   "link",
   "input",
 ]);
+
+/**
+ * Signals that the current runtime is browser.
+ */
+export const isClient = $CLIENT;
+/**
+ * Signals that the current runtime is server.
+ */
+export const isServer = !$CLIENT;

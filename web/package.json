@@ -1,7 +1,7 @@
 {
   "name": "@moru/web",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Yevhen Kapelianovych",
   "license": "MIT",
   "keywords": [
@@ -14,10 +14,11 @@
     "url": "git+https://github.com/Kapelianovych/moru.git"
   },
   "exports": {
+    ".": "./index.js",
     "./client": "./client.js",
     "./server": "./server.js"
   },
   "peerDependencies": {
-    "moru": "*"
+    "moru": "0.0.6"
   }
 }

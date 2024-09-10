@@ -1,6 +1,6 @@
 {
   "name": "moru",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Simple reactive JSX UI library.",
   "type": "module",
   "license": "MIT",
@@ -16,7 +16,7 @@
   },
   "exports": {
     ".": "./index.js",
-    "./jsx-runtime": "./element.js",
-    "./jsx-dev-runtime": "./element.js"
+    "./jsx-runtime": "./index.js",
+    "./jsx-dev-runtime": "./index.js"
   }
 }
