@@ -1,4 +1,4 @@
-import { memo, provider, createElement, currentContext } from "moru";
+import { createElement, currentContext, memo, provider } from "moru";
 
 export const store = (initial, reducer) => {
   const [HandlesProvider, getHandles] = provider();

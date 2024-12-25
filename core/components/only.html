@@ -1,0 +1,34 @@
+<if condition="{{ renderedTimes < times }}">
+  <slot />
+</if>
+
+<script type="module" build>
+  const { key, times = 1 } = props;
+
+  if (key === undefined) {
+    throw new Error(
+      'The "only" component requires a "key" property passed in and not equal to `undefined`.',
+    );
+  }
+
+  if (times < 0) {
+    throw new Error(
+      'The "times" property cannot be a negative number, the current value is ' +
+        times +
+        ".",
+    );
+  }
+
+  let onlyCache = buildStore.get("only-cache");
+
+  if (!onlyCache) {
+    onlyCache = new Map();
+    buildStore.set("only-cache", onlyCache);
+  }
+
+  const renderedTimes = onlyCache.get(key) ?? 0;
+
+  if (renderedTimes < times) {
+    onlyCache.set(key, renderedTimes + 1);
+  }
+</script>

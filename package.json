@@ -1,15 +1,21 @@
 {
-  "name": "moru",
   "type": "module",
-  "author": "Yevhen Kapelianovych",
-  "private": true,
-  "license": "MIT",
-  "scripts": {
-    "test": "npm test --workspaces --if-present"
-  },
   "workspaces": [
-    "web",
-    "core",
-    "store"
-  ]
+    "./core",
+    "./vite-plugin"
+  ],
+  "scripts": {
+    "format": "prettier . --write",
+    "test:core": "",
+    "test:vite-plugin": "",
+    "build:core": "tsc --project ./core",
+    "build:vite-plugin": "tsc --project ./vite-plugin"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "prettier": "^3.4.2",
+    "tslib": "^2.8.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
 }

@@ -1,4 +1,4 @@
-import { Component, Getter, Context, MemoComparator, WithChildren } from "moru";
+import { Component, Context, Getter, MemoComparator, WithChildren } from "moru";
 
 export type Dispatch<E> = (event: E) => void;
 
