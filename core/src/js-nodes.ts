@@ -187,3 +187,9 @@ export function createJsLiteralAstNode(
 ): Literal {
   return createJsAstNode({ type: "Literal", ...values });
 }
+
+export function createJsProgramAstNode(
+  values: AstNodeWithoutLocationAndType<Program>,
+): Program {
+  return createJsAstNode({ type: "Program", ...values });
+}

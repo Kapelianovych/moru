@@ -8,6 +8,7 @@ import {
   type Node,
   parse,
   type Pattern,
+  type Program,
   type RestElement,
 } from "acorn";
 
@@ -23,6 +24,7 @@ import {
 import {
   createFailedBuildScriptExecutionMessage,
   createInvalidChildOfExecutableScriptMessage,
+  createJsSyntaxErrorMessage,
   createUnsupportedBuildScriptReexportingMessage,
 } from "./diagnostics.js";
 import {
@@ -39,6 +41,7 @@ import {
   createJsMemberExpressionAstNode,
   createJsObjectExpressionAstNode,
   createJsObjectPatternAstNode,
+  createJsProgramAstNode,
   createJsRestElementAstNode,
   createJsVariableDeclarationAstNode,
   createJsVariableDeclaratorAstNode,
@@ -124,11 +127,27 @@ function compileAndCollectExportedVariables(
   file: VirtualFile,
   options: Options,
 ): string {
-  const executableAst = parse(text.data, {
-    sourceType:
-      buildScriptElement.attribs.type === "module" ? "module" : "script",
-    ecmaVersion: "latest",
-  });
+  const sourceType =
+    buildScriptElement.attribs.type === "module" ? "module" : "script";
+  let executableAst: Program;
+
+  try {
+    executableAst = parse(text.data, {
+      sourceType,
+      ecmaVersion: "latest",
+    });
+  } catch (error: unknown) {
+    options.diagnostics.publish(
+      createJsSyntaxErrorMessage({
+        // @ts-expect-error the "error" variable is not "SyntaxError" explicitly because of TypeScript
+        // rules, but here might be no other error except the syntax error.
+        error,
+        location: getLocationOfHtmlNode(buildScriptElement),
+        sourceFile: file,
+      }),
+    );
+    executableAst = createJsProgramAstNode({ body: [], sourceType });
+  }
 
   ancestor(executableAst, {
     ImportDeclaration(node, _, ancestors) {

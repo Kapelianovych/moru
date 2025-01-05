@@ -6,7 +6,7 @@
   ],
   "scripts": {
     "format": "prettier . --write",
-    "test:core": "",
+    "test:core": "tsx --test \"./core/test/**/*.test.ts\"",
     "test:vite-plugin": "",
     "build:core": "tsc --project ./core",
     "build:vite-plugin": "tsc --project ./vite-plugin"

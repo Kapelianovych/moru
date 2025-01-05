@@ -5,7 +5,5 @@ export interface Options {
   diagnostics: Diagnostics;
   buildStore: Map<PropertyKey, unknown>;
   readFileContent(url: string): Promise<string>;
-  dynamicallyImportJsFile<M extends Record<string, unknown>>(
-    url: string,
-  ): Promise<M>;
+  dynamicallyImportJsFile(url: string): Promise<Record<string, unknown>>;
 }

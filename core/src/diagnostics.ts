@@ -16,6 +16,7 @@ export enum MessageTag {
   NonIterableEachAttribute,
   InvalidChildOfStyleElement,
   MissingExportedValueFromBuild,
+  JsSyntaxError,
 }
 
 export interface Location {
@@ -48,6 +49,7 @@ export type AnyMessage =
   | NonIterableEachAttributeMessage
   | InvalidChildOfStyleElementMessage
   | MissingExportedValueFromBuildMessage
+  | JsSyntaxErrorMessage
   | ProhibitedReservedComponentRemappingMessage;
 
 export interface SingleElseElementMessage
@@ -112,6 +114,11 @@ export interface MissingExportedValueFromBuildMessage
   names: Array<string>;
 }
 
+export interface JsSyntaxErrorMessage
+  extends Message<MessageTag.JsSyntaxError> {
+  error: SyntaxError;
+}
+
 function createMessageCreator<T extends MessageTag>(tag: T) {
   return (
     values: Omit<Extract<AnyMessage, Message<T>>, "tag">,
@@ -174,4 +181,8 @@ export const createInvalidChildOfStyleElementMessage = createMessageCreator(
 
 export const createMissingExportedValueFromBuildMessage = createMessageCreator(
   MessageTag.MissingExportedValueFromBuild,
+);
+
+export const createJsSyntaxErrorMessage = createMessageCreator(
+  MessageTag.JsSyntaxError,
 );
