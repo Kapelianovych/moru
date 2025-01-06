@@ -28,7 +28,7 @@ suite("expressions", () => {
       {{ b }}
       {{ c }}
 
-      <script type="module" build>
+      <script build>
         var a = 1;
         let b = 2;
         const c = 3;
@@ -36,5 +36,49 @@ suite("expressions", () => {
     `);
 
     match(output, /\s+1\s+2\s+/);
+  });
+
+  test("functions can participate in expressions", async () => {
+    const output = await compile(`
+      {{ dummy() }}
+
+      <script build>
+        function dummy() {
+          return 'word';
+        }
+      </script>
+    `);
+
+    match(output, /^\s+word\s+$/);
+  });
+
+  test("classes can participate in expressions", async () => {
+    const output = await compile(`
+      {{ new Dummy().toString() }}
+
+      <script build>
+        class Dummy {
+          toString() {
+            return 'this is dummy';
+          }
+        }
+      </script>
+    `);
+
+    match(output, /^\s+this is dummy\s+$/);
+  });
+
+  test("expressions can represent attribute values", async () => {
+    const output = await compile('<p class="{{ `foo` }}"></p>');
+
+    equal(output, '<p class="foo"></p>');
+  });
+
+  test("attribute values can mix static parts and expressions", async () => {
+    const output = await compile(
+      '<p class="static {{ `foo` }} {{ `bar` }}"></p>',
+    );
+
+    equal(output, '<p class="static foo bar"></p>');
   });
 });

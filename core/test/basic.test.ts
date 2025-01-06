@@ -49,4 +49,20 @@ suite("basic", () => {
 
     equal(output, "<div></div>");
   });
+
+  test('does not allow the "src" attribute in "build" scripts', async () => {
+    const publish = mock.fn();
+    await compile(
+      `
+        <script src="something" build></script>,
+      `,
+      { diagnostics: { publish } },
+    );
+
+    equal(publish.mock.callCount(), 1);
+    equal(
+      publish.mock.calls[0].arguments[0].tag,
+      MessageTag.ExternalBuildScript,
+    );
+  });
 });

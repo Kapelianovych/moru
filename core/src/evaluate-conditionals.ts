@@ -13,22 +13,21 @@ export async function evaluateConditionals(
   options.htmlNodesCollection.conditionals = [];
 
   for (const nodes of conditionals) {
-    const branchToRender = nodes.flat().find((node) => {
-      if (node) {
-        const shouldBeRendered =
-          "condition" in node.attribs ? node.attribs.condition : true;
+    let isBranchRendered = false;
 
-        if (!shouldBeRendered) {
+    for (const node of nodes.flat()) {
+      if (node) {
+        if (
+          !isBranchRendered &&
+          ("condition" in node.attribs ? node.attribs.condition : true)
+        ) {
+          await preCompile({ ...options, ast: node });
+          replaceElementWithMultiple(node, node.children);
+          isBranchRendered = true;
+        } else {
           removeElement(node);
         }
-
-        return shouldBeRendered;
       }
-    });
-
-    if (branchToRender) {
-      await preCompile({ ...options, ast: branchToRender });
-      replaceElementWithMultiple(branchToRender, branchToRender.children);
     }
   }
 }
