@@ -1,11 +1,5 @@
 import type { ChildNode, ParentNode } from "domhandler";
-import {
-  append,
-  appendChild,
-  getParent,
-  prevElementSibling,
-  removeElement,
-} from "domutils";
+import { append, appendChild, getParent, removeElement } from "domutils";
 
 import type { PreCompileOptions, PreCompiler } from "./compile-html.js";
 import { createNonIterableEachAttributeMessage } from "./diagnostics.js";
@@ -75,7 +69,7 @@ async function loopAndEvaluate(
   const previousAsNameValue = options.localThis[asName];
   const previousIndexNameValue = options.localThis[indexName];
 
-  let previousChildNode: ChildNode | null = prevElementSibling(loopElement);
+  let previousChildNode: ChildNode | null = loopElement.prev;
   // In case the loopElement is the first child.
   const parentNode: ParentNode | null = getParent(loopElement);
   const lastChildIndex = loopElement.children.length - 1;

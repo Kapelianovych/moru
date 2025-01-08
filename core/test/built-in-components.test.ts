@@ -19,6 +19,89 @@ suite("built-in components", () => {
     });
   });
 
+  suite("portal", () => {
+    test('"portal" should be removed from the HTML', async () => {
+      const output = await compile(`
+        <portal />
+      `);
+
+      equal(output.trim(), "");
+    });
+
+    test('children of the "portal" should not be removed', async () => {
+      const output = await compile(`
+        <portal>
+          <p>some</p>
+        </portal>
+      `);
+
+      match(output, /\s+<p>some<\/p>\s+/);
+    });
+
+    test('native HTML elements can be moved into a "portal" by its name', async () => {
+      const output = await compile(`
+        <portal name="test-portal" />
+
+        <hr />
+
+        <div portal="test-portal">
+          some content
+        </div>
+      `);
+
+      match(output, /^\s+<div>.+?<\/div>\s+<hr>\s+$/s);
+    });
+
+    test('fragments can be moved into a "portal" by its name', async () => {
+      const output = await compile(`
+        <portal name="test-portal" />
+
+        <hr />
+
+        <fragment portal="test-portal">
+          <div>
+            some content
+          </div>
+        </fragment>
+      `);
+
+      match(output, /^\s+<div>.+?<\/div>\s+<hr>\s+$/s);
+    });
+
+    test('raws can be moved into a "portal" by its name', async () => {
+      const output = await compile(`
+        <portal name="test-portal" />
+
+        <hr />
+
+        <raw portal="test-portal">
+          <div>
+            some content
+          </div>
+        </raw>
+      `);
+
+      match(output, /^\s+<div>.+?<\/div>\s+<hr>\s+$/s);
+    });
+
+    test("conditionals and loops cannot be moved to portals", async () => {
+      const output = await compile(`
+        <portal name="foo" />
+
+        <hr>
+
+        <if condition="{{ true }}" portal="foo">
+          1
+        </if>
+        <for each="{{ [0] }}" portal="foo">
+          2
+        </for>
+      `);
+
+      match(output, /<hr>\s+1\s+2/);
+    });
+  });
+
   suite("raw", () => {
     test('"raw" component should preserve children as they are', async () => {
       const output = await compile(`
@@ -29,6 +112,26 @@ suite("built-in components", () => {
       `);
 
       match(output, /^\s+{{ 1 }}\s+<import src="something"><\/import>\s+$/);
+    });
+  });
+
+  suite("fragment", () => {
+    test('"fragment" should be removed from resulting HTML', async () => {
+      const output = await compile(`
+        <fragment />
+      `);
+
+      equal(output.trim(), "");
+    });
+
+    test('children of the "fragment" element should not be removed from HTML', async () => {
+      const output = await compile(`
+        <fragment>
+          <p>hello</p>
+        </fragment>
+      `);
+
+      match(output, /\s+<p>hello<\/p>\s+/);
     });
   });
 

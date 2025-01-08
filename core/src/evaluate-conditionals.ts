@@ -21,7 +21,12 @@ export async function evaluateConditionals(
           !isBranchRendered &&
           ("condition" in node.attribs ? node.attribs.condition : true)
         ) {
+          // Prevent preemptive loops evaluation.
+          const loops = options.htmlNodesCollection.loops;
+          options.htmlNodesCollection.loops = [];
           await preCompile({ ...options, ast: node });
+          options.htmlNodesCollection.loops = loops;
+
           replaceElementWithMultiple(node, node.children);
           isBranchRendered = true;
         } else {
