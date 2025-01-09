@@ -183,6 +183,14 @@ export class DiagnosticsReporter implements Diagnostics {
             this.#highlightedRegion(message),
         );
         break;
+      case MessageTag.JsSyntaxError:
+        this.#error(
+          "A script in the " +
+            colors.blue(message.sourceFile.url) +
+            " file contains a syntax error.\n" +
+            this.#highlightedRegion(message),
+        );
+        break;
     }
   }
 
