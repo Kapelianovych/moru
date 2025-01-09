@@ -1,4 +1,4 @@
-import { equal } from "node:assert/strict";
+import { ok, equal, match } from "node:assert/strict";
 import { test, suite, mock } from "node:test";
 
 import { compile } from "./compiler.js";
@@ -64,5 +64,58 @@ suite("basic", () => {
       publish.mock.calls[0].arguments[0].tag,
       MessageTag.ExternalBuildScript,
     );
+  });
+
+  test('"build" scripts should have the global "props" object', async () => {
+    const fn = mock.fn();
+
+    await compile(
+      `
+        <script build>
+          props.fn();
+        </script>
+      `,
+      {
+        properties: {
+          fn,
+        },
+      },
+    );
+
+    equal(fn.mock.callCount(), 1);
+  });
+
+  test('"build" scripts should have the global "url" function with the current component URL', async () => {
+    const output = await compile(
+      `
+        {{ url('./foo.webp') }}
+        <div>{{ url.current }}</div>
+      `,
+      {
+        fileUrl: "/folder/index.html",
+      },
+    );
+
+    match(output, /\/folder\/foo.webp\s+<div>\/folder\/index.html<\/div>/);
+  });
+
+  test('"build" scripts should have the global "buildStore" object', async () => {
+    const fn = mock.fn();
+
+    await compile(
+      `
+        <script build>
+          props.fn(buildStore);
+        </script>
+      `,
+      {
+        properties: {
+          fn,
+        },
+      },
+    );
+
+    equal(fn.mock.callCount(), 1);
+    ok(fn.mock.calls[0].arguments[0] instanceof Map);
   });
 });

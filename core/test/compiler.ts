@@ -18,14 +18,20 @@ const DEFAULT_OPTIONS: Options = {
   },
 };
 
+export interface CompileOptions extends Partial<Options> {
+  fileUrl?: string;
+}
+
 export async function compile(
   text: string,
-  options: Partial<Options> = {},
+  options: CompileOptions = {},
 ): Promise<string> {
   const file: VirtualFile = {
-    url: "#",
+    url: options.fileUrl ?? "/index.html",
     content: text,
   };
+  delete options.fileUrl;
+
   const ast = parseHtml(file);
   await compileHtml(ast, file, { ...DEFAULT_OPTIONS, ...options });
   return generateHtml(ast);
