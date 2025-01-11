@@ -85,24 +85,28 @@ suite("client data", () => {
     match(output, /const { foo: foo } = JSON\.parse\("{[\\]+"foo[\\]+":1}"\);/);
   });
 
-  test("a client script should be able to import exported value by default '+'and all named exports gathered into a namespace", async () => {
-    const output = await compile(`
-      <script type="module">
-        import def, * as bar from "build";
-      </script>
+  test(
+    "a client script should be able to import exported value by default " +
+      "and all named exports gathered into a namespace",
+    async () => {
+      const output = await compile(`
+        <script type="module">
+          import def, * as bar from "build";
+        </script>
 
-      <script type="module" build>
-        const foo = 1;
+        <script type="module" build>
+          const foo = 1;
 
-        export { foo };
+          export { foo };
 
-        export default 2;
-      </script>
-    `);
+          export default 2;
+        </script>
+      `);
 
-    match(output, /const def = JSON\.parse\("2"\);/);
-    match(output, /const bar = JSON\.parse\("{[\\]+"foo[\\]+":1}"\);/);
-  });
+      match(output, /const def = JSON\.parse\("2"\);/);
+      match(output, /const bar = JSON\.parse\("{[\\]+"foo[\\]+":1}"\);/);
+    },
+  );
 
   test("error when a client script imports value which is not exported", async () => {
     const publish = mock.fn();
