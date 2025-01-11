@@ -47,7 +47,12 @@ export function inlineClientData(
               fullMatch,
               `const ${defaultImportName} = JSON.parse(${stringifyClientData(
                 localThis[alias.local],
-              )});`,
+              )});${
+                onlyDefaultImport
+                  ? ""
+                  : // Preserve original statement for named or namespaced imports to replace.
+                    fullMatch
+              }`,
             );
           } else {
             options.diagnostics.publish(

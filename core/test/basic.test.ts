@@ -118,4 +118,83 @@ suite("basic", () => {
     equal(fn.mock.callCount(), 1);
     ok(fn.mock.calls[0].arguments[0] instanceof Map);
   });
+
+  test('if a top-level "build" script fails, then the whole component is not compiled', async () => {
+    const publish = mock.fn();
+    const output = await compile(
+      `
+      {{ foo }}
+
+      <script build>
+        throw 'error';
+        const foo = 'child';
+      </script>
+    `,
+      { diagnostics: { publish } },
+    );
+
+    equal(publish.mock.callCount(), 1);
+    equal(
+      publish.mock.calls[0].arguments[0].tag,
+      MessageTag.FailedBuildScriptExecution,
+    );
+    equal(output, "");
+  });
+
+  test('if "build" script inside an "if" element fails, then whole element is not compiled', async () => {
+    const publish = mock.fn();
+    const output = await compile(
+      `
+      before
+
+      <if condition="{{ true }}">
+        {{ foo }}
+
+        <script build>
+          throw 'error';
+          const foo = 'child';
+        </script>
+      </if>
+
+      after
+    `,
+      { diagnostics: { publish } },
+    );
+
+    equal(publish.mock.callCount(), 1);
+    equal(
+      publish.mock.calls[0].arguments[0].tag,
+      MessageTag.FailedBuildScriptExecution,
+    );
+    match(output, /^\s+before\s+after\s+$/);
+  });
+
+  test('if "build" script inside a "for" element fails, then the failed iteration is not compiled', async () => {
+    const publish = mock.fn();
+    const output = await compile(
+      `
+      before
+
+      <for each="{{ [1, 2] }}">
+        {{ item }}
+
+        <script build>
+          if (item % 2) {
+            throw 'error';
+          }
+        </script>
+      </for>
+
+      after
+    `,
+      { diagnostics: { publish } },
+    );
+
+    equal(publish.mock.callCount(), 1);
+    equal(
+      publish.mock.calls[0].arguments[0].tag,
+      MessageTag.FailedBuildScriptExecution,
+    );
+    match(output, /^\s+before\s+2\s+after\s+$/);
+  });
 });

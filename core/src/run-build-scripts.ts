@@ -1,6 +1,6 @@
 import { ancestor } from "acorn-walk";
 import { generate } from "astring";
-import { isText, type Text } from "domhandler";
+import { type Document, type Element, isText, type Text } from "domhandler";
 import {
   type AssignmentProperty,
   type ExpressionStatement,
@@ -13,7 +13,10 @@ import {
 } from "acorn";
 
 import type { Options } from "./options.js";
-import type { HtmlNodesCollection } from "./collect-html-nodes.js";
+import {
+  createEmptyHtmlNodesCollection,
+  type HtmlNodesCollection,
+} from "./collect-html-nodes.js";
 import type { VirtualFile } from "./virtual-file.js";
 import { resolveUrl, createUrlCreator } from "./location.js";
 import { createAsyncStatementsJsRunner } from "./js-runners.js";
@@ -41,7 +44,6 @@ import {
   createJsMemberExpressionAstNode,
   createJsObjectExpressionAstNode,
   createJsObjectPatternAstNode,
-  createJsProgramAstNode,
   createJsRestElementAstNode,
   createJsVariableDeclarationAstNode,
   createJsVariableDeclaratorAstNode,
@@ -64,6 +66,7 @@ export async function runBuildScripts(
   collection: HtmlNodesCollection,
   localThis: Record<string, unknown>,
   publicNames: Array<PublicNameWithAlias>,
+  ast: Document | Element,
   file: VirtualFile,
   options: Options,
 ): Promise<void> {
@@ -79,14 +82,19 @@ export async function runBuildScripts(
           location: getLocationOfHtmlNode(maybeText),
         }),
       );
+      return discardCompiledScope(collection, ast);
     } else if (maybeText) {
-      const code = compileAndCollectExportedVariables(
+      const code: string | void = compileAndCollectExportedVariables(
         buildScriptElement,
         maybeText,
         publicNames,
         file,
         options,
       );
+
+      if (code == null) {
+        return discardCompiledScope(collection, ast);
+      }
 
       const runBuildScript = createAsyncStatementsJsRunner(
         code,
@@ -109,6 +117,7 @@ export async function runBuildScripts(
             location: getLocationOfHtmlNode(buildScriptElement),
           }),
         );
+        return discardCompiledScope(collection, ast);
       }
     } else {
       // No text, nothing to execute.
@@ -126,7 +135,7 @@ function compileAndCollectExportedVariables(
   publicNames: Array<PublicNameWithAlias>,
   file: VirtualFile,
   options: Options,
-): string {
+): string | void {
   const sourceType =
     buildScriptElement.attribs.type === "module" ? "module" : "script";
   let executableAst: Program;
@@ -146,7 +155,8 @@ function compileAndCollectExportedVariables(
         sourceFile: file,
       }),
     );
-    executableAst = createJsProgramAstNode({ body: [], sourceType });
+    // Signal that the whole scope has to be discarded.
+    return;
   }
 
   ancestor(executableAst, {
@@ -291,6 +301,8 @@ function compileAndCollectExportedVariables(
       const parent = ancestors.at(-2);
 
       if (parent && isJsProgram(parent)) {
+        const index = parent.body.findIndex((child) => child === node);
+
         if (node.source) {
           options.diagnostics.publish(
             createUnsupportedBuildScriptReexportingMessage({
@@ -299,9 +311,8 @@ function compileAndCollectExportedVariables(
               reexportLocation: getLocationOfJsNode(node),
             }),
           );
+          parent.body[index] = createJsEmptyStatementAstNode();
         } else {
-          const index = parent.body.findIndex((child) => child === node);
-
           if (node.declaration) {
             switch (node.declaration.type) {
               case "ClassDeclaration":
@@ -359,7 +370,7 @@ function compileAndCollectExportedVariables(
         }
       }
     },
-    ExportAllDeclaration(node) {
+    ExportAllDeclaration(node, _, ancestors) {
       options.diagnostics.publish(
         createUnsupportedBuildScriptReexportingMessage({
           sourceFile: file,
@@ -367,6 +378,14 @@ function compileAndCollectExportedVariables(
           reexportLocation: getLocationOfJsNode(node),
         }),
       );
+
+      const parent = ancestors.at(-2);
+
+      if (parent && isJsProgram(parent)) {
+        const index = parent.body.findIndex((child) => child === node);
+
+        parent.body[index] = createJsEmptyStatementAstNode();
+      }
     },
     ExportDefaultDeclaration(node, _, ancestors) {
       const parent = ancestors.at(-2);
@@ -480,4 +499,17 @@ function createAssignmentToLocalThisOf(
       right: identifierNode,
     }),
   });
+}
+
+function discardCompiledScope(
+  collection: HtmlNodesCollection,
+  ast: Document | Element,
+): void {
+  ast.children = [];
+
+  if ("attribs" in ast) {
+    ast.attribs = {};
+  }
+
+  Object.assign(collection, createEmptyHtmlNodesCollection());
 }

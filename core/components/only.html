@@ -1,8 +1,8 @@
-<if condition="{{ renderedTimes < times }}">
+<if condition="{{ shouldRender }}">
   <slot />
 </if>
 
-<script type="module" build>
+<script build>
   const { key, times = 1 } = props;
 
   if (key === undefined) {
@@ -27,8 +27,9 @@
   }
 
   const renderedTimes = onlyCache.get(key) ?? 0;
+  const shouldRender = renderedTimes < times;
 
-  if (renderedTimes < times) {
+  if (shouldRender) {
     onlyCache.set(key, renderedTimes + 1);
   }
 </script>

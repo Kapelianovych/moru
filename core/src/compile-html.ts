@@ -29,7 +29,7 @@ export async function compileHtml(
   // Make a copy, so the original store won't be changed.
   options.buildStore = new Map(options.buildStore);
 
-  await prepareIR({
+  await prepareAst({
     ast,
     file,
     compilerOptions: options,
@@ -39,7 +39,7 @@ export async function compileHtml(
   removeArtifacts(htmlNodesCollection);
 }
 
-export interface IRCompilerOptions {
+export interface AstCompilerOptions {
   ast: Document | Element;
   file: VirtualFile;
   compilerOptions: Options;
@@ -47,16 +47,16 @@ export interface IRCompilerOptions {
 }
 
 export interface IRCompiler {
-  (options: IRCompilerOptions): Promise<void>;
+  (options: AstCompilerOptions): Promise<void>;
 }
 
-async function prepareIR(options: IRCompilerOptions): Promise<void> {
+async function prepareAst(options: AstCompilerOptions): Promise<void> {
   const nodes: HtmlNodesCollection = createEmptyHtmlNodesCollection();
   const localThis: Record<string, unknown> = {};
   const publicNames: Array<PublicNameWithAlias> = [];
 
-  // These parts must be shared across all component of one unit,
-  // because they are handled when combined AST is ready.
+  // These parts must be shared across all components of one compilation unit,
+  // because they are handled when combined the AST is ready.
   nodes.slots = options.htmlNodesCollection.slots;
   nodes.fragments = options.htmlNodesCollection.fragments;
   nodes.portals = options.htmlNodesCollection.portals;
@@ -83,7 +83,7 @@ async function prepareIR(options: IRCompilerOptions): Promise<void> {
 
   await compileComponents(
     nodes,
-    prepareIR,
+    prepareAst,
     options.file,
     options.compilerOptions,
   );
@@ -103,6 +103,15 @@ export interface PreCompiler {
 }
 
 async function preCompile(options: PreCompileOptions): Promise<void> {
+  const scopedNodes: HtmlNodesCollection = createEmptyHtmlNodesCollection();
+
+  // All imports can be defined only at the beginning of the component
+  // and then are shared between all of its scopes.
+  scopedNodes.imports = options.htmlNodesCollection.imports;
+
+  const parentHtmlNodesCollection = options.htmlNodesCollection;
+  options.htmlNodesCollection = scopedNodes;
+
   collectHtmlNodes(
     options.ast,
     options.htmlNodesCollection,
@@ -114,6 +123,7 @@ async function preCompile(options: PreCompileOptions): Promise<void> {
     options.htmlNodesCollection,
     options.localThis,
     options.publicNames,
+    options.ast,
     options.file,
     options.compilerOptions,
   );
@@ -134,6 +144,20 @@ async function preCompile(options: PreCompileOptions): Promise<void> {
   await evaluateConditionals(options, preCompile);
 
   await evaluateLoops(options, preCompile);
+
+  options.htmlNodesCollection = parentHtmlNodesCollection;
+
+  // These parts must be shared across all components of one compilation unit,
+  // because they are handled when combined the AST is ready.
+  options.htmlNodesCollection.slots.push(...scopedNodes.slots);
+  options.htmlNodesCollection.fragments.push(...scopedNodes.fragments);
+  Object.assign(options.htmlNodesCollection.portals, scopedNodes.portals);
+  options.htmlNodesCollection.transferrableElements.push(
+    ...scopedNodes.transferrableElements,
+  );
+  options.htmlNodesCollection.raws.push(...scopedNodes.raws);
+  options.htmlNodesCollection.clientScripts.push(...scopedNodes.clientScripts);
+  options.htmlNodesCollection.components.push(...scopedNodes.components);
 }
 
 function removeArtifacts(htmlNodesCollection: HtmlNodesCollection): void {

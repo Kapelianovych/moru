@@ -1,6 +1,5 @@
 import { removeElement } from "domutils";
 import {
-  type AnyNode,
   type Document,
   type Element,
   isTag,
@@ -51,6 +50,18 @@ import {
   isHtmlStyleElement,
   isHtmlTransferrableElement,
 } from "./html-nodes.js";
+
+const RESERVED_HTML_ELEMENT_TAGS: Array<string> = [
+  "if",
+  "else",
+  "else-if",
+  "for",
+  "raw",
+  "import",
+  "script",
+  "portal",
+  "fragment",
+];
 
 export interface HtmlNodesCollection {
   imports: Record<string, string>;
@@ -161,9 +172,9 @@ export function collectHtmlNodes(
               explicitlyProvidedAlias ?? componentName;
 
             if (importedComponentAlias) {
-              const isReservedTag =
-                reservedHtmlElementTags[importedComponentAlias]?.(node) ??
-                false;
+              const isReservedTag = RESERVED_HTML_ELEMENT_TAGS.includes(
+                importedComponentAlias,
+              );
 
               if (isReservedTag) {
                 options.diagnostics.publish(
@@ -400,33 +411,3 @@ export function collectHtmlNodes(
     true,
   );
 }
-
-const reservedHtmlElementTags: Record<string, (node: AnyNode) => boolean> = {
-  if() {
-    return true;
-  },
-  else() {
-    return true;
-  },
-  "else-if"() {
-    return true;
-  },
-  for() {
-    return true;
-  },
-  raw() {
-    return true;
-  },
-  import() {
-    return true;
-  },
-  script(node) {
-    return isHtmlBuildScriptElement(node) || isHtmlClientScriptElement(node);
-  },
-  portal() {
-    return true;
-  },
-  fragment() {
-    return true;
-  },
-};

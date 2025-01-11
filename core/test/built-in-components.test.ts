@@ -7,15 +7,27 @@ import { MessageTag } from "../src/diagnostics.js";
 suite("built-in components", () => {
   suite("import", () => {
     test('"import" component should be removed', async () => {
-      const output = await compile('<import src="something" />');
+      const output = await compile('<import from="something.html" />');
 
       equal(output, "");
     });
 
     test('"import" component\'s children should be ignored', async () => {
-      const output = await compile('<import src="something">foo</import>');
+      const output = await compile(
+        '<import from="something.html">foo</import>',
+      );
 
       equal(output, "");
+    });
+
+    test('"import" should warn if source extension is not "html"', async () => {
+      const publish = mock.fn();
+      await compile('<import from="something.foo" />', {
+        diagnostics: { publish },
+      });
+
+      equal(publish.mock.callCount(), 1);
+      equal(publish.mock.calls[0].arguments[0].tag, MessageTag.InvalidFileName);
     });
   });
 
