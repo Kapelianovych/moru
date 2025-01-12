@@ -29,7 +29,7 @@ export async function compileHtml(
   // Make a copy, so the original store won't be changed.
   options.buildStore = new Map(options.buildStore);
 
-  await prepareAst({
+  await compileModule({
     ast,
     file,
     compilerOptions: options,
@@ -39,18 +39,18 @@ export async function compileHtml(
   removeArtifacts(htmlNodesCollection);
 }
 
-export interface AstCompilerOptions {
+export interface ModuleCompilerOptions {
   ast: Document | Element;
   file: VirtualFile;
   compilerOptions: Options;
   htmlNodesCollection: HtmlNodesCollection;
 }
 
-export interface IRCompiler {
-  (options: AstCompilerOptions): Promise<void>;
+export interface ModuleCompiler {
+  (options: ModuleCompilerOptions): Promise<void>;
 }
 
-async function prepareAst(options: AstCompilerOptions): Promise<void> {
+async function compileModule(options: ModuleCompilerOptions): Promise<void> {
   const nodes: HtmlNodesCollection = createEmptyHtmlNodesCollection();
   const localThis: Record<string, unknown> = {};
   const publicNames: Array<PublicNameWithAlias> = [];
@@ -64,7 +64,7 @@ async function prepareAst(options: AstCompilerOptions): Promise<void> {
     options.htmlNodesCollection.transferrableElements;
   nodes.raws = options.htmlNodesCollection.raws;
 
-  await preCompile({
+  await preCompileScope({
     ast: options.ast,
     file: options.file,
     localThis,
@@ -83,13 +83,13 @@ async function prepareAst(options: AstCompilerOptions): Promise<void> {
 
   await compileComponents(
     nodes,
-    prepareAst,
+    compileModule,
     options.file,
     options.compilerOptions,
   );
 }
 
-export interface PreCompileOptions {
+export interface ScopePreCompilerOptions {
   ast: Document | Element;
   file: VirtualFile;
   localThis: Record<string, unknown>;
@@ -98,11 +98,13 @@ export interface PreCompileOptions {
   htmlNodesCollection: HtmlNodesCollection;
 }
 
-export interface PreCompiler {
-  (options: PreCompileOptions): Promise<void>;
+export interface ScopePreCompiler {
+  (options: ScopePreCompilerOptions): Promise<void>;
 }
 
-async function preCompile(options: PreCompileOptions): Promise<void> {
+async function preCompileScope(
+  options: ScopePreCompilerOptions,
+): Promise<void> {
   const scopedNodes: HtmlNodesCollection = createEmptyHtmlNodesCollection();
 
   // All imports can be defined only at the beginning of the component
@@ -141,9 +143,9 @@ async function preCompile(options: PreCompileOptions): Promise<void> {
     options.compilerOptions,
   );
 
-  await evaluateConditionals(options, preCompile);
+  await evaluateConditionals(options, preCompileScope);
 
-  await evaluateLoops(options, preCompile);
+  await evaluateLoops(options, preCompileScope);
 
   options.htmlNodesCollection = parentHtmlNodesCollection;
 

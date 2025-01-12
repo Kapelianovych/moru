@@ -1,8 +1,11 @@
 import type { ChildNode, ParentNode } from "domhandler";
 import { append, appendChild, getParent, removeElement } from "domutils";
 
-import type { PreCompileOptions, PreCompiler } from "./compile-html.js";
 import { createNonIterableEachAttributeMessage } from "./diagnostics.js";
+import type {
+  ScopePreCompilerOptions,
+  ScopePreCompiler,
+} from "./compile-html.js";
 import {
   getLocationOfHtmlNode,
   type HtmlElseElement,
@@ -11,8 +14,8 @@ import {
 } from "./html-nodes.js";
 
 export async function evaluateLoops(
-  options: PreCompileOptions,
-  preCompile: PreCompiler,
+  options: ScopePreCompilerOptions,
+  preCompileScope: ScopePreCompiler,
 ): Promise<void> {
   const loops = options.htmlNodesCollection.loops;
 
@@ -33,12 +36,12 @@ export async function evaluateLoops(
           each,
           asName,
           indexName,
-          preCompile,
+          preCompileScope,
           options,
           fallbackElement,
         );
       } else {
-        await renderPossibleFallback(preCompile, options, fallbackElement);
+        await renderPossibleFallback(preCompileScope, options, fallbackElement);
       }
     } else {
       options.compilerOptions.diagnostics.publish(
@@ -49,7 +52,7 @@ export async function evaluateLoops(
         }),
       );
 
-      await renderPossibleFallback(preCompile, options, fallbackElement);
+      await renderPossibleFallback(preCompileScope, options, fallbackElement);
     }
 
     removeElement(loopElement);
@@ -61,8 +64,8 @@ async function loopAndEvaluate(
   each: Array<unknown>,
   asName: string,
   indexName: string,
-  preCompile: PreCompiler,
-  options: PreCompileOptions,
+  preCompileScope: ScopePreCompiler,
+  options: ScopePreCompilerOptions,
   fallbackElement: HtmlElseElement | undefined,
 ): Promise<void> {
   // Borrow possibly defined names and save their values.
@@ -85,7 +88,7 @@ async function loopAndEvaluate(
 
     const clonedLoopElement = loopElement.cloneNode(true);
 
-    await preCompile({ ...options, ast: clonedLoopElement });
+    await preCompileScope({ ...options, ast: clonedLoopElement });
 
     if (previousChildNode) {
       clonedLoopElement.children.forEach((child) => {
@@ -115,12 +118,12 @@ async function loopAndEvaluate(
 }
 
 async function renderPossibleFallback(
-  preCompile: PreCompiler,
-  options: PreCompileOptions,
+  preCompileScope: ScopePreCompiler,
+  options: ScopePreCompilerOptions,
   fallbackElement: HtmlElseElement | undefined,
 ): Promise<void> {
   if (fallbackElement) {
-    await preCompile({ ...options, ast: fallbackElement });
+    await preCompileScope({ ...options, ast: fallbackElement });
     replaceElementWithMultiple(fallbackElement, fallbackElement.children);
   }
 }

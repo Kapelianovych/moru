@@ -283,4 +283,110 @@ suite("custom components", () => {
 
     match(output, /^\s+1\s+$/);
   });
+
+  test("nested component should be able to pass attributes to its children though slot's attributes", async () => {
+    const output = await compile(
+      `
+        <import from="./some.html" />
+
+        <some>
+          <div />
+        </some>
+      `,
+      {
+        async readFileContent() {
+          return '<slot id="foo" />';
+        },
+      },
+    );
+
+    match(output, /<div id="foo"><\/div>/);
+  });
+
+  test("slot's attributes should replace children's attributes by default", async () => {
+    const output = await compile(
+      `
+        <import from="./some.html" />
+
+        <some>
+          <div id="bar" />
+        </some>
+      `,
+      {
+        async readFileContent() {
+          return '<slot id="foo" />';
+        },
+      },
+    );
+
+    match(output, /<div id="foo"><\/div>/);
+  });
+
+  test(
+    "if slot's attribute is a function, it accepts child node's current attribute value and " +
+      "the function execution result should replace children's attribute",
+    async () => {
+      const output = await compile(
+        `
+          <import from="./some.html" />
+
+          <some>
+            <div id="bar" />
+          </some>
+        `,
+        {
+          async readFileContent() {
+            return "<slot id=\"{{ (classes) => classes + ' foo' }}\" />";
+          },
+        },
+      );
+
+      match(output, /<div id="bar foo"><\/div>/);
+    },
+  );
+
+  test("slot's attributes should be populated to all element children", async () => {
+    const output = await compile(
+      `
+          <import from="./some.html" />
+
+          <some>
+            <div  />
+            text
+            <p />
+          </some>
+        `,
+      {
+        async readFileContent() {
+          return '<slot id="foo" />';
+        },
+      },
+    );
+
+    match(output, /<div id="foo"><\/div>\s+text\s+<p id="foo"><\/p>/);
+  });
+
+  test('"fragment" should not receive slot\'s attributes but its children', async () => {
+    const output = await compile(
+      `
+          <import from="./some.html" />
+
+          <some>
+            <fragment>
+              <div  />
+              <fragment>
+                <p />
+              </fragment>
+            </fragment>
+          </some>
+        `,
+      {
+        async readFileContent() {
+          return '<slot id="foo" />';
+        },
+      },
+    );
+
+    match(output, /<div id="foo"><\/div>\s+<p id="foo"><\/p>/);
+  });
 });

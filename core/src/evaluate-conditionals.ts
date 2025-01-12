@@ -1,11 +1,14 @@
 import { removeElement } from "domutils";
 
 import { replaceElementWithMultiple } from "./html-nodes.js";
-import type { PreCompileOptions, PreCompiler } from "./compile-html.js";
+import type {
+  ScopePreCompilerOptions,
+  ScopePreCompiler,
+} from "./compile-html.js";
 
 export async function evaluateConditionals(
-  options: PreCompileOptions,
-  preCompile: PreCompiler,
+  options: ScopePreCompilerOptions,
+  preCompileScope: ScopePreCompiler,
 ): Promise<void> {
   const conditionals = options.htmlNodesCollection.conditionals;
 
@@ -24,7 +27,7 @@ export async function evaluateConditionals(
           // Prevent preemptive loops evaluation.
           const loops = options.htmlNodesCollection.loops;
           options.htmlNodesCollection.loops = [];
-          await preCompile({ ...options, ast: node });
+          await preCompileScope({ ...options, ast: node });
           options.htmlNodesCollection.loops = loops;
 
           replaceElementWithMultiple(node, node.children);
