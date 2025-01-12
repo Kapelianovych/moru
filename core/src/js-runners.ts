@@ -1,11 +1,11 @@
-import type { Options } from "./options.js";
 import type { UrlCreator } from "./location.js";
+import type { BuildStore, Options } from "./options.js";
 
 export interface AsyncBuildJsRunner<R> {
   (
     props: Options["properties"],
     localThis: Record<string, unknown>,
-    buildStore: Options["buildStore"],
+    buildStore: BuildStore,
     url: UrlCreator,
     dynamicallyImportJsFile: Options["dynamicallyImportJsFile"],
   ): Promise<R>;

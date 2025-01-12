@@ -159,16 +159,16 @@ suite("custom components", () => {
   test("custom component should receive properties passed from parent components", async () => {
     const output = await compile(
       `
-      <import from="./nested.html" />
+        <import from="./nested.html" />
 
-      <nested foo="{{ obj }}" />
+        <nested foo="{{ obj }}" />
 
-      <script build>
-        const obj = {
-          a: 11,
-        };
-      </script>
-    `,
+        <script build>
+          const obj = {
+            a: 11,
+          };
+        </script>
+      `,
       {
         async readFileContent() {
           return "{{ typeof props.foo.a }} {{ props.foo.a }}";
@@ -182,12 +182,12 @@ suite("custom components", () => {
   test("children of the nested component should be inserted into a <slot /> element", async () => {
     const output = await compile(
       `
-      <import from="./nested.html" />
+        <import from="./nested.html" />
 
-      <nested>
-        child
-      </nested>
-    `,
+        <nested>
+          child
+        </nested>
+      `,
       {
         async readFileContent() {
           return "<div><slot /></div>";
@@ -201,12 +201,12 @@ suite("custom components", () => {
   test("if custom component does not have a <slot /> element, all it's children will be ignored", async () => {
     const output = await compile(
       `
-      <import from="./nested.html" />
+        <import from="./nested.html" />
 
-      <nested>
-        child
-      </nested>
-    `,
+        <nested>
+          child
+        </nested>
+      `,
       {
         async readFileContent() {
           return "<div></div>";
@@ -220,12 +220,12 @@ suite("custom components", () => {
   test("children of the custom component can replace named slot", async () => {
     const output = await compile(
       `
-      <import from="./nested.html" />
+        <import from="./nested.html" />
 
-      <nested>
-        <p slot="text">child</p>
-      </nested>
-    `,
+        <nested>
+          <p slot="text">child</p>
+        </nested>
+      `,
       {
         async readFileContent() {
           return '<div><slot name="text" /></div>';
@@ -239,12 +239,12 @@ suite("custom components", () => {
   test('the "fragment" can be used to group and forward children of the custom component to a named slot', async () => {
     const output = await compile(
       `
-      <import from="./nested.html" />
+        <import from="./nested.html" />
 
-      <nested>
-        <fragment slot="text">child</fragment>
-      </nested>
-    `,
+        <nested>
+          <fragment slot="text">child</fragment>
+        </nested>
+      `,
       {
         async readFileContent() {
           return '<div><slot name="text" /></div>';
@@ -258,16 +258,16 @@ suite("custom components", () => {
   test("any expression inside the custom component's children should be evaluated in a parent scope", async () => {
     const output = await compile(
       `
-      <import from="./nested.html" />
+        <import from="./nested.html" />
 
-      <nested>
-        {{ a }}
-      </nested>
+        <nested>
+          {{ a }}
+        </nested>
 
-      <script build>
-        let a = 1;
-      </script>
-    `,
+        <script build>
+          let a = 1;
+        </script>
+      `,
       {
         async readFileContent() {
           return `
@@ -348,14 +348,14 @@ suite("custom components", () => {
   test("slot's attributes should be populated to all element children", async () => {
     const output = await compile(
       `
-          <import from="./some.html" />
+        <import from="./some.html" />
 
-          <some>
-            <div  />
-            text
-            <p />
-          </some>
-        `,
+        <some>
+          <div  />
+          text
+          <p />
+        </some>
+      `,
       {
         async readFileContent() {
           return '<slot id="foo" />';
@@ -369,17 +369,17 @@ suite("custom components", () => {
   test('"fragment" should not receive slot\'s attributes but its children', async () => {
     const output = await compile(
       `
-          <import from="./some.html" />
+        <import from="./some.html" />
 
-          <some>
+        <some>
+          <fragment>
+            <div  />
             <fragment>
-              <div  />
-              <fragment>
-                <p />
-              </fragment>
+              <p />
             </fragment>
-          </some>
-        `,
+          </fragment>
+        </some>
+      `,
       {
         async readFileContent() {
           return '<slot id="foo" />';

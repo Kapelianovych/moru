@@ -3,7 +3,11 @@
 </if>
 
 <script build>
-  const { key, times = 1 } = props;
+  /** @typedef {Object} Props
+   * @property {string | number | symbol} key
+   * @property {number} [times = 1] */
+
+  const { key, times = 1 } = /** @type {Props} */ (props);
 
   if (key === undefined) {
     throw new Error(

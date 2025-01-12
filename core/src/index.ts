@@ -2,8 +2,9 @@ export { parseHtml } from "./parse-html.js";
 export { compileHtml } from "./compile-html.js";
 export { generateHtml } from "./generate-html.js";
 export { traverseHtml, type HtmlVisitor } from "./traverse-html.js";
-export { type Options } from "./options.js";
+export { type UrlCreator } from "./location.js";
 export { type VirtualFile } from "./virtual-file.js";
+export type { Options, BuildStore } from "./options.js";
 export {
   type AnyMessage,
   type Diagnostics,
