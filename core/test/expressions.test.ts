@@ -1,7 +1,8 @@
 import { equal, match } from "node:assert/strict";
-import { suite, test } from "node:test";
+import { suite, test, mock } from "node:test";
 
 import { compile } from "./compiler.js";
+import { MessageTag } from "../src/diagnostics.js";
 
 suite("expressions", () => {
   test("evaluates an expression and inserts the result into HTML", async () => {
@@ -80,5 +81,39 @@ suite("expressions", () => {
     );
 
     equal(output, '<p class="static foo bar"></p>');
+  });
+
+  test('"expand" attribute should accept objects only', async () => {
+    const publish = mock.fn();
+    const output = await compile(
+      `
+        <div expand="{{ {} }}" />
+        <div expand="{{ 1 }}" />
+      `,
+      { diagnostics: { publish } },
+    );
+
+    equal(publish.mock.callCount(), 1);
+    equal(
+      publish.mock.calls[0].arguments[0].tag,
+      MessageTag.InvalidExpandResult,
+    );
+    match(output, /<div><\/div>\s+<div><\/div>/);
+  });
+
+  test('"expand" attribute object should be spread its entries as element attributes', async () => {
+    const output = await compile(
+      "<div expand=\"{{ { class: 'foo', id: 'bar' } }}\" />",
+    );
+
+    match(output, /<div class="foo" id="bar"><\/div>/);
+  });
+
+  test('"expand" attribute object entry should be overridden by an explicitly defined attribute', async () => {
+    const output = await compile(
+      "<div id=\"identifier\" expand=\"{{ { class: 'foo', id: 'bar' } }}\" />",
+    );
+
+    match(output, /<div class="foo" id="identifier"><\/div>/);
   });
 });

@@ -90,24 +90,11 @@ async function evaluateInHtmlExpressionsOf(
       ),
     );
   } else {
-    const expand = node.attribs.expand;
-    delete node.attribs.expand;
+    const attribs = node.attribs;
+    node.attribs = {};
 
-    for (const attribute in node.attribs) {
-      const value = node.attribs[attribute];
-
-      // @ts-expect-error final attribute value can be of any type.
-      node.attribs[attribute] =
-        // There is no error in the assigment value.
-        await findAndEvaluateInhtmlExpressionsIn(
-          value,
-          localThis,
-          node,
-          url,
-          file,
-          options,
-        );
-    }
+    const expand = attribs.expand;
+    delete attribs.expand;
 
     if (expand?.trim()) {
       const spread = await findAndEvaluateInhtmlExpressionsIn(
@@ -130,6 +117,22 @@ async function evaluateInHtmlExpressionsOf(
           }),
         );
       }
+    }
+
+    for (const attribute in attribs) {
+      const value = attribs[attribute];
+
+      // @ts-expect-error final attribute value can be of any type.
+      node.attribs[attribute] =
+        // There is no error in the assigment value.
+        await findAndEvaluateInhtmlExpressionsIn(
+          value,
+          localThis,
+          node,
+          url,
+          file,
+          options,
+        );
     }
   }
 }
