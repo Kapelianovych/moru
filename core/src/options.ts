@@ -8,6 +8,9 @@ export interface Options {
   buildStore: BuildStore;
   diagnostics: Diagnostics;
 
+  /** Resolves URLs when the current location is the same as URL of
+   * the {@link currentFile}. When {@link relativeUrl} is `build`,
+   * it **must not** resolve it, but return as is. */
   resolveUrl(currentFile: VirtualFile, relativeUrl: string): string;
   readFileContent(url: string): Promise<string>;
   dynamicallyImportJsFile(url: string): Promise<Record<string, unknown>>;
