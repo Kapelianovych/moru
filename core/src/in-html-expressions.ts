@@ -14,11 +14,11 @@ import {
 const EXPRESSION_INTERPOLATION = "{{\\s*(.+?)\\s*}}";
 
 function createExpressionRe(): RegExp {
-  return new RegExp(`(?<!\\\\)${EXPRESSION_INTERPOLATION}`, "g");
+  return new RegExp(`(?<!\\\\)${EXPRESSION_INTERPOLATION}`, "gs");
 }
 
 function createEscapedExpressionRe(): RegExp {
-  return new RegExp(`\\\\${EXPRESSION_INTERPOLATION}`, "g");
+  return new RegExp(`\\\\${EXPRESSION_INTERPOLATION}`, "gs");
 }
 
 export function hasAnyInHtmlExpression(text: string): boolean {
@@ -39,7 +39,7 @@ export async function evaluateInHtmlExpressions(
   file: VirtualFile,
   options: Options,
 ): Promise<void> {
-  const url = createUrlCreator(file);
+  const url = createUrlCreator(file, options);
 
   for (const key in nodes) {
     const nodeGroupName = key as keyof typeof nodes;

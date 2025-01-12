@@ -20,31 +20,19 @@ suite("rebaseUrl", () => {
     match(output, /src="\/foo.webp"/);
   });
 
-  test("should not rebase if URL starts with a network protocol", async () => {
-    const output = await compile('<img src="https://name.domain/foo.webp">', {
-      fileUrl: "/folder/index.html",
-    });
-
-    match(output, /src="https:\/\/name.domain\/foo.webp"/);
-  });
-
-  test("should not rebase if URL starts with a data protocol", async () => {
+  test('should not rebase the "build" URL', async () => {
     const output = await compile(
-      '<img src="data:image/png;base64,sdlkjshwe8923h">',
+      `
+        <script type="module">
+          import foo from 'build';
+        </script>
+      `,
       {
         fileUrl: "/folder/index.html",
       },
     );
 
-    match(output, /src="data:image\/png;base64,sdlkjshwe8923h"/);
-  });
-
-  test("should not rebase if URL starts with a hash symbol", async () => {
-    const output = await compile('<img src="#/foo.webp">', {
-      fileUrl: "/folder/index.html",
-    });
-
-    match(output, /src="#\/foo.webp"/);
+    match(output, /import foo from 'build';/);
   });
 
   test("should rebase relative imports of the client-side scripts", async () => {

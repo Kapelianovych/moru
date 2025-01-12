@@ -9,9 +9,9 @@ import {
 
 import type { Options } from "./options.js";
 import type { VirtualFile } from "./virtual-file.js";
+import { getFileNameFrom } from "./location.js";
 import { hasAnyInHtmlExpression } from "./in-html-expressions.js";
 import { isHtmlElementRebaseable } from "./url-rebaser.js";
-import { getFileNameFrom, resolveUrl } from "./location.js";
 import { type HtmlVisitor, traverseHtml } from "./traverse-html.js";
 import {
   createEmptyExplicitComponentAliasMessage,
@@ -184,7 +184,7 @@ export function collectHtmlNodes(
                   }),
                 );
               } else {
-                nodes.imports[importedComponentAlias] = resolveUrl(
+                nodes.imports[importedComponentAlias] = options.resolveUrl(
                   file,
                   node.attribs.from,
                 );

@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { readFile } from "node:fs/promises";
-import { equal, deepEqual } from "node:assert/strict";
 import { mock, suite, test } from "node:test";
+import { equal, deepEqual, match } from "node:assert/strict";
 
 import { compile } from "./compiler.js";
 import { MessageTag } from "../src/diagnostics.js";
@@ -62,5 +62,28 @@ suite("only", () => {
       publish.mock.calls[0].arguments[0].tag,
       MessageTag.FailedBuildScriptExecution,
     );
+  });
+
+  test("should render children only once by default", async () => {
+    const output = await compile(
+      `
+        <import from="only.html" />
+
+        <only key="wow"">
+          foo
+        </only>
+
+        <only key="wow"">
+          bar
+        </only>
+      `,
+      {
+        readFileContent() {
+          return onlyComponentContent;
+        },
+      },
+    );
+
+    match(output, /^\s+foo\s+$/);
   });
 });

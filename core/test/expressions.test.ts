@@ -23,6 +23,16 @@ suite("expressions", () => {
     equal(output, "{{ &quot;executed&quot; }}");
   });
 
+  test("expressions can span multiple lines", async () => {
+    const output = await compile(`
+      {{
+        'foo'
+      }}
+    `);
+
+    match(output, /^\s+foo\s+$/);
+  });
+
   test("variables can participate in expressions", async () => {
     const output = await compile(`
       {{ a }}

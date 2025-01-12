@@ -18,7 +18,7 @@ import {
   type HtmlNodesCollection,
 } from "./collect-html-nodes.js";
 import type { VirtualFile } from "./virtual-file.js";
-import { resolveUrl, createUrlCreator } from "./location.js";
+import { createUrlCreator } from "./location.js";
 import { createAsyncStatementsJsRunner } from "./js-runners.js";
 import {
   getLocationOfHtmlNode,
@@ -70,7 +70,7 @@ export async function runBuildScripts(
   file: VirtualFile,
   options: Options,
 ): Promise<void> {
-  const url = createUrlCreator(file);
+  const url = createUrlCreator(file, options);
 
   for (const buildScriptElement of collection.buildScripts) {
     const maybeText = buildScriptElement.firstChild;
@@ -168,7 +168,7 @@ function compileAndCollectExportedVariables(
         const source =
           typeof node.source.value === "string"
             ? createJsLiteralAstNode({
-                value: resolveUrl(file, node.source.value),
+                value: options.resolveUrl(file, node.source.value),
               })
             : node.source;
 
@@ -231,7 +231,7 @@ function compileAndCollectExportedVariables(
       const source =
         node.source.type === "Literal" && typeof node.source.value === "string"
           ? createJsLiteralAstNode({
-              value: resolveUrl(file, node.source.value),
+              value: options.resolveUrl(file, node.source.value),
             })
           : node.source;
 

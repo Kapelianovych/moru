@@ -3,7 +3,6 @@ import { type Element, isText } from "domhandler";
 import type { Options } from "./options.js";
 import type { HtmlNodesCollection } from "./collect-html-nodes.js";
 import type { VirtualFile } from "./virtual-file.js";
-import { resolveUrl } from "./location.js";
 import { getLocationOfHtmlNode } from "./html-nodes.js";
 import {
   createInvalidChildOfExecutableScriptMessage,
@@ -185,6 +184,7 @@ export function rebaseUrls(
               element.attribs[attributeName] = rebasePingAttribute(
                 currentAttributeValue,
                 file,
+                options,
               );
               break;
             }
@@ -192,6 +192,7 @@ export function rebaseUrls(
               element.attribs[attributeName] = rebaseContentAttribute(
                 currentAttributeValue,
                 file,
+                options,
               );
               break;
             }
@@ -199,11 +200,12 @@ export function rebaseUrls(
               element.attribs[attributeName] = rebaseSrcsetAttribute(
                 currentAttributeValue,
                 file,
+                options,
               );
               break;
             }
             default:
-              element.attribs[attributeName] = resolveUrl(
+              element.attribs[attributeName] = options.resolveUrl(
                 file,
                 currentAttributeValue,
               );
@@ -235,9 +237,12 @@ export function rebaseUrls(
           const newImport = declarationUrl
             ? fullMatch.replace(
                 declarationUrl,
-                resolveUrl(file, declarationUrl),
+                options.resolveUrl(file, declarationUrl),
               )
-            : fullMatch.replace(expressionUrl, resolveUrl(file, expressionUrl));
+            : fullMatch.replace(
+                expressionUrl,
+                options.resolveUrl(file, expressionUrl),
+              );
 
           child.data = child.data.replace(fullMatch, newImport);
         }
@@ -257,7 +262,7 @@ export function rebaseUrls(
         for (const [fullMatch, url] of matches) {
           child.data = child.data.replace(
             fullMatch,
-            fullMatch.replace(url, resolveUrl(file, url)),
+            fullMatch.replace(url, options.resolveUrl(file, url)),
           );
         }
       } else {
@@ -277,29 +282,41 @@ export function rebaseUrls(
   collection.rebaseableElements.length = 0;
 }
 
-function rebasePingAttribute(value: string, file: VirtualFile): string {
+function rebasePingAttribute(
+  value: string,
+  file: VirtualFile,
+  options: Options,
+): string {
   return value
     .split(ONE_OR_MORE_WHITESPACES)
-    .map((url) => resolveUrl(file, url))
+    .map((url) => options.resolveUrl(file, url))
     .join(" ");
 }
 
-function rebaseContentAttribute(value: string, file: VirtualFile): string {
+function rebaseContentAttribute(
+  value: string,
+  file: VirtualFile,
+  options: Options,
+): string {
   const values = HTTP_EQUIV_REFRESH_CONTENT.exec(value);
 
   if (values) {
     const [_, timeout, url = values[3]] = values;
 
-    return `${timeout}; url=${resolveUrl(file, url)}`;
+    return `${timeout}; url=${options.resolveUrl(file, url)}`;
   } else {
     return value;
   }
 }
 
-function rebaseSrcsetAttribute(value: string, file: VirtualFile): string {
+function rebaseSrcsetAttribute(
+  value: string,
+  file: VirtualFile,
+  options: Options,
+): string {
   return Array.from(value.matchAll(SRCSET_SEGMENT))
     .map(([_, url, quantity, units]) => {
-      return resolveUrl(file, url) + (units ? quantity + units : "");
+      return options.resolveUrl(file, url) + (units ? quantity + units : "");
     })
     .join(", ");
 }

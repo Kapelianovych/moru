@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { isAbsolute, normalize, sep } from "node:path";
+import { isAbsolute, normalize, sep, resolve, dirname } from "node:path";
 
 import type { IndexHtmlTransform, Plugin } from "vite";
 import {
@@ -13,6 +13,8 @@ import {
 
 import type { Environment } from "./environment.js";
 import { DiagnosticsReporter } from "./diagnostics-reporter.js";
+
+const NON_RESOLVEABLE_URL_PREFIX = /^(?:https?:|#|\/|data:)/;
 
 export class Compiler implements Plugin {
   name = "@moru/compiler";
@@ -32,20 +34,9 @@ export class Compiler implements Plugin {
         properties: {},
         buildStore: new Map(),
         diagnostics: this.diagnostics,
-        readFileContent(url) {
-          const normalisedPath = normalize(url);
-
-          return readFile(
-            isAbsolute(normalisedPath)
-              ? normalisedPath
-              : // Leverages Node's resolution algorithm.
-                fileURLToPath(import.meta.resolve(normalisedPath)),
-            "utf8",
-          );
-        },
-        dynamicallyImportJsFile(url) {
-          return import(url);
-        },
+        resolveUrl: this.#resolveUrl,
+        readFileContent: this.#readFileContent,
+        dynamicallyImportJsFile: this.#dynamicallyImportJsFile,
       });
       return generateHtml(tree);
     },
@@ -53,5 +44,34 @@ export class Compiler implements Plugin {
 
   constructor(environment: Environment) {
     this.diagnostics = new DiagnosticsReporter(environment);
+  }
+
+  #resolveUrl(currentFile: VirtualFile, relativeUrl: string): string {
+    if (
+      NON_RESOLVEABLE_URL_PREFIX.test(relativeUrl) ||
+      relativeUrl === "build"
+    ) {
+      return relativeUrl;
+    } else if (relativeUrl.startsWith(".")) {
+      return resolve(dirname(currentFile.url), relativeUrl).replace(sep, "/");
+    } else {
+      return fileURLToPath(import.meta.resolve(relativeUrl)).replace(sep, "/");
+    }
+  }
+
+  #readFileContent(url: string): Promise<string> {
+    const normalisedPath = normalize(url);
+
+    return readFile(
+      isAbsolute(normalisedPath)
+        ? normalisedPath
+        : // Leverages Node's resolution algorithm.
+          fileURLToPath(import.meta.resolve(normalisedPath)),
+      "utf8",
+    );
+  }
+
+  #dynamicallyImportJsFile(url: string): Promise<Record<string, unknown>> {
+    return import(url);
   }
 }
