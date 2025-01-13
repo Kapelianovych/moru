@@ -65,6 +65,9 @@ const RESERVED_HTML_ELEMENT_TAGS: Array<string> = [
 
 export interface HtmlNodesCollection {
   imports: Record<string, string>;
+  /** Locally defined reusable fragments of markup. */
+  markupDefinitions: Record<string, HtmlFragmentElement>;
+  getParentMarkupDefinitionFor?(name: string): HtmlFragmentElement | undefined;
 
   raws: Array<HtmlRawElement>;
   loops: Array<[HtmlForElement, HtmlElseElement?]>;
@@ -85,11 +88,13 @@ export interface HtmlNodesCollection {
   /** Elements with attributes which may contain URL. */
   rebaseableElements: Array<Element>;
   transferrableElements: Array<HtmlTransferrableElement>;
+  reusableMarkupReferences: Array<Element>;
 }
 
 export function createEmptyHtmlNodesCollection(): HtmlNodesCollection {
   return {
     imports: {},
+    markupDefinitions: {},
 
     raws: [],
     loops: [],
@@ -105,6 +110,7 @@ export function createEmptyHtmlNodesCollection(): HtmlNodesCollection {
     clientScripts: [],
     rebaseableElements: [],
     transferrableElements: [],
+    reusableMarkupReferences: [],
   };
 }
 
@@ -224,10 +230,21 @@ export function collectHtmlNodes(
           lastConditionalElementGroup = null;
           firstNonImportElementEncountered = true;
 
+          if ("name" in node.attribs) {
+            nodes.markupDefinitions[node.attribs.name] = node;
+            // Do not visit a markup template.
+            return false;
+          }
+
           nodes.fragments.push(node);
 
           if (isHtmlTransferrableElement(node)) {
             nodes.transferrableElements.push(node);
+          }
+        },
+        exit(node) {
+          if ("name" in node.attribs) {
+            removeElement(node);
           }
         },
       } satisfies HtmlVisitor<HtmlFragmentElement>,
@@ -382,7 +399,13 @@ export function collectHtmlNodes(
           lastConditionalElementGroup = null;
           firstNonImportElementEncountered = true;
 
-          if (node.tagName in nodes.imports) {
+          // Markup definitions have higher priority than imports.
+          if (
+            node.tagName in nodes.markupDefinitions ||
+            nodes.getParentMarkupDefinitionFor?.(node.tagName)
+          ) {
+            nodes.reusableMarkupReferences.push(node);
+          } else if (node.tagName in nodes.imports) {
             nodes.components.push([nodes.imports[node.tagName], node]);
           } else {
             if (

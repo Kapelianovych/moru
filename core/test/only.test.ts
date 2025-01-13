@@ -11,6 +11,12 @@ const onlyComponentContent = readFile(
   "utf8",
 );
 
+async function dynamicallyImportJsFile() {
+  return {
+    ONLY_CACHE: "only-cache",
+  };
+}
+
 suite("only", () => {
   test('should error if the "key" property is not provided or is "undefined"', async () => {
     const publish = mock.fn();
@@ -22,10 +28,12 @@ suite("only", () => {
         <only key="{{ undefined }}">bar</only>
       `,
       {
+        buildStore: new Map(),
         diagnostics: { publish },
         readFileContent() {
           return onlyComponentContent;
         },
+        dynamicallyImportJsFile,
       },
     );
 
@@ -50,10 +58,12 @@ suite("only", () => {
         </only>
       `,
       {
+        buildStore: new Map(),
         diagnostics: { publish },
         readFileContent() {
           return onlyComponentContent;
         },
+        dynamicallyImportJsFile,
       },
     );
 
@@ -69,21 +79,52 @@ suite("only", () => {
       `
         <import from="only.html" />
 
-        <only key="wow"">
+        <only key="wow">
           foo
         </only>
 
-        <only key="wow"">
+        <only key="wow">
           bar
         </only>
       `,
       {
+        buildStore: new Map(),
         readFileContent() {
           return onlyComponentContent;
         },
+        dynamicallyImportJsFile,
       },
     );
 
     match(output, /^\s+foo\s+$/);
+  });
+
+  test('should render children no more than the "times" attribute value', async () => {
+    const output = await compile(
+      `
+        <import from="only.html" />
+
+        <only key="wow" times="{{ 2 }}">
+          foo
+        </only>
+
+        <only key="wow" times="{{ 2 }}">
+          bar
+        </only>
+
+        <only key="wow" times="{{ 2 }}">
+          bar
+        </only>
+      `,
+      {
+        buildStore: new Map(),
+        readFileContent() {
+          return onlyComponentContent;
+        },
+        dynamicallyImportJsFile,
+      },
+    );
+
+    match(output, /^\s+foo\s+bar\s+$/);
   });
 });

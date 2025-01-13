@@ -353,4 +353,48 @@ suite("custom components", () => {
 
     match(output, /<div id="foo"><\/div>\s+<p id="foo"><\/p>/);
   });
+
+  test("if there is a markup fragment with the same name as imported component, the former should win the reference element over", async () => {
+    const output = await compile(
+      `
+        <import from="./some.html" />
+
+        <fragment name="some">
+          <div />
+        </fragment>
+
+        <some />
+      `,
+      {
+        resolveUrl,
+        async readFileContent() {
+          return "<p />";
+        },
+      },
+    );
+
+    match(output, /^\s+<div><\/div>\s+$/);
+  });
+
+  test("markup fragment can not be inserted into a component as a child", async () => {
+    const output = await compile(
+      `
+        <import from="./some.html" />
+
+        <some>
+          <fragment name="foo">
+            <div  />
+          </fragment>
+        </some>
+      `,
+      {
+        resolveUrl,
+        async readFileContent() {
+          return "<slot />";
+        },
+      },
+    );
+
+    match(output, /^\s+$/);
+  });
 });

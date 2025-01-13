@@ -10,6 +10,7 @@ import { compileComponents } from "./compile-components.js";
 import { evaluateConditionals } from "./evaluate-conditionals.js";
 import { evaluateInHtmlExpressions } from "./in-html-expressions.js";
 import { replaceElementWithMultiple } from "./html-nodes.js";
+import { evaluateMarkupDefinitions } from "./evaluate-markup-definitions.js";
 import {
   type PublicNameWithAlias,
   runBuildScripts,
@@ -108,12 +109,25 @@ async function preCompileScope(
   // All imports can be defined only at the beginning of the component
   // and then are shared between all of its scopes.
   scopedNodes.imports = options.htmlNodesCollection.imports;
+  // Fragments with a name should be available in nested scopes.
+  scopedNodes.getParentMarkupDefinitionFor = (name) => {
+    return (
+      parentHtmlNodesCollection.markupDefinitions[name] ??
+      parentHtmlNodesCollection.getParentMarkupDefinitionFor?.(name)
+    );
+  };
 
   const parentHtmlNodesCollection = options.htmlNodesCollection;
   options.htmlNodesCollection = scopedNodes;
 
   collectHtmlNodes(
     options.ast,
+    options.htmlNodesCollection,
+    options.file,
+    options.compilerOptions,
+  );
+
+  evaluateMarkupDefinitions(
     options.htmlNodesCollection,
     options.file,
     options.compilerOptions,
@@ -189,4 +203,5 @@ function removeArtifacts(htmlNodesCollection: HtmlNodesCollection): void {
   htmlNodesCollection.transferrableElements.length = 0;
   htmlNodesCollection.fragments.length = 0;
   htmlNodesCollection.raws.length = 0;
+  htmlNodesCollection.markupDefinitions = {};
 }

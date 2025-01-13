@@ -34,6 +34,8 @@ export async function evaluateInHtmlExpressions(
   {
     imports: _,
     buildScripts: __,
+    markupDefinitions: ___,
+    getParentMarkupDefinitionFor: ____,
     portals,
     components,
     ...nodes

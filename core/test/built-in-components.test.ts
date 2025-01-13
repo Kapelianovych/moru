@@ -80,6 +80,22 @@ suite("built-in components", () => {
       match(output, /^\s+<div>.+?<\/div>\s+<hr>\s+$/s);
     });
 
+    test('markup fragment should not be moved into a "portal"', async () => {
+      const output = await compile(`
+        <portal name="test-portal" />
+
+        <hr />
+
+        <fragment name="foo" portal="test-portal">
+          <div>
+            some content
+          </div>
+        </fragment>
+      `);
+
+      match(output, /^\s+<hr>\s+$/);
+    });
+
     test('raws can be moved into a "portal" by its name', async () => {
       const output = await compile(`
         <portal name="test-portal" />
@@ -144,6 +160,93 @@ suite("built-in components", () => {
       `);
 
       match(output, /\s+<p>hello<\/p>\s+/);
+    });
+
+    test("fragments with a name do not end up in HTML if there are no reference to it", async () => {
+      const output = await compile(`
+        <fragment name="foo">
+          <p />
+        </fragment>
+      `);
+
+      equal(output.trim(), "");
+    });
+
+    test("element with the tagName equals to the name of defined markup fragment should be replaced with fragment's children", async () => {
+      const output = await compile(`
+        <fragment name="foo">
+          <p />
+        </fragment>
+
+        <foo />
+      `);
+
+      match(output, /^\s+<p><\/p>\s+$/);
+    });
+
+    test("any evaluatable statement inside markup fragments should be evaluated for each reference separately", async () => {
+      let counter = 1;
+      const fn = mock.fn(() => counter++);
+      const output = await compile(
+        `
+          <fragment name="foo">
+            <p class="{{ String(props.fn()) }}" />
+          </fragment>
+
+          <foo />
+          <foo />
+        `,
+        { properties: { fn } },
+      );
+
+      match(output, /^\s+<p class="1"><\/p>\s+<p class="2"><\/p>\s+$/);
+      equal(fn.mock.callCount(), 2);
+    });
+
+    test("markup fragments should be inheritable", async () => {
+      const output = await compile(`
+        <fragment name="foo">
+          <p />
+        </fragment>
+
+        <if condition="{{ true }}">
+          <foo />
+        </if>
+      `);
+
+      match(output, /^\s+<p><\/p>\s+$/);
+    });
+
+    test("markup fragments should not be shared by scopes on the same level", async () => {
+      const output = await compile(`
+        <if condition="{{ true }}">
+          <p />
+
+          <fragment name="bar">
+            <div />
+          </fragment>
+        </if>
+
+        <if condition="{{ true }}">
+          <bar />
+        </if>
+      `);
+
+      match(output, /^\s+<p><\/p>\s+<bar><\/bar>\s+$/);
+    });
+
+    test("markup fragments should not be accessible from nested scopes", async () => {
+      const output = await compile(`
+        <if condition="{{ true }}">
+          <fragment name="bar">
+            <div />
+          </fragment>
+        </if>
+
+        <bar />
+      `);
+
+      match(output, /^\s+<bar><\/bar>\s+$/);
     });
   });
 

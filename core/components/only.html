@@ -2,7 +2,9 @@
   <slot />
 </if>
 
-<script build>
+<script type="module" build>
+  import { ONLY_CACHE } from "./symbols.js";
+
   /** @typedef {Object} Props
    * @property {string | number | symbol} key
    * @property {number} [times = 1] */
@@ -23,11 +25,11 @@
     );
   }
 
-  let onlyCache = buildStore.get("only-cache");
+  let onlyCache = buildStore.get(ONLY_CACHE);
 
   if (!onlyCache) {
     onlyCache = new Map();
-    buildStore.set("only-cache", onlyCache);
+    buildStore.set(ONLY_CACHE, onlyCache);
   }
 
   const renderedTimes = onlyCache.get(key) ?? 0;
