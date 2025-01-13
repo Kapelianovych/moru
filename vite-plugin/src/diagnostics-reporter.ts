@@ -191,6 +191,18 @@ export class DiagnosticsReporter implements Diagnostics {
             this.#highlightedRegion(message),
         );
         break;
+      case MessageTag.EmptyOrNotDefinedPortalName:
+        this.#error(
+          "A portal in the" +
+            colors.blue(message.sourceFile.url) +
+            " file is " +
+            colors.red("undefined") +
+            " or it is " +
+            colors.red("an empty string") +
+            ".\n" +
+            this.#highlightedRegion(message),
+        );
+        break;
     }
   }
 

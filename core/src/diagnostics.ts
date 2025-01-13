@@ -17,6 +17,7 @@ export enum MessageTag {
   InvalidChildOfStyleElement,
   MissingExportedValueFromBuild,
   JsSyntaxError,
+  EmptyOrNotDefinedPortalName,
 }
 
 export interface Location {
@@ -50,6 +51,7 @@ export type AnyMessage =
   | InvalidChildOfStyleElementMessage
   | MissingExportedValueFromBuildMessage
   | JsSyntaxErrorMessage
+  | EmptyOrNotDefinedPortalNameMessage
   | ProhibitedReservedComponentRemappingMessage;
 
 export interface SingleElseElementMessage
@@ -119,6 +121,9 @@ export interface JsSyntaxErrorMessage
   error: SyntaxError;
 }
 
+export interface EmptyOrNotDefinedPortalNameMessage
+  extends Message<MessageTag.EmptyOrNotDefinedPortalName> {}
+
 function createMessageCreator<T extends MessageTag>(tag: T) {
   return (
     values: Omit<Extract<AnyMessage, Message<T>>, "tag">,
@@ -185,4 +190,8 @@ export const createMissingExportedValueFromBuildMessage = createMessageCreator(
 
 export const createJsSyntaxErrorMessage = createMessageCreator(
   MessageTag.JsSyntaxError,
+);
+
+export const createEmptyOrNotDefinedPortalNameMessage = createMessageCreator(
+  MessageTag.EmptyOrNotDefinedPortalName,
 );

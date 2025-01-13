@@ -1,4 +1,4 @@
-import { equal, match } from "node:assert/strict";
+import { ok, equal, match } from "node:assert/strict";
 import { test, suite, mock } from "node:test";
 
 import { compile } from "./compiler.js";
@@ -34,15 +34,35 @@ suite("built-in components", () => {
   suite("portal", () => {
     test('"portal" should be removed from the HTML', async () => {
       const output = await compile(`
-        <portal />
+        <portal name="foo" />
       `);
 
       equal(output.trim(), "");
     });
 
+    test('"portal" without name or with an empty name should raise an error', async () => {
+      const publish = mock.fn();
+      const output = await compile(
+        `
+        <portal />
+        <portal name="" />
+      `,
+        { diagnostics: { publish } },
+      );
+
+      equal(output.trim(), "");
+      equal(publish.mock.callCount(), 2);
+      ok(
+        publish.mock.calls.every(
+          (call) =>
+            call.arguments[0].tag === MessageTag.EmptyOrNotDefinedPortalName,
+        ),
+      );
+    });
+
     test('children of the "portal" should not be removed', async () => {
       const output = await compile(`
-        <portal>
+        <portal name="foo">
           <p>some</p>
         </portal>
       `);
@@ -62,6 +82,55 @@ suite("built-in components", () => {
       `);
 
       match(output, /^\s+<div>.+?<\/div>\s+<hr>\s+$/s);
+    });
+
+    test("portal's name can be computed", async () => {
+      const output = await compile(`
+        <portal name="{{ portalName }}" />
+
+        <hr />
+
+        <div portal="{{ portalName }}">
+          some content
+        </div>
+
+        <script build>
+          const portalName = 'foo';
+        </script>
+      `);
+
+      match(output, /^\s+<div>.+?<\/div>\s+<hr>\s+$/s);
+    });
+
+    test("portal's evaluated name can not be undefined or empty", async () => {
+      const publish = mock.fn();
+      await compile(
+        `
+          <portal name="{{ '' }}" />
+          <portal name="{{ undefined }}" />
+        `,
+        { diagnostics: { publish } },
+      );
+
+      equal(publish.mock.callCount(), 2);
+      ok(
+        publish.mock.calls.every(
+          (call) =>
+            call.arguments[0].tag === MessageTag.EmptyOrNotDefinedPortalName,
+        ),
+      );
+    });
+
+    test("if portal's evaluated name is invalid, it should be removed with its children", async () => {
+      const output = await compile(
+        `
+          <portal name="{{ '' }}">
+            <p/>
+          </portal>
+        `,
+      );
+
+      equal(output.trim(), "");
     });
 
     test('fragments can be moved into a "portal" by its name', async () => {

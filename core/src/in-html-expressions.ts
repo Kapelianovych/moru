@@ -1,3 +1,4 @@
+import { removeElement } from "domutils";
 import { type AnyNode, type Element, isText, type Text } from "domhandler";
 
 import type { Options } from "./options.js";
@@ -9,6 +10,7 @@ import { createAsyncExpressionJsRunner } from "./js-runners.js";
 import {
   createFailedInHtmlExpressionExecutionMessage,
   createInvalidExpandResultMessage,
+  createEmptyOrNotDefinedPortalNameMessage,
 } from "./diagnostics.js";
 
 const EXPRESSION_INTERPOLATION = "{{\\s*(.+?)\\s*}}";
@@ -61,13 +63,33 @@ export async function evaluateInHtmlExpressions(
   }
 
   for (const portalName in portals) {
+    const portalElement = portals[portalName];
     await evaluateInHtmlExpressionsOf(
-      portals[portalName],
+      portalElement,
       context,
       url,
       file,
       options,
     );
+    const probablyNewName = portalElement.attribs.name;
+
+    // Change portal's key if it was an expression.
+    if (portalName !== probablyNewName) {
+      if (probablyNewName === undefined || probablyNewName === "") {
+        options.diagnostics.publish(
+          createEmptyOrNotDefinedPortalNameMessage({
+            location: getLocationOfHtmlNode(portalElement),
+            sourceFile: file,
+          }),
+        );
+        // Name is invalid, so we have to remove it from the HTML with its children.
+        removeElement(portalElement);
+      } else {
+        portals[probablyNewName] = portalElement;
+      }
+
+      delete portals[portalName];
+    }
   }
 
   // We can remove basic nodes to avoid walking

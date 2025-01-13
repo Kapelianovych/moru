@@ -18,6 +18,7 @@ import {
   createExternalBuildScriptMessage,
   createInvalidFileNameMessage,
   createInvalidImportComponentPositionMessage,
+  createEmptyOrNotDefinedPortalNameMessage,
   createProhibitedReservedComponentRemappingMessage,
   createSingleElseElementMessage,
   createSingleElseIfElementMessage,
@@ -255,7 +256,23 @@ export function collectHtmlNodes(
           lastConditionalElementGroup = null;
           firstNonImportElementEncountered = true;
 
-          nodes.portals[node.attribs.name] = node;
+          if (node.attribs.name) {
+            nodes.portals[node.attribs.name] = node;
+          } else {
+            options.diagnostics.publish(
+              createEmptyOrNotDefinedPortalNameMessage({
+                location: getLocationOfHtmlNode(node),
+                sourceFile: file,
+              }),
+            );
+            // Current node will be removed, so no need to walk its children.
+            return false;
+          }
+        },
+        exit(node) {
+          if (!node.attribs.name) {
+            removeElement(node);
+          }
         },
       } satisfies HtmlVisitor<HtmlPortalElement>,
       {
