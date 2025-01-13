@@ -14,11 +14,6 @@ export class DevServer implements Plugin {
         const isFolderAccess = url.pathname.endsWith("/");
 
         if (isFolderAccess || !extname(normalize(url.pathname))) {
-          // If JS is changing every time a page is reloaded then Vite is not going
-          // to pick up updated script serving the old one. This line makes sure
-          // we send the latest assets.
-          server.moduleGraph.invalidateAll();
-
           url.pathname =
             url.pathname +
             `${
