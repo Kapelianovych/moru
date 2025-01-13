@@ -18,7 +18,7 @@ import {
   createExternalBuildScriptMessage,
   createInvalidFileNameMessage,
   createInvalidImportComponentPositionMessage,
-  createEmptyOrNotDefinedPortalNameMessage,
+  createNotDefinedPortalNameMessage,
   createProhibitedReservedComponentRemappingMessage,
   createSingleElseElementMessage,
   createSingleElseIfElementMessage,
@@ -256,11 +256,11 @@ export function collectHtmlNodes(
           lastConditionalElementGroup = null;
           firstNonImportElementEncountered = true;
 
-          if (node.attribs.name) {
+          if ("name" in node.attribs) {
             nodes.portals[node.attribs.name] = node;
           } else {
             options.diagnostics.publish(
-              createEmptyOrNotDefinedPortalNameMessage({
+              createNotDefinedPortalNameMessage({
                 location: getLocationOfHtmlNode(node),
                 sourceFile: file,
               }),
@@ -270,7 +270,7 @@ export function collectHtmlNodes(
           }
         },
         exit(node) {
-          if (!node.attribs.name) {
+          if (!("name" in node.attribs)) {
             removeElement(node);
           }
         },

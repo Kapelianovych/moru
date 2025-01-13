@@ -40,23 +40,20 @@ suite("built-in components", () => {
       equal(output.trim(), "");
     });
 
-    test('"portal" without name or with an empty name should raise an error', async () => {
+    test('"portal" without name should raise an error', async () => {
       const publish = mock.fn();
       const output = await compile(
         `
-        <portal />
-        <portal name="" />
-      `,
+          <portal />
+        `,
         { diagnostics: { publish } },
       );
 
       equal(output.trim(), "");
-      equal(publish.mock.callCount(), 2);
+      equal(publish.mock.callCount(), 1);
       ok(
-        publish.mock.calls.every(
-          (call) =>
-            call.arguments[0].tag === MessageTag.EmptyOrNotDefinedPortalName,
-        ),
+        publish.mock.calls[0].arguments[0].tag ===
+          MessageTag.NotDefinedPortalName,
       );
     });
 
@@ -102,29 +99,26 @@ suite("built-in components", () => {
       match(output, /^\s+<div>.+?<\/div>\s+<hr>\s+$/s);
     });
 
-    test("portal's evaluated name can not be undefined or empty", async () => {
+    test("portal's evaluated name can not be undefined", async () => {
       const publish = mock.fn();
       await compile(
         `
-          <portal name="{{ '' }}" />
           <portal name="{{ undefined }}" />
         `,
         { diagnostics: { publish } },
       );
 
-      equal(publish.mock.callCount(), 2);
+      equal(publish.mock.callCount(), 1);
       ok(
-        publish.mock.calls.every(
-          (call) =>
-            call.arguments[0].tag === MessageTag.EmptyOrNotDefinedPortalName,
-        ),
+        publish.mock.calls[0].arguments[0].tag ===
+          MessageTag.NotDefinedPortalName,
       );
     });
 
     test("if portal's evaluated name is invalid, it should be removed with its children", async () => {
       const output = await compile(
         `
-          <portal name="{{ '' }}">
+          <portal name="{{ undefined }}">
             <p/>
           </portal>
         `,

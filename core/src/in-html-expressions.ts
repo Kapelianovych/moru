@@ -10,7 +10,7 @@ import { createAsyncExpressionJsRunner } from "./js-runners.js";
 import {
   createFailedInHtmlExpressionExecutionMessage,
   createInvalidExpandResultMessage,
-  createEmptyOrNotDefinedPortalNameMessage,
+  createNotDefinedPortalNameMessage,
 } from "./diagnostics.js";
 
 const EXPRESSION_INTERPOLATION = "{{\\s*(.+?)\\s*}}";
@@ -75,14 +75,14 @@ export async function evaluateInHtmlExpressions(
 
     // Change portal's key if it was an expression.
     if (portalName !== probablyNewName) {
-      if (probablyNewName === undefined || probablyNewName === "") {
+      if (probablyNewName === undefined) {
         options.diagnostics.publish(
-          createEmptyOrNotDefinedPortalNameMessage({
+          createNotDefinedPortalNameMessage({
             location: getLocationOfHtmlNode(portalElement),
             sourceFile: file,
           }),
         );
-        // Name is invalid, so we have to remove it from the HTML with its children.
+        // Name is not defined, so we have to remove it from the HTML with its children.
         removeElement(portalElement);
       } else {
         portals[probablyNewName] = portalElement;
