@@ -15,7 +15,8 @@ const HTTP_EQUIV_REFRESH_CONTENT =
   /^\s*(\d+)(?:\s*;(?:\s*url\s*=)?\s*(?:["']\s*(.*?)\s*['"]|(.*?)))?\s*$/i;
 const ESMODULE_DECLARATION_OR_EXPRESSION_WITH_STATIC_SOURCE =
   /import.+?from\s*['"]([^'"]+)['"]|import\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
-const CSS_URL_DEFINITION = /url\s*\(\s*['"]?([^)\s]+)['"]?\s*\)/g;
+const CSS_URL_DEFINITION =
+  /url\s*\(\s*(?<quote>['"]?)([^)\s]+?)\k<quote>\s*\)/g;
 
 const COMMON_REBASEABLE_ATTRIBUTES = ["itemtype"];
 const REBASEABLE_ELEMENT_MAP: Record<
@@ -167,13 +168,15 @@ export function rebaseUrls(
   for (const element of collection.rebaseableElements) {
     const rebaseableAttributesSettings =
       REBASEABLE_ELEMENT_MAP[element.tagName];
-    const attributesToRebase = COMMON_REBASEABLE_ATTRIBUTES.concat(
-      Object.keys(rebaseableAttributesSettings),
-    );
+    const attributesToRebase = rebaseableAttributesSettings
+      ? COMMON_REBASEABLE_ATTRIBUTES.concat(
+          Object.keys(rebaseableAttributesSettings),
+        )
+      : COMMON_REBASEABLE_ATTRIBUTES;
 
     for (const attributeName of attributesToRebase) {
       if (
-        rebaseableAttributesSettings[attributeName]?.(element) ??
+        rebaseableAttributesSettings?.[attributeName]?.(element) ??
         /* itemtype */ true
       ) {
         const currentAttributeValue = element.attribs[attributeName]?.trim();
@@ -220,6 +223,13 @@ export function rebaseUrls(
   for (const clientScriptElement of collection.clientScripts) {
     const child = clientScriptElement.firstChild;
 
+    if (clientScriptElement.attribs.src) {
+      clientScriptElement.attribs.src = options.resolveUrl(
+        file,
+        clientScriptElement.attribs.src,
+      );
+    }
+
     if (child) {
       if (!isText(child)) {
         options.diagnostics.publish(
@@ -259,7 +269,7 @@ export function rebaseUrls(
       if (isText(child)) {
         const matches = child.data.matchAll(CSS_URL_DEFINITION);
 
-        for (const [fullMatch, url] of matches) {
+        for (const [fullMatch, _quote, url] of matches) {
           child.data = child.data.replace(
             fullMatch,
             fullMatch.replace(url, options.resolveUrl(file, url)),
@@ -316,7 +326,9 @@ function rebaseSrcsetAttribute(
 ): string {
   return Array.from(value.matchAll(SRCSET_SEGMENT))
     .map(([_, url, quantity, units]) => {
-      return options.resolveUrl(file, url) + (units ? quantity + units : "");
+      return (
+        options.resolveUrl(file, url) + (units ? " " + quantity + units : "")
+      );
     })
     .join(", ");
 }

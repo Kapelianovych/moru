@@ -3,6 +3,11 @@ import { match, equal, deepEqual } from "node:assert/strict";
 
 import { compile } from "./compiler.js";
 import { MessageTag } from "../src/diagnostics.js";
+import type { VirtualFile } from "../src/virtual-file.js";
+
+function resolveUrl(currentFile: VirtualFile, relativeUrl: string): string {
+  return relativeUrl.slice(1);
+}
 
 suite("custom components", () => {
   test("should render imported component", async () => {
@@ -13,6 +18,7 @@ suite("custom components", () => {
         <foo />
       `,
       {
+        resolveUrl,
         async readFileContent(url) {
           return "foo component";
         },
@@ -22,71 +28,15 @@ suite("custom components", () => {
     match(output, /^\s+foo component\s+$/);
   });
 
-  test("relative import of the custom component should be resolved relative to the importer file", async () => {
-    const readFileContent = mock.fn(async (url: string): Promise<string> => {
-      return "component";
-    });
-    await compile(
-      `
-        <import from="./foo.html" />
-
-        <foo />
-      `,
-      {
-        fileUrl: "/folder/index.html",
-        readFileContent,
-      },
-    );
-
-    equal(readFileContent.mock.calls[0].arguments[0], "/folder/foo.html");
-  });
-
-  test("absolute import of the custom component should be used as is", async () => {
-    const readFileContent = mock.fn(async (url: string): Promise<string> => {
-      return "component";
-    });
-    await compile(
-      `
-        <import from="/foo.html" />
-
-        <foo />
-      `,
-      {
-        fileUrl: "/folder/index.html",
-        readFileContent,
-      },
-    );
-
-    equal(readFileContent.mock.calls[0].arguments[0], "/foo.html");
-  });
-
-  test("package import of the custom component should be used as is", async () => {
-    const readFileContent = mock.fn(async (url: string): Promise<string> => {
-      return "component";
-    });
-    await compile(
-      `
-        <import from="package/foo.html" />
-
-        <foo />
-      `,
-      {
-        fileUrl: "/folder/index.html",
-        readFileContent,
-      },
-    );
-
-    equal(readFileContent.mock.calls[0].arguments[0], "package/foo.html");
-  });
-
   test("should be able to provide an alias for the imported component", async () => {
     const output = await compile(
       `
-        <import from="package/foo.html" as="bar" />
+        <import from="./foo.html" as="bar" />
 
         <bar />
       `,
       {
+        resolveUrl,
         async readFileContent() {
           return "component";
         },
@@ -99,11 +49,12 @@ suite("custom components", () => {
   test("an element without matching component import should be left as is", async () => {
     const output = await compile(
       `
-        <import from="package/foo.html" as="bar" />
+        <import from="./foo.html" as="bar" />
 
         <non-matched-element />
       `,
       {
+        resolveUrl,
         async readFileContent() {
           return "component";
         },
@@ -116,11 +67,12 @@ suite("custom components", () => {
   test("should be able to provide a component for native elements", async () => {
     const output = await compile(
       `
-        <import from="package/foo.html" as="p" />
+        <import from="./foo.html" as="p" />
 
         <p />
       `,
       {
+        resolveUrl,
         async readFileContent() {
           return "p component";
         },
@@ -145,6 +97,7 @@ suite("custom components", () => {
         <import from="./script.html" />
       `,
       {
+        resolveUrl,
         diagnostics: { publish },
       },
     );
@@ -170,6 +123,7 @@ suite("custom components", () => {
         </script>
       `,
       {
+        resolveUrl,
         async readFileContent() {
           return "{{ typeof props.foo.a }} {{ props.foo.a }}";
         },
@@ -189,6 +143,7 @@ suite("custom components", () => {
         </nested>
       `,
       {
+        resolveUrl,
         async readFileContent() {
           return "<div><slot /></div>";
         },
@@ -208,6 +163,7 @@ suite("custom components", () => {
         </nested>
       `,
       {
+        resolveUrl,
         async readFileContent() {
           return "<div></div>";
         },
@@ -227,6 +183,7 @@ suite("custom components", () => {
         </nested>
       `,
       {
+        resolveUrl,
         async readFileContent() {
           return '<div><slot name="text" /></div>';
         },
@@ -246,6 +203,7 @@ suite("custom components", () => {
         </nested>
       `,
       {
+        resolveUrl,
         async readFileContent() {
           return '<div><slot name="text" /></div>';
         },
@@ -269,6 +227,7 @@ suite("custom components", () => {
         </script>
       `,
       {
+        resolveUrl,
         async readFileContent() {
           return `
             <slot />
@@ -294,6 +253,7 @@ suite("custom components", () => {
         </some>
       `,
       {
+        resolveUrl,
         async readFileContent() {
           return '<slot id="foo" />';
         },
@@ -313,6 +273,7 @@ suite("custom components", () => {
         </some>
       `,
       {
+        resolveUrl,
         async readFileContent() {
           return '<slot id="foo" />';
         },
@@ -335,6 +296,7 @@ suite("custom components", () => {
           </some>
         `,
         {
+          resolveUrl,
           async readFileContent() {
             return "<slot id=\"{{ (classes) => classes + ' foo' }}\" />";
           },
@@ -357,6 +319,7 @@ suite("custom components", () => {
         </some>
       `,
       {
+        resolveUrl,
         async readFileContent() {
           return '<slot id="foo" />';
         },
@@ -381,6 +344,7 @@ suite("custom components", () => {
         </some>
       `,
       {
+        resolveUrl,
         async readFileContent() {
           return '<slot id="foo" />';
         },

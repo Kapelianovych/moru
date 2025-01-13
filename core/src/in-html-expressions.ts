@@ -12,18 +12,21 @@ import {
 } from "./diagnostics.js";
 
 const EXPRESSION_INTERPOLATION = "{{\\s*(.+?)\\s*}}";
-
-function createExpressionRe(): RegExp {
-  return new RegExp(`(?<!\\\\)${EXPRESSION_INTERPOLATION}`, "gs");
-}
-
-function createEscapedExpressionRe(): RegExp {
-  return new RegExp(`\\\\${EXPRESSION_INTERPOLATION}`, "gs");
-}
+const ESCAPED_EXPRESSION_INTERPOLATION = new RegExp(
+  `\\\\${EXPRESSION_INTERPOLATION}`,
+  "gs",
+);
+const NON_ESCAPED_EXPRESSION_INTERPOLATION = new RegExp(
+  `(?<!\\\\)${EXPRESSION_INTERPOLATION}`,
+  "gs",
+);
 
 export function hasAnyInHtmlExpression(text: string): boolean {
   return (
-    createExpressionRe().test(text) || createEscapedExpressionRe().test(text)
+    // We must clone regular expressions here, because they contain the global flag,
+    // which makes the regular expression stateful,
+    new RegExp(ESCAPED_EXPRESSION_INTERPOLATION).test(text) ||
+    new RegExp(NON_ESCAPED_EXPRESSION_INTERPOLATION).test(text)
   );
 }
 
@@ -145,7 +148,7 @@ async function findAndEvaluateInhtmlExpressionsIn(
   file: VirtualFile,
   options: Options,
 ): Promise<unknown> {
-  const matches = text.matchAll(createExpressionRe());
+  const matches = text.matchAll(NON_ESCAPED_EXPRESSION_INTERPOLATION);
   let finalValue: unknown = text;
 
   let replacementOffset = 0;
@@ -188,7 +191,9 @@ async function findAndEvaluateInhtmlExpressionsIn(
   }
 
   if (typeof finalValue === "string") {
-    const escapedMatches = finalValue.matchAll(createEscapedExpressionRe());
+    const escapedMatches = finalValue.matchAll(
+      ESCAPED_EXPRESSION_INTERPOLATION,
+    );
 
     let replacementOffset = 0;
     for (const match of escapedMatches) {

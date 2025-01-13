@@ -92,11 +92,14 @@ suite("basic", () => {
         <div>{{ url.current }}</div>
       `,
       {
+        resolveUrl(currentFile, relativeUrl) {
+          return relativeUrl.slice(1);
+        },
         fileUrl: "/folder/index.html",
       },
     );
 
-    match(output, /\/folder\/foo.webp\s+<div>\/folder\/index.html<\/div>/);
+    match(output, /\/foo.webp\s+<div>\/folder\/index.html<\/div>/);
   });
 
   test('"build" scripts should have the global "buildStore" object', async () => {

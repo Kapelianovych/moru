@@ -26,8 +26,6 @@ export async function compileHtml(
   options: Options,
 ): Promise<void> {
   const htmlNodesCollection = createEmptyHtmlNodesCollection();
-  // Make a copy, so the original store won't be changed.
-  options.buildStore = new Map(options.buildStore);
 
   await compileModule({
     ast,
