@@ -126,4 +126,22 @@ suite("expressions", () => {
 
     match(output, /<div class="foo" id="identifier"><\/div>/);
   });
+
+  test("if an attribute expression evaluates to undefined, then the attribute is removed from an element", async () => {
+    const output = await compile(`
+      <p class="{{ undefined }}" />
+    `);
+
+    match(output, /^\s+<p><\/p>\s+$/);
+  });
+
+  test("if a text expression evaluates to undefined, then it is stringified and inserted into HTML", async () => {
+    const output = await compile(`
+      <p>
+        {{ undefined }}
+      </p>
+    `);
+
+    match(output, /^\s+<p>\s+undefined\s+<\/p>\s+$/);
+  });
 });

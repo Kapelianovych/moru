@@ -232,7 +232,7 @@ export function collectHtmlNodes(
           firstNonImportElementEncountered = true;
 
           if ("name" in node.attribs) {
-            nodes.markupDefinitions[node.attribs.name] = node;
+            nodes.markupDefinitions[node.attribs.name!] = node;
             // Do not visit a markup template.
             return false;
           }

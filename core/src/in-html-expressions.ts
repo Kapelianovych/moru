@@ -149,17 +149,23 @@ async function evaluateInHtmlExpressionsOf(
     for (const attribute in attribs) {
       const value = attribs[attribute];
 
-      // @ts-expect-error final attribute value can be of any type.
-      node.attribs[attribute] =
-        // There is no error in the assigment value.
-        await findAndEvaluateInhtmlExpressionsIn(
-          value,
-          localThis,
-          node,
-          url,
-          file,
-          options,
-        );
+      const evaluatedAttributeValue = await findAndEvaluateInhtmlExpressionsIn(
+        value,
+        localThis,
+        node,
+        url,
+        file,
+        options,
+      );
+
+      // Discard all attributes with the value of undefined, so they
+      // won't end up as boolean attributes in HTML.
+      if (evaluatedAttributeValue === undefined) {
+        delete node.attribs[attribute];
+      } else {
+        // @ts-expect-error Final attribute value can be of any type.
+        node.attribs[attribute] = evaluatedAttributeValue;
+      }
     }
   }
 }

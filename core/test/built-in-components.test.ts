@@ -212,6 +212,16 @@ suite("built-in components", () => {
         );
       },
     );
+
+    test("when element's portal attribute value is undefined, the element is removed from HTML", async () => {
+      const output = await compile(
+        `
+          <div portal="{{ undefined }}" />
+        `,
+      );
+
+      equal(output.trim(), "");
+    });
   });
 
   suite("raw", () => {

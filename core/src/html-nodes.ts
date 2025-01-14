@@ -69,7 +69,11 @@ export interface HtmlTransferrableElement extends Element {
 
 export interface HtmlFragmentElement extends HtmlTransferrableElement {
   attribs: HtmlAttributes<
-    [HtmlOptionalAttribute<"slot">, HtmlOptionalAttribute<"portal">]
+    [
+      HtmlOptionalAttribute<"name">,
+      HtmlOptionalAttribute<"slot">,
+      HtmlOptionalAttribute<"portal">,
+    ]
   >;
 }
 
