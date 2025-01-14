@@ -191,6 +191,27 @@ suite("built-in components", () => {
 
       match(output, /<hr>\s+1\s+2/);
     });
+
+    test(
+      "elements with a reference to non-existent portal should be " +
+        "removed from HTML and a diagnostic message should be emitted",
+      async () => {
+        const publish = mock.fn();
+        const output = await compile(
+          `
+            <div portal="foo" />
+          `,
+          { diagnostics: { publish } },
+        );
+
+        equal(output.trim(), "");
+        equal(publish.mock.callCount(), 1);
+        equal(
+          publish.mock.calls[0].arguments[0].tag,
+          MessageTag.ReferenceToNonExistendPortal,
+        );
+      },
+    );
   });
 
   suite("raw", () => {

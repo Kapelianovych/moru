@@ -1,4 +1,5 @@
 import type { VirtualFile } from "./virtual-file.js";
+import type { Stringifiable } from "./type-utilities.js";
 
 export enum MessageTag {
   SingleElseElement,
@@ -18,6 +19,7 @@ export enum MessageTag {
   MissingExportedValueFromBuild,
   JsSyntaxError,
   NotDefinedPortalName,
+  ReferenceToNonExistendPortal,
 }
 
 export interface Location {
@@ -52,6 +54,7 @@ export type AnyMessage =
   | MissingExportedValueFromBuildMessage
   | JsSyntaxErrorMessage
   | NotDefinedPortalNameMessage
+  | ReferenceToNonExistendPortalMessage
   | ProhibitedReservedComponentRemappingMessage;
 
 export interface SingleElseElementMessage
@@ -124,6 +127,11 @@ export interface JsSyntaxErrorMessage
 export interface NotDefinedPortalNameMessage
   extends Message<MessageTag.NotDefinedPortalName> {}
 
+export interface ReferenceToNonExistendPortalMessage
+  extends Message<MessageTag.ReferenceToNonExistendPortal> {
+  name: Stringifiable;
+}
+
 function createMessageCreator<T extends MessageTag>(tag: T) {
   return (
     values: Omit<Extract<AnyMessage, Message<T>>, "tag">,
@@ -194,4 +202,8 @@ export const createJsSyntaxErrorMessage = createMessageCreator(
 
 export const createNotDefinedPortalNameMessage = createMessageCreator(
   MessageTag.NotDefinedPortalName,
+);
+
+export const createReferenceToNonExistendPortalMessage = createMessageCreator(
+  MessageTag.ReferenceToNonExistendPortal,
 );

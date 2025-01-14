@@ -201,6 +201,16 @@ export class DiagnosticsReporter implements Diagnostics {
             this.#highlightedRegion(message),
         );
         break;
+      case MessageTag.ReferenceToNonExistendPortal:
+        this.#error(
+          "An element references a non-existent portal " +
+            colors.magenta(String(message.name)) +
+            " from the " +
+            colors.blue(message.sourceFile.url) +
+            " file.\n" +
+            this.#highlightedRegion(message),
+        );
+        break;
     }
   }
 

@@ -1,16 +1,16 @@
-import { appendChild } from "domutils";
 import type { Document, Element } from "domhandler";
 
 import type { Options } from "./options.js";
 import { rebaseUrls } from "./url-rebaser.js";
 import type { VirtualFile } from "./virtual-file.js";
 import { evaluateLoops } from "./evaluate-loops.js";
+import { evaluatePortals } from "./evaluate-portals.js";
 import { inlineClientData } from "./inline-client-data.js";
 import { compileComponents } from "./compile-components.js";
 import { evaluateConditionals } from "./evaluate-conditionals.js";
 import { evaluateInHtmlExpressions } from "./in-html-expressions.js";
-import { replaceElementWithMultiple } from "./html-nodes.js";
 import { evaluateMarkupDefinitions } from "./evaluate-markup-definitions.js";
+import { replaceElementWithMultiple } from "./html-nodes.js";
 import {
   type PublicNameWithAlias,
   runBuildScripts,
@@ -34,6 +34,8 @@ export async function compileHtml(
     compilerOptions: options,
     htmlNodesCollection,
   });
+
+  evaluatePortals(htmlNodesCollection, file, options);
 
   removeArtifacts(htmlNodesCollection);
 }
@@ -175,23 +177,6 @@ async function preCompileScope(
 }
 
 function removeArtifacts(htmlNodesCollection: HtmlNodesCollection): void {
-  htmlNodesCollection.transferrableElements.forEach((transferrableElement) => {
-    const portalName = transferrableElement.attribs.portal;
-    delete transferrableElement.attribs.portal;
-
-    if (portalName) {
-      const portal = htmlNodesCollection.portals[portalName];
-
-      appendChild(portal, transferrableElement);
-    }
-  });
-
-  for (const portalName in htmlNodesCollection.portals) {
-    const portal = htmlNodesCollection.portals[portalName];
-
-    replaceElementWithMultiple(portal, portal.childNodes);
-  }
-
   htmlNodesCollection.fragments.forEach((fragment) => {
     replaceElementWithMultiple(fragment, fragment.childNodes);
   });
@@ -199,8 +184,6 @@ function removeArtifacts(htmlNodesCollection: HtmlNodesCollection): void {
     replaceElementWithMultiple(raw, raw.childNodes);
   });
 
-  htmlNodesCollection.portals = {};
-  htmlNodesCollection.transferrableElements.length = 0;
   htmlNodesCollection.fragments.length = 0;
   htmlNodesCollection.raws.length = 0;
   htmlNodesCollection.markupDefinitions = {};
