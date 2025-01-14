@@ -127,6 +127,18 @@ suite("expressions", () => {
     match(output, /<div class="foo" id="identifier"><\/div>/);
   });
 
+  test(
+    'if the "expand" attribute value contains an undefined entry, ' +
+      "it should not end up as a boolean attribute in HTML",
+    async () => {
+      const output = await compile(
+        '<div expand="{{ { class: undefined } }}" />',
+      );
+
+      match(output, /<div><\/div>/);
+    },
+  );
+
   test("if an attribute expression evaluates to undefined, then the attribute is removed from an element", async () => {
     const output = await compile(`
       <p class="{{ undefined }}" />

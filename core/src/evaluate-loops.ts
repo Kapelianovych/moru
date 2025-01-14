@@ -1,5 +1,4 @@
-import type { ChildNode, ParentNode } from "domhandler";
-import { append, appendChild, getParent, removeElement } from "domutils";
+import { prepend, removeElement } from "domutils";
 
 import { createNonIterableEachAttributeMessage } from "./diagnostics.js";
 import type {
@@ -72,11 +71,6 @@ async function loopAndEvaluate(
   const previousAsNameValue = options.localThis[asName];
   const previousIndexNameValue = options.localThis[indexName];
 
-  let previousChildNode: ChildNode | null = loopElement.prev;
-  // In case the loopElement is the first child.
-  const parentNode: ParentNode | null = getParent(loopElement);
-  const lastChildIndex = loopElement.children.length - 1;
-
   // Make cloning node a little bit more efficient.
   loopElement.attribs.each = "";
 
@@ -90,22 +84,8 @@ async function loopAndEvaluate(
 
     await preCompileScope({ ...options, ast: clonedLoopElement });
 
-    if (previousChildNode) {
-      clonedLoopElement.children.forEach((child) => {
-        append(previousChildNode!, child);
-        previousChildNode = child;
-      });
-    } else if (parentNode) {
-      clonedLoopElement.children.forEach((child, index) => {
-        appendChild(parentNode, child);
-
-        if (index === lastChildIndex) {
-          previousChildNode = child;
-        }
-      });
-    } else {
-      // Impossible state. Should never happen.
-    }
+    prepend(loopElement, clonedLoopElement);
+    replaceElementWithMultiple(clonedLoopElement, clonedLoopElement.children);
   }
 
   if (fallbackElement) {

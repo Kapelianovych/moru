@@ -133,8 +133,12 @@ async function evaluateInHtmlExpressionsOf(
         options,
       );
 
-      if (typeof spread === "object") {
-        Object.assign(node.attribs, spread);
+      if (spread && typeof spread === "object") {
+        for (const attributeName in spread) {
+          const value = (spread as Record<string, unknown>)[attributeName];
+
+          assignAttribute(node, attributeName, value);
+        }
       } else {
         options.diagnostics.publish(
           createInvalidExpandResultMessage({
@@ -146,8 +150,8 @@ async function evaluateInHtmlExpressionsOf(
       }
     }
 
-    for (const attribute in attribs) {
-      const value = attribs[attribute];
+    for (const attributeName in attribs) {
+      const value = attribs[attributeName];
 
       const evaluatedAttributeValue = await findAndEvaluateInhtmlExpressionsIn(
         value,
@@ -158,15 +162,23 @@ async function evaluateInHtmlExpressionsOf(
         options,
       );
 
-      // Discard all attributes with the value of undefined, so they
-      // won't end up as boolean attributes in HTML.
-      if (evaluatedAttributeValue === undefined) {
-        delete node.attribs[attribute];
-      } else {
-        // @ts-expect-error Final attribute value can be of any type.
-        node.attribs[attribute] = evaluatedAttributeValue;
-      }
+      assignAttribute(node, attributeName, evaluatedAttributeValue);
     }
+  }
+}
+
+function assignAttribute(
+  target: Element,
+  attributeName: string,
+  attributeValue: unknown,
+): void {
+  // Discard all attributes with the value of undefined, so they
+  // won't end up as boolean attributes in HTML.
+  if (attributeValue === undefined) {
+    delete target.attribs[attributeName];
+  } else {
+    // @ts-expect-error Final attribute value can be of any type.
+    target.attribs[attributeName] = attributeValue;
   }
 }
 

@@ -533,6 +533,20 @@ suite("built-in components", () => {
       match(output, /\s+1 at 0\s+2 at 1\s+3 at 2\s+/);
     });
 
+    test("loops must render HTML elements", async () => {
+      const output = await compile(
+        `
+          <div />
+
+          <for each="{{ ['foo'] }}">
+            <p class="{{ item }}" />
+          </for>
+        `,
+      );
+
+      match(output, /\s+<div><\/div>\s+<p class="foo"><\/p>\s+/);
+    });
+
     test('renders the "else" element of the loop group if present when an array is empty', async () => {
       const output = await compile(`
         <for each="{{ [] }}">
