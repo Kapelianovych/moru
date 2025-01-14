@@ -62,6 +62,8 @@ const RESERVED_HTML_ELEMENT_TAGS: Array<string> = [
   "script",
   "portal",
   "fragment",
+  "style",
+  "slot",
 ];
 
 export interface HtmlNodesCollection {
@@ -232,7 +234,22 @@ export function collectHtmlNodes(
           firstNonImportElementEncountered = true;
 
           if ("name" in node.attribs) {
-            nodes.markupDefinitions[node.attribs.name!] = node;
+            const markupFragmentName = node.attribs.name!;
+
+            const isReserved =
+              RESERVED_HTML_ELEMENT_TAGS.includes(markupFragmentName);
+
+            if (isReserved) {
+              options.diagnostics.publish(
+                createProhibitedReservedComponentRemappingMessage({
+                  sourceFile: file,
+                  location: getLocationOfHtmlNode(node),
+                }),
+              );
+            } else {
+              nodes.markupDefinitions[markupFragmentName] = node;
+            }
+
             // Do not visit a markup template.
             return false;
           }

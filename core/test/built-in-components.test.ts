@@ -1,5 +1,5 @@
-import { ok, equal, match } from "node:assert/strict";
 import { test, suite, mock } from "node:test";
+import { ok, equal, match, deepEqual } from "node:assert/strict";
 
 import { compile } from "./compiler.js";
 import { MessageTag } from "../src/diagnostics.js";
@@ -341,6 +341,32 @@ suite("built-in components", () => {
       `);
 
       match(output, /^\s+<bar><\/bar>\s+$/);
+    });
+
+    test("it should not be possible to create markup fragments using any of the reserved element names", async () => {
+      const publish = mock.fn();
+      await compile(
+        `
+          <fragment name="if" />
+          <fragment name="else-if" />
+          <fragment name="else" />
+          <fragment name="for" />
+          <fragment name="raw" />
+          <fragment name="portal" />
+          <fragment name="fragment" />
+          <fragment name="import" />
+          <fragment name="script" />
+          <fragment name="style" />
+          <fragment name="slot" />
+        `,
+        { diagnostics: { publish } },
+      );
+
+      equal(publish.mock.callCount(), 11);
+      deepEqual(
+        publish.mock.calls.map((call) => call.arguments[0].tag),
+        new Array(11).fill(MessageTag.ProhibitedReservedComponentRemapping),
+      );
     });
   });
 

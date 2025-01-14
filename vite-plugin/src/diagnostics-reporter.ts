@@ -96,9 +96,10 @@ export class DiagnosticsReporter implements Diagnostics {
         break;
       case MessageTag.ProhibitedReservedComponentRemapping:
         this.#error(
-          "It is forbidden to import a custom component under the name of any built-in components.\n" +
+          "It is forbidden to import a custom component or create a markup fragment " +
+            "with any of the reserved names.\n" +
             this.#highlightedRegion(message) +
-            "\nPlease, use another alias or rename component file.",
+            "\nPlease, use another alias or rename a component file.",
         );
         break;
       case MessageTag.EmptyExplicitComponentAlias:

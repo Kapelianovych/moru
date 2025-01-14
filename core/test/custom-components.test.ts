@@ -95,6 +95,8 @@ suite("custom components", () => {
         <import from="./fragment.html" />
         <import from="./import.html" />
         <import from="./script.html" />
+        <import from="./style.html" />
+        <import from="./slot.html" />
       `,
       {
         resolveUrl,
@@ -102,10 +104,10 @@ suite("custom components", () => {
       },
     );
 
-    equal(publish.mock.callCount(), 9);
+    equal(publish.mock.callCount(), 11);
     deepEqual(
       publish.mock.calls.map((call) => call.arguments[0].tag),
-      new Array(9).fill(MessageTag.ProhibitedReservedComponentRemapping),
+      new Array(11).fill(MessageTag.ProhibitedReservedComponentRemapping),
     );
   });
 
