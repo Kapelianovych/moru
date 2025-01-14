@@ -397,4 +397,52 @@ suite("custom components", () => {
 
     match(output, /^\s+$/);
   });
+
+  test(
+    "if a final attribute value of an attribute passed through the <slot> is undefined, " +
+      "that attribute should be removed from the destination element",
+    async () => {
+      const output = await compile(
+        `
+          <import from="./some.html" />
+
+          <some>
+            <div id="foo" />
+          </some>
+        `,
+        {
+          resolveUrl,
+          async readFileContent() {
+            return '<slot id="{{ () => undefined }}" />';
+          },
+        },
+      );
+
+      match(output, /^\s+<div><\/div>\s+$/);
+    },
+  );
+
+  test(
+    "if a <slot> attribute evaluated to undefined, it should not affect the same attribute " +
+      "of the destination element",
+    async () => {
+      const output = await compile(
+        `
+          <import from="./some.html" />
+
+          <some>
+            <div id="foo" />
+          </some>
+        `,
+        {
+          resolveUrl,
+          async readFileContent() {
+            return '<slot id="{{ undefined }}" />';
+          },
+        },
+      );
+
+      match(output, /^\s+<div id="foo"><\/div>\s+$/);
+    },
+  );
 });

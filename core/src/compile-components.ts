@@ -59,10 +59,16 @@ export async function compileComponents(
                 | string
                 | ((value: unknown) => string);
 
-              node.attribs[attribute] =
+              const resultingAttributeValue =
                 typeof injectValue === "function"
                   ? injectValue(node.attribs[attribute])
                   : injectValue;
+
+              if (resultingAttributeValue === undefined) {
+                delete node.attribs[attribute];
+              } else {
+                node.attribs[attribute] = resultingAttributeValue;
+              }
             }
           }
         }
