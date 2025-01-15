@@ -26,4 +26,7 @@ export {
   type SingleElseElementMessage,
   type SingleElseIfElementMessage,
   type UnsupportedBuildScriptReexportingMessage,
+  type JsSyntaxErrorMessage,
+  type NotDefinedPortalNameMessage,
+  type ReferenceToNonExistendPortalMessage,
 } from "./diagnostics.js";
