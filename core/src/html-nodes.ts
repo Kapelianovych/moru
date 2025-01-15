@@ -77,7 +77,11 @@ export interface HtmlFragmentElement extends HtmlTransferrableElement {
   >;
 }
 
-export interface HtmlRawElement extends HtmlTransferrableElement {}
+export interface HtmlRawElement extends HtmlTransferrableElement {
+  attribs: HtmlAttributes<
+    [HtmlOptionalAttribute<"slot">, HtmlOptionalAttribute<"portal">]
+  >;
+}
 
 export interface HtmlIfElement extends Element {
   attribs: HtmlAttributes<[HtmlRequiredAttribute<"condition">]>;
@@ -112,6 +116,7 @@ export interface HtmlClientScriptElement extends HtmlTransferrableElement {
     [
       HtmlOptionalAttribute<"type", "" | "module" | "text/javascript">,
       HtmlOptionalAttribute<"src">,
+      HtmlOptionalAttribute<"slot">,
       HtmlOptionalAttribute<"portal">,
     ]
   >;

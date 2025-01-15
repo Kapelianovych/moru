@@ -215,6 +215,26 @@ suite("custom components", () => {
     match(output, /^\s+<div>child<\/div>\s+$/);
   });
 
+  test('the "raw" can be rendered into a names slot', async () => {
+    const output = await compile(
+      `
+        <import from="./nested.html" />
+
+        <nested>
+          <raw slot="text">{{ 1 }}</raw>
+        </nested>
+      `,
+      {
+        resolveUrl,
+        async readFileContent() {
+          return '<div><slot name="text" /></div>';
+        },
+      },
+    );
+
+    match(output, /^\s+<div>{{ 1 }}<\/div>\s+$/);
+  });
+
   test("any expression inside the custom component's children should be evaluated in a parent scope", async () => {
     const output = await compile(
       `
