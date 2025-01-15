@@ -63,6 +63,12 @@ export interface HtmlImportElement extends HtmlChildlessElement {
   >;
 }
 
+export interface HtmlExportElement extends HtmlChildlessElement {
+  attribs: HtmlAttributes<
+    [HtmlRequiredAttribute<"name">, HtmlRequiredAttribute<"value">]
+  >;
+}
+
 export interface HtmlTransferrableElement extends Element {
   attribs: HtmlAttributes<[HtmlOptionalAttribute<"portal">]>;
 }
@@ -166,6 +172,9 @@ function createCustomHtmlElementTagNamePredicate<T extends Element>(
 
 export const isHtmlImportElement =
   createCustomHtmlElementTagNamePredicate<HtmlImportElement>("import");
+
+export const isHtmlExportElement =
+  createCustomHtmlElementTagNamePredicate<HtmlExportElement>("export");
 
 export const isHtmlRawElement =
   createCustomHtmlElementTagNamePredicate<HtmlRawElement>("raw");

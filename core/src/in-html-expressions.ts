@@ -35,9 +35,10 @@ export function hasAnyInHtmlExpression(text: string): boolean {
 export async function evaluateInHtmlExpressions(
   {
     imports: _,
-    buildScripts: __,
-    markupDefinitions: ___,
-    getParentMarkupDefinitionFor: ____,
+    exports: __,
+    buildScripts: ___,
+    markupDefinitions: ____,
+    getParentMarkupDefinitionFor: _____,
     portals,
     components,
     ...nodes
@@ -58,8 +59,8 @@ export async function evaluateInHtmlExpressions(
     }
   }
 
-  for (const [, component] of components) {
-    await evaluateInHtmlExpressionsOf(component, context, url, file, options);
+  for (const { node } of components) {
+    await evaluateInHtmlExpressionsOf(node, context, url, file, options);
   }
 
   for (const portalName in portals) {
@@ -107,7 +108,7 @@ async function evaluateInHtmlExpressionsOf(
 ): Promise<void> {
   if (isText(node)) {
     node.data = String(
-      await findAndEvaluateInhtmlExpressionsIn(
+      await findAndEvaluateInHtmlExpressionsIn(
         node.data,
         localThis,
         node,
@@ -124,7 +125,7 @@ async function evaluateInHtmlExpressionsOf(
     delete attribs.expand;
 
     if (expand?.trim()) {
-      const spread = await findAndEvaluateInhtmlExpressionsIn(
+      const spread = await findAndEvaluateInHtmlExpressionsIn(
         expand,
         localThis,
         node,
@@ -153,7 +154,7 @@ async function evaluateInHtmlExpressionsOf(
     for (const attributeName in attribs) {
       const value = attribs[attributeName];
 
-      const evaluatedAttributeValue = await findAndEvaluateInhtmlExpressionsIn(
+      const evaluatedAttributeValue = await findAndEvaluateInHtmlExpressionsIn(
         value,
         localThis,
         node,
@@ -182,7 +183,7 @@ function assignAttribute(
   }
 }
 
-async function findAndEvaluateInhtmlExpressionsIn(
+export async function findAndEvaluateInHtmlExpressionsIn(
   text: string,
   localThis: Record<string, unknown>,
   node: AnyNode,

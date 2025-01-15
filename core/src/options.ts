@@ -4,6 +4,9 @@ import type { VirtualFile } from "./virtual-file.js";
 export type BuildStore = Map<PropertyKey, unknown>;
 
 export interface Options {
+  /** Exported values from a compiled files.
+   * It will be filled by the compiler. */
+  exports: Record<string, unknown>;
   /** Data for the top-level HTML component. */
   properties: Record<string, unknown>;
   /** Store object for a single compilation unit.

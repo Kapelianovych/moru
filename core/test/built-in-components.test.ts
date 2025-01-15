@@ -355,6 +355,7 @@ suite("built-in components", () => {
           <fragment name="portal" />
           <fragment name="fragment" />
           <fragment name="import" />
+          <fragment name="export" />
           <fragment name="script" />
           <fragment name="style" />
           <fragment name="slot" />
@@ -362,10 +363,10 @@ suite("built-in components", () => {
         { diagnostics: { publish } },
       );
 
-      equal(publish.mock.callCount(), 11);
+      equal(publish.mock.callCount(), 12);
       deepEqual(
         publish.mock.calls.map((call) => call.arguments[0].tag),
-        new Array(11).fill(MessageTag.ProhibitedReservedComponentRemapping),
+        new Array(12).fill(MessageTag.ProhibitedReservedComponentRemapping),
       );
     });
   });

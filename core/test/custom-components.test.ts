@@ -94,6 +94,7 @@ suite("custom components", () => {
         <import from="./portal.html" />
         <import from="./fragment.html" />
         <import from="./import.html" />
+        <import from="./export.html" />
         <import from="./script.html" />
         <import from="./style.html" />
         <import from="./slot.html" />
@@ -104,10 +105,10 @@ suite("custom components", () => {
       },
     );
 
-    equal(publish.mock.callCount(), 11);
+    equal(publish.mock.callCount(), 12);
     deepEqual(
       publish.mock.calls.map((call) => call.arguments[0].tag),
-      new Array(11).fill(MessageTag.ProhibitedReservedComponentRemapping),
+      new Array(12).fill(MessageTag.ProhibitedReservedComponentRemapping),
     );
   });
 
@@ -265,117 +266,6 @@ suite("custom components", () => {
     match(output, /^\s+1\s+$/);
   });
 
-  test("nested component should be able to pass attributes to its children though slot's attributes", async () => {
-    const output = await compile(
-      `
-        <import from="./some.html" />
-
-        <some>
-          <div />
-        </some>
-      `,
-      {
-        resolveUrl,
-        async readFileContent() {
-          return '<slot id="foo" />';
-        },
-      },
-    );
-
-    match(output, /<div id="foo"><\/div>/);
-  });
-
-  test("slot's attributes should replace children's attributes by default", async () => {
-    const output = await compile(
-      `
-        <import from="./some.html" />
-
-        <some>
-          <div id="bar" />
-        </some>
-      `,
-      {
-        resolveUrl,
-        async readFileContent() {
-          return '<slot id="foo" />';
-        },
-      },
-    );
-
-    match(output, /<div id="foo"><\/div>/);
-  });
-
-  test(
-    "if slot's attribute is a function, it accepts child node's current attribute value and " +
-      "the function execution result should replace children's attribute",
-    async () => {
-      const output = await compile(
-        `
-          <import from="./some.html" />
-
-          <some>
-            <div id="bar" />
-          </some>
-        `,
-        {
-          resolveUrl,
-          async readFileContent() {
-            return "<slot id=\"{{ (classes) => classes + ' foo' }}\" />";
-          },
-        },
-      );
-
-      match(output, /<div id="bar foo"><\/div>/);
-    },
-  );
-
-  test("slot's attributes should be populated to all element children", async () => {
-    const output = await compile(
-      `
-        <import from="./some.html" />
-
-        <some>
-          <div  />
-          text
-          <p />
-        </some>
-      `,
-      {
-        resolveUrl,
-        async readFileContent() {
-          return '<slot id="foo" />';
-        },
-      },
-    );
-
-    match(output, /<div id="foo"><\/div>\s+text\s+<p id="foo"><\/p>/);
-  });
-
-  test('"fragment" should not receive slot\'s attributes but its children', async () => {
-    const output = await compile(
-      `
-        <import from="./some.html" />
-
-        <some>
-          <fragment>
-            <div  />
-            <fragment>
-              <p />
-            </fragment>
-          </fragment>
-        </some>
-      `,
-      {
-        resolveUrl,
-        async readFileContent() {
-          return '<slot id="foo" />';
-        },
-      },
-    );
-
-    match(output, /<div id="foo"><\/div>\s+<p id="foo"><\/p>/);
-  });
-
   test("if there is a markup fragment with the same name as imported component, the former should win the reference element over", async () => {
     const output = await compile(
       `
@@ -419,52 +309,4 @@ suite("custom components", () => {
 
     match(output, /^\s+$/);
   });
-
-  test(
-    "if a final attribute value of an attribute passed through the <slot> is undefined, " +
-      "that attribute should be removed from the destination element",
-    async () => {
-      const output = await compile(
-        `
-          <import from="./some.html" />
-
-          <some>
-            <div id="foo" />
-          </some>
-        `,
-        {
-          resolveUrl,
-          async readFileContent() {
-            return '<slot id="{{ () => undefined }}" />';
-          },
-        },
-      );
-
-      match(output, /^\s+<div><\/div>\s+$/);
-    },
-  );
-
-  test(
-    "if a <slot> attribute evaluated to undefined, it should not affect the same attribute " +
-      "of the destination element",
-    async () => {
-      const output = await compile(
-        `
-          <import from="./some.html" />
-
-          <some>
-            <div id="foo" />
-          </some>
-        `,
-        {
-          resolveUrl,
-          async readFileContent() {
-            return '<slot id="{{ undefined }}" />';
-          },
-        },
-      );
-
-      match(output, /^\s+<div id="foo"><\/div>\s+$/);
-    },
-  );
 });

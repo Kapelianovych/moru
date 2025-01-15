@@ -7,6 +7,7 @@ import {
 } from "../src/index.js";
 
 const DEFAULT_OPTIONS: Options = {
+  exports: {},
   properties: {},
   diagnostics: { publish() {} },
   buildStore: new Map(),

@@ -5,6 +5,7 @@ import { rebaseUrls } from "./url-rebaser.js";
 import type { VirtualFile } from "./virtual-file.js";
 import { evaluateLoops } from "./evaluate-loops.js";
 import { evaluatePortals } from "./evaluate-portals.js";
+import { evaluateExports } from "./evaluate-exports.js";
 import { inlineClientData } from "./inline-client-data.js";
 import { compileComponents } from "./compile-components.js";
 import { evaluateConditionals } from "./evaluate-conditionals.js";
@@ -65,26 +66,34 @@ async function compileModule(options: ModuleCompilerOptions): Promise<void> {
     options.htmlNodesCollection.transferrableElements;
   nodes.raws = options.htmlNodesCollection.raws;
 
-  await preCompileScope({
+  const scopePreCompilerOptions: ScopePreCompilerOptions = {
     ast: options.ast,
     file: options.file,
     localThis,
     compilerOptions: options.compilerOptions,
     htmlNodesCollection: nodes,
     publicNames,
-  });
+  };
+
+  await preCompileScope(scopePreCompilerOptions);
+
+  await compileComponents(
+    scopePreCompilerOptions,
+    preCompileScope,
+    compileModule,
+  );
+
+  await evaluateExports(
+    nodes,
+    localThis,
+    options.file,
+    options.compilerOptions,
+  );
 
   inlineClientData(
     nodes,
     localThis,
     publicNames,
-    options.file,
-    options.compilerOptions,
-  );
-
-  await compileComponents(
-    nodes,
-    compileModule,
     options.file,
     options.compilerOptions,
   );
@@ -111,6 +120,9 @@ async function preCompileScope(
   // All imports can be defined only at the beginning of the component
   // and then are shared between all of its scopes.
   scopedNodes.imports = options.htmlNodesCollection.imports;
+  // Even though exporte can be defined at the top level and there is not point
+  // to pass it inside every scope, it has to be passed into the first one.
+  scopedNodes.exports = options.htmlNodesCollection.exports;
   // Fragments with a name should be available in nested scopes.
   scopedNodes.getParentMarkupDefinitionFor = (name) => {
     return (

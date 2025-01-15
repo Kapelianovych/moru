@@ -1,7 +1,8 @@
-import { removeElement } from "domutils";
+import { getParent, removeElement } from "domutils";
 import {
   type Document,
   type Element,
+  isDocument,
   isTag,
   isText,
   type Text,
@@ -16,8 +17,11 @@ import { type HtmlVisitor, traverseHtml } from "./traverse-html.js";
 import {
   createEmptyExplicitComponentAliasMessage,
   createExternalBuildScriptMessage,
+  createInvalidExportElementPositionMessage,
   createInvalidFileNameMessage,
   createInvalidImportComponentPositionMessage,
+  createNotDefinedExportNameMessage,
+  createNotDefinedExportValueExpressionMessage,
   createNotDefinedPortalNameMessage,
   createProhibitedReservedComponentRemappingMessage,
   createSingleElseElementMessage,
@@ -29,6 +33,7 @@ import {
   type HtmlClientScriptElement,
   type HtmlElseElement,
   type HtmlElseIfElement,
+  HtmlExportElement,
   type HtmlForElement,
   type HtmlFragmentElement,
   type HtmlIfElement,
@@ -41,6 +46,7 @@ import {
   isHtmlClientScriptElement,
   isHtmlElseElement,
   isHtmlElseIfElement,
+  isHtmlExportElement,
   isHtmlForElement,
   isHtmlFragmentElement,
   isHtmlIfElement,
@@ -59,6 +65,7 @@ const RESERVED_HTML_ELEMENT_TAGS: Array<string> = [
   "for",
   "raw",
   "import",
+  "export",
   "script",
   "portal",
   "fragment",
@@ -66,8 +73,18 @@ const RESERVED_HTML_ELEMENT_TAGS: Array<string> = [
   "slot",
 ];
 
+export interface ComponentDefinition {
+  url: string;
+  node: Element;
+  /** Variables which are exprected to be exported from
+   * a component to be used in passed children. */
+  exports: Record<string, string>;
+  hasAssignDefinitions: boolean;
+}
+
 export interface HtmlNodesCollection {
   imports: Record<string, string>;
+  exports: Record<string, Element>;
   /** Locally defined reusable fragments of markup. */
   markupDefinitions: Record<string, HtmlFragmentElement>;
   getParentMarkupDefinitionFor?(name: string): HtmlFragmentElement | undefined;
@@ -82,7 +99,7 @@ export interface HtmlNodesCollection {
   /** Elements with an expression in at least one attribute. */
   elements: Array<Element>;
   fragments: Array<HtmlFragmentElement>;
-  components: Array<[string, Element]>;
+  components: Array<ComponentDefinition>;
   conditionals: Array<
     [HtmlIfElement, Array<HtmlElseIfElement>?, HtmlElseElement?]
   >;
@@ -97,6 +114,7 @@ export interface HtmlNodesCollection {
 export function createEmptyHtmlNodesCollection(): HtmlNodesCollection {
   return {
     imports: {},
+    exports: {},
     markupDefinitions: {},
 
     raws: [],
@@ -210,6 +228,51 @@ export function collectHtmlNodes(
           removeElement(node);
         },
       } satisfies HtmlVisitor<HtmlImportElement>,
+      {
+        matches: isHtmlExportElement,
+        enter(node) {
+          lastForElementGroup = null;
+          lastConditionalElementGroup = null;
+          // <export> is allowed before <import>.
+
+          const parent = getParent(node);
+
+          if (parent && isDocument(parent)) {
+            if ("name" in node.attribs) {
+              if ("value" in node.attribs) {
+                nodes.exports[node.attribs.name] = node;
+              } else {
+                options.diagnostics.publish(
+                  createNotDefinedExportValueExpressionMessage({
+                    location: getLocationOfHtmlNode(node),
+                    sourceFile: file,
+                  }),
+                );
+              }
+            } else {
+              options.diagnostics.publish(
+                createNotDefinedExportNameMessage({
+                  location: getLocationOfHtmlNode(node),
+                  sourceFile: file,
+                }),
+              );
+            }
+          } else {
+            options.diagnostics.publish(
+              createInvalidExportElementPositionMessage({
+                location: getLocationOfHtmlNode(node),
+                sourceFile: file,
+              }),
+            );
+          }
+
+          // It cannot have children.
+          return false;
+        },
+        exit(node) {
+          removeElement(node);
+        },
+      } satisfies HtmlVisitor<HtmlExportElement>,
       {
         matches: isHtmlRawElement,
         enter(node) {
@@ -440,7 +503,32 @@ export function collectHtmlNodes(
           ) {
             nodes.reusableMarkupReferences.push(node);
           } else if (node.tagName in nodes.imports) {
-            nodes.components.push([nodes.imports[node.tagName], node]);
+            const exports: Record<string, string> = {};
+            let shouldWalkChildren = true;
+
+            for (const attributeName in node.attribs) {
+              if (attributeName.startsWith("assign:")) {
+                const exportedName = attributeName.slice(7);
+
+                const importedName =
+                  node.attribs[attributeName] || exportedName;
+
+                exports[exportedName] = importedName;
+                shouldWalkChildren = false;
+
+                // We don't need to pass the let: attribute as a prop.
+                delete node.attribs[attributeName];
+              }
+            }
+
+            nodes.components.push({
+              url: nodes.imports[node.tagName],
+              node,
+              exports,
+              hasAssignDefinitions: !shouldWalkChildren,
+            });
+
+            return shouldWalkChildren;
           } else {
             if (
               node.attributes.some((attribute) =>

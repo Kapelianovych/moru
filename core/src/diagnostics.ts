@@ -20,6 +20,10 @@ export enum MessageTag {
   JsSyntaxError,
   NotDefinedPortalName,
   ReferenceToNonExistendPortal,
+  NotDefinedExportName,
+  NotDefinedExportValueExpression,
+  InvalidExportElementPosition,
+  ComponentMissingExport,
 }
 
 export interface Location {
@@ -55,6 +59,10 @@ export type AnyMessage =
   | JsSyntaxErrorMessage
   | NotDefinedPortalNameMessage
   | ReferenceToNonExistendPortalMessage
+  | NotDefinedExportNameMessage
+  | NotDefinedExportValueExpressionMessage
+  | InvalidExportElementPositionMessage
+  | ComponentMissingExportMessage
   | ProhibitedReservedComponentRemappingMessage;
 
 export interface SingleElseElementMessage
@@ -132,6 +140,21 @@ export interface ReferenceToNonExistendPortalMessage
   name: Stringifiable;
 }
 
+export interface NotDefinedExportNameMessage
+  extends Message<MessageTag.NotDefinedExportName> {}
+
+export interface NotDefinedExportValueExpressionMessage
+  extends Message<MessageTag.NotDefinedExportValueExpression> {}
+
+export interface InvalidExportElementPositionMessage
+  extends Message<MessageTag.InvalidExportElementPosition> {}
+
+export interface ComponentMissingExportMessage
+  extends Message<MessageTag.ComponentMissingExport> {
+  name: string;
+  componentUrl: string;
+}
+
 function createMessageCreator<T extends MessageTag>(tag: T) {
   return (
     values: Omit<Extract<AnyMessage, Message<T>>, "tag">,
@@ -206,4 +229,19 @@ export const createNotDefinedPortalNameMessage = createMessageCreator(
 
 export const createReferenceToNonExistendPortalMessage = createMessageCreator(
   MessageTag.ReferenceToNonExistendPortal,
+);
+
+export const createNotDefinedExportNameMessage = createMessageCreator(
+  MessageTag.NotDefinedExportName,
+);
+
+export const createNotDefinedExportValueExpressionMessage =
+  createMessageCreator(MessageTag.NotDefinedExportValueExpression);
+
+export const createInvalidExportElementPositionMessage = createMessageCreator(
+  MessageTag.InvalidExportElementPosition,
+);
+
+export const createComponentMissingExportMessage = createMessageCreator(
+  MessageTag.ComponentMissingExport,
 );

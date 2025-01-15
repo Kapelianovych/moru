@@ -29,4 +29,8 @@ export {
   type JsSyntaxErrorMessage,
   type NotDefinedPortalNameMessage,
   type ReferenceToNonExistendPortalMessage,
+  type NotDefinedExportNameMessage,
+  type NotDefinedExportValueExpressionMessage,
+  type InvalidExportElementPositionMessage,
+  type ComponentMissingExportMessage,
 } from "./diagnostics.js";

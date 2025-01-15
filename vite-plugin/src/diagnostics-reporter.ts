@@ -212,6 +212,56 @@ export class DiagnosticsReporter implements Diagnostics {
             this.#highlightedRegion(message),
         );
         break;
+      case MessageTag.NotDefinedExportName:
+        this.#error(
+          "An " +
+            colors.magenta("<export>") +
+            " element must contain the non-empty " +
+            colors.bold("name") +
+            " attribute.\n" +
+            "Found in: " +
+            colors.magenta(message.sourceFile.url) +
+            ".\n" +
+            this.#highlightedRegion(message),
+        );
+        break;
+      case MessageTag.NotDefinedExportValueExpression:
+        this.#error(
+          "An " +
+            colors.magenta("<export>") +
+            " element must contain the non-empty " +
+            colors.bold("value") +
+            " attribute.\n" +
+            "Found in: " +
+            colors.magenta(message.sourceFile.url) +
+            ".\n" +
+            this.#highlightedRegion(message),
+        );
+        break;
+      case MessageTag.InvalidExportElementPosition:
+        this.#error(
+          "An " +
+            colors.magenta("<export>") +
+            " element can be defined only at the top-level of the HTML file.\n" +
+            "Found in: " +
+            colors.magenta(message.sourceFile.url) +
+            ".\n" +
+            this.#highlightedRegion(message),
+        );
+        break;
+      case MessageTag.ComponentMissingExport:
+        this.#error(
+          "A " +
+            colors.bold(message.componentUrl) +
+            " component does not export the " +
+            colors.magenta(message.name) +
+            " variable.\n" +
+            "Found in: " +
+            colors.magenta(message.sourceFile.url) +
+            ".\n" +
+            this.#highlightedRegion(message),
+        );
+        break;
     }
   }
 
