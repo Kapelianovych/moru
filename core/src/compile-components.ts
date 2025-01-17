@@ -33,12 +33,14 @@ export async function compileComponents(
       content: componentContent,
     };
     const ast = parseHtml(componentFile);
-    const slots: Array<HtmlSlotElement> = [];
-    const parentExportedValues: Record<string, unknown> =
+    const childSlots: Array<HtmlSlotElement> = [];
+    const currentModuleExportedValues: Record<string, unknown> =
       scopePreCompilerOptions.compilerOptions.exports;
+    const currentModuleSlots: Array<HtmlSlotElement> =
+      scopePreCompilerOptions.htmlNodesCollection.slots;
 
     scopePreCompilerOptions.compilerOptions.exports = {};
-    scopePreCompilerOptions.htmlNodesCollection.slots = slots;
+    scopePreCompilerOptions.htmlNodesCollection.slots = childSlots;
     scopePreCompilerOptions.compilerOptions.properties = node.attribs;
 
     await compileModule({
@@ -47,6 +49,9 @@ export async function compileComponents(
       htmlNodesCollection: scopePreCompilerOptions.htmlNodesCollection,
       compilerOptions: scopePreCompilerOptions.compilerOptions,
     });
+
+    // Return back current slots, so they can be passed to potential parent component.
+    scopePreCompilerOptions.htmlNodesCollection.slots = currentModuleSlots;
 
     if (hasAssignDefinitions) {
       // We skipped walking over component's children because any expression inside potentially
@@ -59,13 +64,14 @@ export async function compileComponents(
       );
     }
 
-    scopePreCompilerOptions.compilerOptions.exports = parentExportedValues;
+    scopePreCompilerOptions.compilerOptions.exports =
+      currentModuleExportedValues;
 
     const childrenGroupedBySlots = getComponentChildrenGroupedBySlots(node);
 
     replaceElementWithMultiple(node, ast.children);
 
-    slots.forEach((slot) => {
+    childSlots.forEach((slot) => {
       const slotName = slot.attribs.name || "default";
       const replacerNodes = childrenGroupedBySlots[slotName];
 
@@ -78,7 +84,7 @@ export async function compileComponents(
     });
 
     // Empty slots store to avoid populating it up the tree.
-    slots.length = 0;
+    childSlots.length = 0;
   }
 
   scopePreCompilerOptions.htmlNodesCollection.components.length = 0;

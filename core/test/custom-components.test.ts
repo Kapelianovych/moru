@@ -309,4 +309,33 @@ suite("custom components", () => {
 
     match(output, /^\s+$/);
   });
+
+  test("element should be passed down the component hierarchy to the leaf <slot> element", async () => {
+    const output = await compile(
+      `
+        <import from="foo.html" />
+
+        <foo>
+          <div />
+        </foo>
+      `,
+      {
+        async readFileContent(url) {
+          if (url.includes("foo")) {
+            return `
+              <import from="bar.html" />
+
+              <bar>
+                <slot />
+              </bar>
+            `;
+          } else {
+            return "<slot />";
+          }
+        },
+      },
+    );
+
+    match(output, /^\s+<div><\/div>\s+$/);
+  });
 });
