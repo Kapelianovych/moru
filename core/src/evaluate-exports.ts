@@ -1,28 +1,30 @@
 import { type HtmlNodesCollection } from "./collect-html-nodes.js";
-import { findAndEvaluateInHtmlExpressionsIn } from "./in-html-expressions.js";
-import { createUrlCreator, type UrlCreator } from "./location.js";
+import { createMissingExportedValueFromHtmlDefinitionMessage } from "./diagnostics.js";
+import { getLocationOfHtmlNode } from "./html-nodes.js";
 import { type Options } from "./options.js";
 import { type VirtualFile } from "./virtual-file.js";
 
-export async function evaluateExports(
+export function evaluateExports(
   collection: HtmlNodesCollection,
   localThis: Record<string, unknown>,
   file: VirtualFile,
   options: Options,
-): Promise<void> {
-  const url: UrlCreator = createUrlCreator(file, options);
+): void {
+  for (const localVariableNameForExport in collection.exports) {
+    const node = collection.exports[localVariableNameForExport];
 
-  for (const exportVariableName in collection.exports) {
-    const node = collection.exports[exportVariableName];
+    const publicName = node.attribs.as ?? localVariableNameForExport;
 
-    options.exports[exportVariableName] =
-      await findAndEvaluateInHtmlExpressionsIn(
-        node.attribs.value,
-        localThis,
-        node,
-        url,
-        file,
-        options,
+    if (localVariableNameForExport in localThis) {
+      options.exports[publicName] = localThis[localVariableNameForExport];
+    } else {
+      options.diagnostics.publish(
+        createMissingExportedValueFromHtmlDefinitionMessage({
+          name: localVariableNameForExport,
+          sourceFile: file,
+          location: getLocationOfHtmlNode(node),
+        }),
       );
+    }
   }
 }

@@ -65,7 +65,7 @@ export interface HtmlImportElement extends HtmlChildlessElement {
 
 export interface HtmlExportElement extends HtmlChildlessElement {
   attribs: HtmlAttributes<
-    [HtmlRequiredAttribute<"name">, HtmlRequiredAttribute<"value">]
+    [HtmlRequiredAttribute<"name">, HtmlOptionalAttribute<"as">]
   >;
 }
 

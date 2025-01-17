@@ -21,7 +21,6 @@ import {
   createInvalidFileNameMessage,
   createInvalidImportComponentPositionMessage,
   createNotDefinedExportNameMessage,
-  createNotDefinedExportValueExpressionMessage,
   createNotDefinedPortalNameMessage,
   createProhibitedReservedComponentRemappingMessage,
   createSingleElseElementMessage,
@@ -137,7 +136,7 @@ export function createEmptyHtmlNodesCollection(): HtmlNodesCollection {
 
 /**
  * Groups nodes in one scope.
- * `<if>` and `<for>` elements create inner scope which is not processed
+ * `<if>` and `<for>` elements create an inner scope which is not processed
  * along with a parent scope.
  */
 export function collectHtmlNodes(
@@ -239,16 +238,7 @@ export function collectHtmlNodes(
 
           if (parent && isDocument(parent)) {
             if ("name" in node.attribs) {
-              if ("value" in node.attribs) {
-                nodes.exports[node.attribs.name] = node;
-              } else {
-                options.diagnostics.publish(
-                  createNotDefinedExportValueExpressionMessage({
-                    location: getLocationOfHtmlNode(node),
-                    sourceFile: file,
-                  }),
-                );
-              }
+              nodes.exports[node.attribs.name] = node;
             } else {
               options.diagnostics.publish(
                 createNotDefinedExportNameMessage({

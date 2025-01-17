@@ -31,6 +31,7 @@ export class Compiler implements Plugin {
 
       const tree = parseHtml(virtualFile);
       await compileHtml(tree, virtualFile, {
+        exports: {},
         properties: {},
         buildStore: new Map(),
         diagnostics: this.diagnostics,

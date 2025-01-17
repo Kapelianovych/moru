@@ -83,12 +83,7 @@ async function compileModule(options: ModuleCompilerOptions): Promise<void> {
     compileModule,
   );
 
-  await evaluateExports(
-    nodes,
-    localThis,
-    options.file,
-    options.compilerOptions,
-  );
+  evaluateExports(nodes, localThis, options.file, options.compilerOptions);
 
   inlineClientData(
     nodes,

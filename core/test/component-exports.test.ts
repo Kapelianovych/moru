@@ -7,7 +7,11 @@ import { MessageTag } from "../src/diagnostics.js";
 suite("component's export", () => {
   test("export element should be removed from HTML", async () => {
     const output = await compile(`
-      <export name="some" value="foo" />
+      <export name="some" />
+
+      <script build>
+        const some = 1;
+      </script>
     `);
 
     match(output, /^\s+$/);
@@ -15,24 +19,16 @@ suite("component's export", () => {
 
   test("export element's children are ignored", async () => {
     const output = await compile(`
-      <export name="some" value="foo">
+      <export name="some">
         <p />
       </export>
+
+      <script build>
+        const some = 1;
+      </script>
     `);
 
     match(output, /^\s+$/);
-  });
-
-  test("export element's value attribute can contain an expression", async () => {
-    const fn = mock.fn();
-    await compile(
-      `
-        <export name="some" value="{{ props.fn() }}" />
-      `,
-      { properties: { fn } },
-    );
-
-    equal(fn.mock.callCount(), 1);
   });
 
   test("export element can be defined only at the top-level", async () => {
@@ -40,10 +36,14 @@ suite("component's export", () => {
     await compile(
       `
         <div>
-          <export name="some" value="foo" />
+          <export name="some" />
         </div>
 
-        <export name="other" value="foo" />
+        <export name="other" />
+
+        <script build>
+          const other = 1;
+        </script>
       `,
       { diagnostics: { publish } },
     );
@@ -59,8 +59,12 @@ suite("component's export", () => {
     const publish = mock.fn();
     await compile(
       `
-        <export name="some" value="foo" />
+        <export name="some" />
         <import from="foo.html" />
+
+        <script build>
+          const some = 1;
+        </script>
       `,
       { diagnostics: { publish } },
     );
@@ -68,27 +72,11 @@ suite("component's export", () => {
     equal(publish.mock.callCount(), 0);
   });
 
-  test("export element should contain the value attribute", async () => {
-    const publish = mock.fn();
-    await compile(
-      `
-        <export name="some"  />
-      `,
-      { diagnostics: { publish } },
-    );
-
-    equal(publish.mock.callCount(), 1);
-    equal(
-      publish.mock.calls[0].arguments[0].tag,
-      MessageTag.NotDefinedExportValueExpression,
-    );
-  });
-
   test("export element should contain the name attribute", async () => {
     const publish = mock.fn();
     await compile(
       `
-        <export value="some"  />
+        <export />
       `,
       { diagnostics: { publish } },
     );
@@ -111,7 +99,15 @@ suite("component's export", () => {
       `,
       {
         async readFileContent() {
-          return '<export name="variable" value="text" /> <slot />';
+          return `
+            <export name="variable" />
+
+            <slot />
+
+            <script build>
+              const variable = 'text';
+            </script>
+          `;
         },
       },
     );
@@ -132,7 +128,15 @@ suite("component's export", () => {
       {
         diagnostics: { publish },
         async readFileContent() {
-          return '<export name="variable" value="text" />';
+          return `
+            <export name="variable" />
+
+            <slot />
+
+            <script build>
+              const variable = 1;
+            </script>
+          `;
         },
       },
     );
@@ -155,7 +159,15 @@ suite("component's export", () => {
       `,
       {
         async readFileContent() {
-          return '<export name="variable" value="text" /> <slot />';
+          return `
+            <export name="variable" />
+
+            <slot />
+
+            <script build>
+              const variable = 'text';
+            </script>
+          `;
         },
       },
     );
@@ -163,30 +175,69 @@ suite("component's export", () => {
     match(output, /^\s+text\s+$/);
   });
 
-  test("if outer scope contains variable with the same name, it won't be erased when accessed outside of a component children scope", async () => {
+  test("export element allows to export a value under a different name", async () => {
     const output = await compile(
       `
         <import from="foo.html" />
 
-        <foo assign:variable>
-          {{ variable }}
+        <foo assign:other>
+          {{ other }}
         </foo>
-
-        {{ variable }}
-
-        <script build>
-          const variable = 'current';
-        </script>
       `,
       {
         async readFileContent() {
-          return '<export name="variable" value="text" /> <slot />';
+          return `
+            <export name="variable" as="other" />
+
+            <slot />
+
+            <script build>
+              const variable = 'text';
+            </script>
+          `;
         },
       },
     );
 
-    match(output, /^\s+text\s+current\s+$/);
+    match(output, /^\s+text\s+$/);
   });
+
+  test(
+    "if outer scope contains variable with the same name, it won't be erased when " +
+      "accessed outside of a component children scope",
+    async () => {
+      const output = await compile(
+        `
+          <import from="foo.html" />
+
+          <foo assign:variable>
+            {{ variable }}
+          </foo>
+
+          {{ variable }}
+
+          <script build>
+            const variable = 'current';
+          </script>
+        `,
+        {
+          async readFileContent() {
+            return `
+              <export name="variable" />
+
+              <slot />
+
+              <script build>
+                const variable = 'text';
+              </script>
+            `;
+          },
+        },
+      );
+
+      match(output, /^\s+text\s+current\s+$/);
+    },
+  );
 
   test("variable can be imported only if a nested component contains an export definition", async () => {
     const publish = mock.fn();
@@ -208,6 +259,24 @@ suite("component's export", () => {
     equal(
       publish.mock.calls[0].arguments[0].tag,
       MessageTag.ComponentMissingExport,
+    );
+  });
+
+  test("should error when an exported value is not defined", async () => {
+    const publish = mock.fn();
+    await compile(
+      `
+        <export name="foo" />
+      `,
+      {
+        diagnostics: { publish },
+      },
+    );
+
+    equal(publish.mock.callCount(), 1);
+    equal(
+      publish.mock.calls[0].arguments[0].tag,
+      MessageTag.MissingExportedFromHtmlValueDefinition,
     );
   });
 });

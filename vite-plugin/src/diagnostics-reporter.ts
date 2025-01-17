@@ -225,16 +225,16 @@ export class DiagnosticsReporter implements Diagnostics {
             this.#highlightedRegion(message),
         );
         break;
-      case MessageTag.NotDefinedExportValueExpression:
+      case MessageTag.MissingExportedFromHtmlValueDefinition:
         this.#error(
-          "An " +
+          "The " +
+            colors.bold(message.sourceFile.url) +
+            " file misses the " +
+            colors.magenta(message.name) +
+            " definition " +
+            "which is required by the defined " +
             colors.magenta("<export>") +
-            " element must contain the non-empty " +
-            colors.bold("value") +
-            " attribute.\n" +
-            "Found in: " +
-            colors.magenta(message.sourceFile.url) +
-            ".\n" +
+            " element.\n" +
             this.#highlightedRegion(message),
         );
         break;

@@ -21,7 +21,7 @@ export enum MessageTag {
   NotDefinedPortalName,
   ReferenceToNonExistendPortal,
   NotDefinedExportName,
-  NotDefinedExportValueExpression,
+  MissingExportedFromHtmlValueDefinition,
   InvalidExportElementPosition,
   ComponentMissingExport,
 }
@@ -60,7 +60,7 @@ export type AnyMessage =
   | NotDefinedPortalNameMessage
   | ReferenceToNonExistendPortalMessage
   | NotDefinedExportNameMessage
-  | NotDefinedExportValueExpressionMessage
+  | MissingExportedValueFromHtmlDefinitionMessage
   | InvalidExportElementPositionMessage
   | ComponentMissingExportMessage
   | ProhibitedReservedComponentRemappingMessage;
@@ -143,8 +143,10 @@ export interface ReferenceToNonExistendPortalMessage
 export interface NotDefinedExportNameMessage
   extends Message<MessageTag.NotDefinedExportName> {}
 
-export interface NotDefinedExportValueExpressionMessage
-  extends Message<MessageTag.NotDefinedExportValueExpression> {}
+export interface MissingExportedValueFromHtmlDefinitionMessage
+  extends Message<MessageTag.MissingExportedFromHtmlValueDefinition> {
+  name: string;
+}
 
 export interface InvalidExportElementPositionMessage
   extends Message<MessageTag.InvalidExportElementPosition> {}
@@ -235,8 +237,8 @@ export const createNotDefinedExportNameMessage = createMessageCreator(
   MessageTag.NotDefinedExportName,
 );
 
-export const createNotDefinedExportValueExpressionMessage =
-  createMessageCreator(MessageTag.NotDefinedExportValueExpression);
+export const createMissingExportedValueFromHtmlDefinitionMessage =
+  createMessageCreator(MessageTag.MissingExportedFromHtmlValueDefinition);
 
 export const createInvalidExportElementPositionMessage = createMessageCreator(
   MessageTag.InvalidExportElementPosition,

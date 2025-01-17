@@ -183,7 +183,7 @@ function assignAttribute(
   }
 }
 
-export async function findAndEvaluateInHtmlExpressionsIn(
+async function findAndEvaluateInHtmlExpressionsIn(
   text: string,
   localThis: Record<string, unknown>,
   node: AnyNode,

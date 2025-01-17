@@ -30,7 +30,7 @@ export {
   type NotDefinedPortalNameMessage,
   type ReferenceToNonExistendPortalMessage,
   type NotDefinedExportNameMessage,
-  type NotDefinedExportValueExpressionMessage,
+  type MissingExportedValueFromHtmlDefinitionMessage,
   type InvalidExportElementPositionMessage,
   type ComponentMissingExportMessage,
 } from "./diagnostics.js";
