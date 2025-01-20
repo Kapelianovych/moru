@@ -5,9 +5,11 @@
 <script type="module" build>
   import { ONLY_CACHE } from "./symbols.js";
 
-  /** @typedef {Object} Props
+  /**
+   * @typedef {Object} Props
    * @property {string | number | symbol} key
-   * @property {number} [times = 1] */
+   * @property {number} [times = 1]
+   */
 
   const { key, times = 1 } = /** @type {Props} */ (props);
 

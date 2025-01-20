@@ -3,16 +3,16 @@
   "type": "module",
   "version": "0.0.1",
   "exports": {
-    ".": "./dist/index.js",
+    ".": "./src/index.js",
     "./*.html": "./components/*.html"
   },
   "dependencies": {
-    "acorn": "^8.14.0",
-    "acorn-walk": "^8.3.4",
-    "astring": "^1.9.0",
-    "dom-serializer": "^2.0.0",
-    "domhandler": "^5.0.3",
-    "domutils": "^3.2.1",
-    "htmlparser2": "^10.0.0"
+    "acorn": "^8",
+    "acorn-walk": "^8",
+    "astring": "^1",
+    "dom-serializer": "^2",
+    "domhandler": "^5",
+    "domutils": "^3",
+    "htmlparser2": "^10"
   }
 }

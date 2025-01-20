@@ -2,13 +2,13 @@
   "name": "@moru/vite-plugin",
   "type": "module",
   "version": "0.0.1",
-  "exports": "./dist/index.js",
+  "exports": "./src/index.js",
   "dependencies": {
-    "glob": "^11.0.0",
-    "picocolors": "^1.1.1"
+    "glob": "^11",
+    "picocolors": "^1"
   },
   "peerDependencies": {
-    "vite": "^6.0.5",
-    "@moru/core": "^0.0.1"
+    "vite": "^6",
+    "@moru/core": "^0"
   }
 }
