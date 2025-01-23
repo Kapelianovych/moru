@@ -1,7 +1,8 @@
 /** @import { Document, Element } from "domhandler"; */
 
 /**
- * @import { LocalThis, Options } from "./options.js";
+ * @import { Options } from "./options.js";
+ * @import { LocalThis } from "./local-this.js";
  * @import { VirtualFile } from "./virtual-file.js";
  * @import { PublicNameWithAlias } from "./run-build-scripts.js";
  * @import { HtmlNodesCollection } from "./collect-html-nodes.js";
@@ -11,6 +12,7 @@ import { rebaseUrls } from "./url-rebaser.js";
 import { evaluateLoops } from "./evaluate-loops.js";
 import { evaluatePortals } from "./evaluate-portals.js";
 import { evaluateExports } from "./evaluate-exports.js";
+import { createLocalThis } from "./local-this.js";
 import { inlineClientData } from "./inline-client-data.js";
 import { compileComponents } from "./compile-components.js";
 import { evaluateConditionals } from "./evaluate-conditionals.js";
@@ -64,8 +66,7 @@ export async function compileHtml(ast, file, options) {
  */
 async function compileModule(options) {
   const nodes = createEmptyHtmlNodesCollection();
-  /** @type {LocalThis} */
-  const localThis = {};
+  const localThis = createLocalThis();
   /** @type {Array<PublicNameWithAlias>} */
   const publicNames = [];
 
@@ -154,12 +155,6 @@ async function preCompileScope(options) {
     options.compilerOptions,
   );
 
-  evaluateMarkupDefinitions(
-    options.htmlNodesCollection,
-    options.file,
-    options.compilerOptions,
-  );
-
   await runBuildScripts(
     options.htmlNodesCollection,
     options.localThis,
@@ -181,6 +176,8 @@ async function preCompileScope(options) {
     options.file,
     options.compilerOptions,
   );
+
+  await evaluateMarkupDefinitions(options, preCompileScope);
 
   await evaluateConditionals(options, preCompileScope);
 

@@ -1,13 +1,14 @@
 /**
  * @import { UrlCreator } from './location.js';
  * @import { VirtualFile } from './virtual-file.js';
- * @import { Options, BuildStore, LocalThis } from './options.js';
+ * @import { Options, BuildStore } from './options.js';
+ * @import { LocalThis } from './local-this.js';
  */
 
 /**
  * @template R
  * @callback AsyncBuildJsRunner
- * @param {LocalThis} props
+ * @param {Record<string, unknown>} props
  * @param {LocalThis} localThis
  * @param {BuildStore} buildStore
  * @param {UrlCreator} url

@@ -1,10 +1,11 @@
 /** @import { Text } from "domhandler"; */
 
 /**
- * @import { LocalThis, Options } from "./options.js";
+ * @import { Options } from "./options.js";
  * @import { VirtualFile } from "./virtual-file.js";
  * @import { HtmlNodesCollection } from "./collect-html-nodes.js";
  * @import { PublicNameWithAlias } from "./run-build-scripts.js";
+ * @import { LocalThis } from "./local-this.js";
  */
 
 import { getLocationOfHtmlNode } from "./html-nodes.js";

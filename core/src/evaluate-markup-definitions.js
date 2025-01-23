@@ -1,45 +1,95 @@
 /**
- * @import { Options } from "./options.js";
- * @import { VirtualFile } from "./virtual-file.js";
- * @import { HtmlNodesCollection } from "./collect-html-nodes.js";
+ * @import { ScopePreCompiler, ScopePreCompilerOptions } from "./compile-html.js";
  */
 
 import { replaceElement } from "domutils";
 
-import { collectHtmlNodes } from "./collect-html-nodes.js";
+import { augmentLocalThis } from "./local-this.js";
+
+const DEFAULT_ATTRIBUTE_PREFIX = "default:";
 
 /**
- * @param {HtmlNodesCollection} htmlNodesCollection
- * @param {VirtualFile} file
- * @param {Options} options
- * @returns {void}
+ * @param {ScopePreCompilerOptions} scopePreCompilerOptions
+ * @param {ScopePreCompiler} preCompileScope
+ * @returns {Promise<void>}
  */
-export function evaluateMarkupDefinitions(htmlNodesCollection, file, options) {
-  const references = htmlNodesCollection.reusableMarkupReferences;
+export async function evaluateMarkupDefinitions(
+  scopePreCompilerOptions,
+  preCompileScope,
+) {
+  const references =
+    scopePreCompilerOptions.htmlNodesCollection.reusableMarkupReferences;
   // Clear markup references array in case some of the current ones
   // contain nested markup fragments and references.
-  htmlNodesCollection.reusableMarkupReferences = [];
+  scopePreCompilerOptions.htmlNodesCollection.reusableMarkupReferences = [];
 
   for (const markupElementReference of references) {
     const markupFragment =
-      htmlNodesCollection.markupDefinitions[markupElementReference.tagName] ??
-      htmlNodesCollection.getParentMarkupDefinitionFor?.(
+      scopePreCompilerOptions.htmlNodesCollection.markupDefinitions[
+        markupElementReference.tagName
+      ] ??
+      scopePreCompilerOptions.htmlNodesCollection.getParentMarkupDefinitionFor?.(
         markupElementReference.tagName,
       );
 
     const clonedMarkupFragment = markupFragment.cloneNode(true);
 
-    // Collect nodes of the cloned fragment.
-    collectHtmlNodes(clonedMarkupFragment, htmlNodesCollection, file, options);
+    /** @type {Array<VoidFunction>} */
+    const rollbacks = [];
+
+    // Augment default values.
+    for (const attribute in clonedMarkupFragment.attribs) {
+      if (attribute.startsWith(DEFAULT_ATTRIBUTE_PREFIX)) {
+        const actualAttributeName = attribute.slice(
+          DEFAULT_ATTRIBUTE_PREFIX.length,
+        );
+
+        if (
+          scopePreCompilerOptions.localThis[actualAttributeName] === undefined
+        ) {
+          const rollback = augmentLocalThis(
+            scopePreCompilerOptions.localThis,
+            actualAttributeName,
+            clonedMarkupFragment.attribs[attribute],
+          );
+
+          rollbacks.push(rollback);
+        }
+      }
+    }
+
+    // Augment non-void user-provided values.
+    for (const attribute in markupElementReference.attribs) {
+      const attributeValue = markupElementReference.attribs[attribute];
+
+      if (attributeValue !== undefined) {
+        const rollback = augmentLocalThis(
+          scopePreCompilerOptions.localThis,
+          attribute,
+          attributeValue,
+        );
+
+        rollbacks.push(rollback);
+      }
+    }
+
+    await preCompileScope({
+      ...scopePreCompilerOptions,
+      ast: clonedMarkupFragment,
+    });
+
+    // Rollback to the initial state in an opposite order.
+    rollbacks.reduceRight(
+      (/** @type {null | void} */ _, rollback) => rollback(),
+      null,
+    );
+
     // collectHtmlNodes skips the root element, so we have to move it
     // to the fragments array to discard it later.
-    htmlNodesCollection.fragments.push(clonedMarkupFragment);
+    scopePreCompilerOptions.htmlNodesCollection.fragments.push(
+      clonedMarkupFragment,
+    );
 
     replaceElement(markupElementReference, clonedMarkupFragment);
-  }
-
-  // If markup fragments contained nested markup fragments, then evaluate them as well.
-  if (htmlNodesCollection.reusableMarkupReferences.length) {
-    evaluateMarkupDefinitions(htmlNodesCollection, file, options);
   }
 }

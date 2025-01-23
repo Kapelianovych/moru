@@ -1,10 +1,11 @@
 /** @import { AnyNode } from 'domhandler'; */
 
 /**
+ * @import { LocalThis as _LocalThis } from "./local-this.js";
  * @import { UrlCreator as _UrlCreator } from "./location.js";
  * @import { VirtualFile as _VirtualFile } from "./virtual-file.js";
  * @import { HtmlVisitor as _HtmlVisitor } from './traverse-html.js';
- * @import { Options as _Options, BuildStore as _BuildStore, LocalThis as _LocalThis } from "./options.js";
+ * @import { Options as _Options, BuildStore as _BuildStore } from "./options.js";
  * @import {
  *   AnyMessage as _AnyMessage,
  *   Diagnostics as _Diagnostics,

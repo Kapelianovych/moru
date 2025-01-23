@@ -4,10 +4,11 @@
  */
 
 /**
- * @import { LocalThis, Options } from './options.js';
+ * @import { Options } from './options.js';
  * @import { HtmlNodesCollection } from './collect-html-nodes.js';
  * @import { VirtualFile } from './virtual-file.js';
  * @import { HtmlBuildScriptElement } from './html-nodes.js';
+ * @import { LocalThis } from './local-this.js';
  */
 
 import { ancestor } from "acorn-walk";

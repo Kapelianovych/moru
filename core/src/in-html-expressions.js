@@ -1,10 +1,11 @@
 /** @import { AnyNode, Element, Text } from 'domhandler'; */
 
 /**
- * @import { LocalThis, Options } from "./options.js";
+ * @import { Options } from "./options.js";
  * @import { VirtualFile } from "./virtual-file.js";
  * @import { UrlCreator } from "./location.js";
  * @import { HtmlNodesCollection } from "./collect-html-nodes.js";
+ * @import { LocalThis } from "./local-this.js";
  */
 
 import { isText } from "domhandler";
@@ -57,8 +58,8 @@ export async function evaluateInHtmlExpressions(
     imports: _,
     exports: __,
     buildScripts: ___,
-    markupDefinitions: ____,
     getParentMarkupDefinitionFor: _____,
+    markupDefinitions,
     portals,
     components,
     ...nodes
@@ -81,6 +82,17 @@ export async function evaluateInHtmlExpressions(
 
   for (const { node } of components) {
     await evaluateInHtmlExpressionsOf(node, localThis, url, file, options);
+  }
+
+  for (const name in markupDefinitions) {
+    const markupDefinitionElement = markupDefinitions[name];
+    await evaluateInHtmlExpressionsOf(
+      markupDefinitionElement,
+      localThis,
+      url,
+      file,
+      options,
+    );
   }
 
   for (const portalName in portals) {

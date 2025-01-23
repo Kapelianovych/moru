@@ -71,6 +71,8 @@ const RESERVED_HTML_ELEMENT_TAGS = [
   "style",
   "slot",
 ];
+const ASSIGN_ATTRIBUTE_PREFIX = "assign:";
+
 /**
  * @typedef {Object} ComponentDefinition
  * @property {string} url
@@ -498,8 +500,10 @@ export function collectHtmlNodes(parent, nodes, file, options) {
             let shouldWalkChildren = true;
 
             for (const attributeName in node.attribs) {
-              if (attributeName.startsWith("assign:")) {
-                const exportedName = attributeName.slice(7);
+              if (attributeName.startsWith(ASSIGN_ATTRIBUTE_PREFIX)) {
+                const exportedName = attributeName.slice(
+                  ASSIGN_ATTRIBUTE_PREFIX.length,
+                );
 
                 const importedName =
                   node.attribs[attributeName] || exportedName;

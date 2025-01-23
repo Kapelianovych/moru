@@ -8,14 +8,10 @@
  */
 
 /**
- * @typedef {Record<string, unknown>} LocalThis
- */
-
-/**
  * @typedef {Object} Options
  * @property {Record<string, unknown>} exports Exported values from a compiled files.
  *   It will be filled by the compiler.
- * @property {LocalThis} properties Data for the top-level HTML component.
+ * @property {Record<string, unknown>} properties Data for the top-level HTML component.
  * @property {BuildStore} buildStore Store object for a single compilation unit.
  *   It must not be shared between multiple units, though it can be prepopulated with some values which are shared.
  * @property {Diagnostics} diagnostics

@@ -14,6 +14,7 @@ import { parseHtml } from "./parse-html.js";
 import { replaceElementWithMultiple } from "./html-nodes.js";
 import { createComponentMissingExportMessage } from "./diagnostics.js";
 import { getLocationOfHtmlNode, isHtmlSlottableElement } from "./html-nodes.js";
+import { augmentLocalThis } from "./local-this.js";
 
 /**
  * @param {ScopePreCompilerOptions} scopePreCompilerOptions
@@ -143,34 +144,20 @@ async function evaluateChildren(
   scopePreCompilerOptions,
   preCompileScope,
 ) {
-  /** @type {Record<string, TypedPropertyDescriptor<unknown>>} */
-  const valuesToRestore = {};
-  /** @type {Array<string>} */
-  const valuesToDelete = [];
+  /** @type {Array<VoidFunction>} */
+  const rollbacks = [];
 
   for (const name in assignedAttributes) {
     if (name in scopePreCompilerOptions.compilerOptions.exports) {
       const importName = assignedAttributes[name];
 
-      if (importName in scopePreCompilerOptions.localThis) {
-        valuesToRestore[importName] =
-          /** @type {TypedPropertyDescriptor<unknown>} */
-          (
-            Reflect.getOwnPropertyDescriptor(
-              scopePreCompilerOptions.localThis,
-              importName,
-            )
-          );
-      } else {
-        valuesToDelete.push(importName);
-      }
+      const rollback = augmentLocalThis(
+        scopePreCompilerOptions.localThis,
+        importName,
+        scopePreCompilerOptions.compilerOptions.exports[name],
+      );
 
-      Reflect.defineProperty(scopePreCompilerOptions.localThis, importName, {
-        value: scopePreCompilerOptions.compilerOptions.exports[name],
-        writable: true,
-        enumerable: true,
-        configurable: true,
-      });
+      rollbacks.push(rollback);
     } else {
       scopePreCompilerOptions.compilerOptions.diagnostics.publish(
         createComponentMissingExportMessage({
@@ -186,15 +173,5 @@ async function evaluateChildren(
 
   await preCompileScope({ ...scopePreCompilerOptions, ast: node });
 
-  valuesToDelete.forEach((name) => {
-    delete scopePreCompilerOptions.localThis[name];
-  });
-
-  for (const property in valuesToRestore) {
-    Reflect.defineProperty(
-      scopePreCompilerOptions.localThis,
-      property,
-      valuesToRestore[property],
-    );
-  }
+  rollbacks.forEach((rollback) => rollback());
 }
