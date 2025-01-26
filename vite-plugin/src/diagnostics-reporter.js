@@ -44,9 +44,9 @@ export class DiagnosticsReporter {
         this.#error(
           "An " +
             colors.magenta("<else>") +
-            " element must be preceeded by an " +
+            " element must be preceeded by the " +
             colors.magenta("<if>") +
-            " or an " +
+            " or " +
             colors.magenta("<else-if>") +
             " tags.\n" +
             this.#highlightedRegion(message),
@@ -62,7 +62,7 @@ export class DiagnosticsReporter {
             this.#highlightedRegion(message),
         );
         break;
-      case MessageTag.InvalidFileName:
+      case MessageTag.InvalidNameOfImportedComponent:
         this.#error(
           "I am unable to extract the file name from " +
             colors.red(message.url) +
@@ -86,17 +86,6 @@ export class DiagnosticsReporter {
             colors.blue(
               '<script type="module" build>\nimport { /* ... */ } from "...";\\n</script>',
             ),
-        );
-        break;
-      case MessageTag.InvalidChildOfExecutableScript:
-        this.#error(
-          "The " +
-            colors.magenta("<script>") +
-            " tag cannot contain any node except for the text node.\n" +
-            this.#highlightedRegion(message) +
-            "\nCurrently the " +
-            colors.magenta("<" + message.tag + ">") +
-            " is a child.",
         );
         break;
       case MessageTag.UnsupportedBuildScriptReexporting:
@@ -188,19 +177,11 @@ export class DiagnosticsReporter {
             ),
         );
         break;
-      case MessageTag.InvalidChildOfStyleElement:
-        this.#error(
-          "The " +
-            colors.magenta("<style>") +
-            " node can have only text as the child node.\n" +
-            this.#highlightedRegion(message),
-        );
-        break;
       case MessageTag.MissingExportedValueFromBuild:
         this.#error(
-          "Any " +
+          "There is no one " +
             colors.magenta("build") +
-            " scripts do not export the " +
+            " script that exports the " +
             colors.blue(message.names.join(", ")) +
             " value" +
             (message.names.length > 1 ? "s" : "") +
@@ -266,7 +247,7 @@ export class DiagnosticsReporter {
         this.#error(
           "An " +
             colors.magenta("<export>") +
-            " element can be defined only at the top-level of the HTML file.\n" +
+            " element can be defined only at the top level of the HTML file.\n" +
             "Found in: " +
             colors.magenta(message.sourceFile.url) +
             ".\n" +
@@ -278,7 +259,7 @@ export class DiagnosticsReporter {
           "A " +
             colors.bold(message.componentUrl) +
             " component does not export the " +
-            colors.magenta(message.name) +
+            colors.magenta(message.importedVariableName) +
             " variable.\n" +
             "Found in: " +
             colors.magenta(message.sourceFile.url) +

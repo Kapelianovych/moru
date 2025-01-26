@@ -13,10 +13,8 @@
  *   ExternalBuildScriptMessage as _ExternalBuildScriptMessage,
  *   FailedBuildScriptExecutionMessage as _FailedBuildScriptExecutionMessage,
  *   FailedInHtmlExpressionExecutionMessage as _FailedInHtmlExpressionExecutionMessage,
- *   InvalidChildOfExecutableScriptMessage as _InvalidChildOfExecutableScriptMessage,
- *   InvalidChildOfStyleElementMessage as _InvalidChildOfStyleElementMessage,
  *   InvalidExpandResultMessage as _InvalidExpandResultMessage,
- *   InvalidFileNameMessage as _InvalidFileNameMessage,
+ *   InvalidNameOfImportedComponentMessage as _InvalidNameOfImportedComponentMessage,
  *   InvalidImportComponentPositionMessage as _InvalidImportComponentPositionMessage,
  *   Location as _Location,
  *   Message as _Message,
@@ -59,10 +57,8 @@
  * @typedef {_ExternalBuildScriptMessage} ExternalBuildScriptMessage
  * @typedef {_FailedBuildScriptExecutionMessage} FailedBuildScriptExecutionMessage
  * @typedef {_FailedInHtmlExpressionExecutionMessage} FailedInHtmlExpressionExecutionMessage
- * @typedef {_InvalidChildOfExecutableScriptMessage} InvalidChildOfExecutableScriptMessage
- * @typedef {_InvalidChildOfStyleElementMessage} InvalidChildOfStyleElementMessage
  * @typedef {_InvalidExpandResultMessage} InvalidExpandResultMessage
- * @typedef {_InvalidFileNameMessage} InvalidFileNameMessage
+ * @typedef {_InvalidNameOfImportedComponentMessage} InvalidNameOfImportedComponentMessage
  * @typedef {_InvalidImportComponentPositionMessage} InvalidImportComponentPositionMessage
  * @typedef {_Location} Location
  * @typedef {_MissingExportedValueFromBuildMessage} MissingExportedValueFromBuildMessage

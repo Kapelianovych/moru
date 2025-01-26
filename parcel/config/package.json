@@ -1,0 +1,14 @@
+{
+  "name": "@moru/parcel-config",
+  "type": "module",
+  "version": "0.0.1",
+  "exports": "./index.json",
+  "engines": {
+    "parcel": "^2"
+  },
+  "dependencies": {
+    "@moru/parcel-namer": "^0",
+    "@moru/parcel-resolver": "^0",
+    "@moru/parcel-transformer": "^0"
+  }
+}

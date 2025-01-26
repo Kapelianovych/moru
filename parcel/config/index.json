@@ -1,0 +1,7 @@
+{
+  "transformers": {
+    "*.html": ["@moru/parcel-transformer", "..."]
+  },
+  "namers": ["@moru/parcel-namer", "..."],
+  "resolvers": ["@moru/parcel-resolver", "..."]
+}

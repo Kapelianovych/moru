@@ -7,9 +7,8 @@
 export const MessageTag = Object.freeze({
   SingleElseElement: "SingleElseElement",
   SingleElseIfElement: "SingleElseIfElement",
-  InvalidFileName: "InvalidFileName",
+  InvalidNameOfImportedComponent: "InvalidNameOfImportedComponent",
   ExternalBuildScript: "ExternalBuildScript",
-  InvalidChildOfExecutableScript: "InvalidChildOfExecutableScript",
   UnsupportedBuildScriptReexporting: "UnsupportedBuildScriptReexporting",
   FailedBuildScriptExecution: "FailedBuildScriptExecution",
   ProhibitedReservedComponentRemapping: "ProhibitedReservedComponentRemapping",
@@ -18,7 +17,6 @@ export const MessageTag = Object.freeze({
   FailedInHtmlExpressionExecution: "FailedInHtmlExpressionExecution",
   InvalidExpandResult: "InvalidExpandResult",
   NonIterableEachAttribute: "NonIterableEachAttribute",
-  InvalidChildOfStyleElement: "InvalidChildOfStyleElement",
   MissingExportedValueFromBuild: "MissingExportedValueFromBuild",
   JsSyntaxError: "JsSyntaxError",
   NotDefinedPortalName: "NotDefinedPortalName",
@@ -52,9 +50,8 @@ export const MessageTag = Object.freeze({
 /**
  * @typedef {SingleElseElementMessage
  *   | SingleElseIfElementMessage
- *   | InvalidFileNameMessage
+ *   | InvalidNameOfImportedComponentMessage
  *   | ExternalBuildScriptMessage
- *   | InvalidChildOfExecutableScriptMessage
  *   | UnsupportedBuildScriptReexportingMessage
  *   | FailedBuildScriptExecutionMessage
  *   | EmptyExplicitComponentAliasMessage
@@ -62,7 +59,6 @@ export const MessageTag = Object.freeze({
  *   | FailedInHtmlExpressionExecutionMessage
  *   | InvalidExpandResultMessage
  *   | NonIterableEachAttributeMessage
- *   | InvalidChildOfStyleElementMessage
  *   | MissingExportedValueFromBuildMessage
  *   | JsSyntaxErrorMessage
  *   | NotDefinedPortalNameMessage
@@ -84,20 +80,16 @@ export const MessageTag = Object.freeze({
  */
 
 /**
- * @typedef {Message<typeof MessageTag.InvalidFileName> & {
+ * @typedef {Message<typeof MessageTag.InvalidNameOfImportedComponent> & {
  *   url: string;
  *   extension: string;
- * }} InvalidFileNameMessage
+ * }} InvalidNameOfImportedComponentMessage
  */
 
 /**
  * @typedef {Message<typeof MessageTag.ExternalBuildScript> & {
  *   path: string;
  * }} ExternalBuildScriptMessage
- */
-
-/**
- * @typedef {Message<typeof MessageTag.InvalidChildOfExecutableScript>} InvalidChildOfExecutableScriptMessage
  */
 
 /**
@@ -113,7 +105,10 @@ export const MessageTag = Object.freeze({
  */
 
 /**
- * @typedef {Message<typeof MessageTag.ProhibitedReservedComponentRemapping>} ProhibitedReservedComponentRemappingMessage
+ * @typedef {Message<typeof MessageTag.ProhibitedReservedComponentRemapping> & {
+ *  remapFor: 'named-fragment' | 'custom-component'
+ *  reservedComponentName: string,
+ * }} ProhibitedReservedComponentRemappingMessage
  */
 
 /**
@@ -140,10 +135,6 @@ export const MessageTag = Object.freeze({
  * @typedef {Message<typeof MessageTag.InvalidExpandResult> & {
  *   actualResult: unknown;
  * }} InvalidExpandResultMessage
- */
-
-/**
- * @typedef {Message<typeof MessageTag.InvalidChildOfStyleElement>} InvalidChildOfStyleElementMessage
  */
 
 /**
@@ -184,8 +175,8 @@ export const MessageTag = Object.freeze({
 
 /**
  * @typedef {Message<typeof MessageTag.ComponentMissingExport> & {
- *   name: string;
  *   componentUrl: string;
+ *   importedVariableName: string;
  * }} ComponentMissingExportMessage
  */
 
@@ -207,16 +198,12 @@ export const createSingleElseIfElementMessage = createMessageCreator(
   MessageTag.SingleElseIfElement,
 );
 
-export const createInvalidFileNameMessage = createMessageCreator(
-  MessageTag.InvalidFileName,
+export const createInvalidNameOfImportedComponentMessage = createMessageCreator(
+  MessageTag.InvalidNameOfImportedComponent,
 );
 
 export const createExternalBuildScriptMessage = createMessageCreator(
   MessageTag.ExternalBuildScript,
-);
-
-export const createInvalidChildOfExecutableScriptMessage = createMessageCreator(
-  MessageTag.InvalidChildOfExecutableScript,
 );
 
 export const createUnsupportedBuildScriptReexportingMessage =
@@ -246,10 +233,6 @@ export const createInvalidExpandResultMessage = createMessageCreator(
 
 export const createNonIterableEachAttributeMessage = createMessageCreator(
   MessageTag.NonIterableEachAttribute,
-);
-
-export const createInvalidChildOfStyleElementMessage = createMessageCreator(
-  MessageTag.InvalidChildOfStyleElement,
 );
 
 export const createMissingExportedValueFromBuildMessage = createMessageCreator(

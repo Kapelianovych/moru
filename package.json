@@ -2,20 +2,19 @@
   "type": "module",
   "workspaces": [
     "./core",
-    "./vite-plugin"
+    "./vite-plugin",
+    "./parcel/namer",
+    "./parcel/config",
+    "./parcel/resolver",
+    "./parcel/transformer"
   ],
   "scripts": {
     "format": "prettier . --write",
-    "test:core": "tsx --test \"./core/test/**/*.test.ts\"",
-    "test:vite-plugin": "",
-    "build:core": "tsc --project ./core",
-    "build:vite-plugin": "tsc --project ./vite-plugin"
+    "test:core": "node --test \"./core/test/**/*.test.js\""
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
-    "prettier": "^3.4.2",
-    "tslib": "^2.8.1",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "@types/node": "^22",
+    "prettier": "^3",
+    "typescript": "^5"
   }
 }

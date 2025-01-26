@@ -27,7 +27,10 @@ suite("built-in components", () => {
       });
 
       equal(publish.mock.callCount(), 1);
-      equal(publish.mock.calls[0].arguments[0].tag, MessageTag.InvalidFileName);
+      equal(
+        publish.mock.calls[0].arguments[0].tag,
+        MessageTag.InvalidNameOfImportedComponent,
+      );
     });
   });
 

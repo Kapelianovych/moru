@@ -13,7 +13,6 @@
 
 import { ancestor } from "acorn-walk";
 import { generate } from "astring";
-import { isText } from "domhandler";
 import { parse } from "acorn";
 
 import { createEmptyHtmlNodesCollection } from "./collect-html-nodes.js";
@@ -25,7 +24,6 @@ import {
 import { getLocationOfHtmlNode } from "./html-nodes.js";
 import {
   createFailedBuildScriptExecutionMessage,
-  createInvalidChildOfExecutableScriptMessage,
   createJsSyntaxErrorMessage,
   createUnsupportedBuildScriptReexportingMessage,
 } from "./diagnostics.js";
@@ -83,17 +81,11 @@ export async function runBuildScripts(
   const url = createUrlCreator(file, options);
 
   for (const buildScriptElement of collection.buildScripts) {
-    const maybeText = buildScriptElement.firstChild;
+    const maybeText = /** @type {Text | null} */ (
+      buildScriptElement.firstChild
+    );
 
-    if (maybeText && !isText(maybeText)) {
-      options.diagnostics.publish(
-        createInvalidChildOfExecutableScriptMessage({
-          sourceFile: file,
-          location: getLocationOfHtmlNode(maybeText),
-        }),
-      );
-      return discardCompiledScope(collection, ast);
-    } else if (maybeText) {
+    if (maybeText) {
       const code = compileAndCollectExportedVariables(
         buildScriptElement,
         maybeText,

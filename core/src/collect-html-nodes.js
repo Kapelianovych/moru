@@ -31,7 +31,7 @@ import {
   createEmptyExplicitComponentAliasMessage,
   createExternalBuildScriptMessage,
   createInvalidExportElementPositionMessage,
-  createInvalidFileNameMessage,
+  createInvalidNameOfImportedComponentMessage,
   createInvalidImportComponentPositionMessage,
   createNotDefinedExportNameMessage,
   createNotDefinedPortalNameMessage,
@@ -185,7 +185,7 @@ export function collectHtmlNodes(parent, nodes, file, options) {
 
             if (!componentName) {
               options.diagnostics.publish(
-                createInvalidFileNameMessage({
+                createInvalidNameOfImportedComponentMessage({
                   url: node.attribs.from,
                   extension: "html",
                   location: getLocationOfHtmlNode(node),
@@ -205,6 +205,8 @@ export function collectHtmlNodes(parent, nodes, file, options) {
               if (isReservedTag) {
                 options.diagnostics.publish(
                   createProhibitedReservedComponentRemappingMessage({
+                    remapFor: "custom-component",
+                    reservedComponentName: importedComponentAlias,
                     sourceFile: file,
                     location: getLocationOfHtmlNode(node),
                   }),
@@ -297,6 +299,8 @@ export function collectHtmlNodes(parent, nodes, file, options) {
             if (isReserved) {
               options.diagnostics.publish(
                 createProhibitedReservedComponentRemappingMessage({
+                  remapFor: "named-fragment",
+                  reservedComponentName: markupFragmentName,
                   sourceFile: file,
                   location: getLocationOfHtmlNode(node),
                 }),

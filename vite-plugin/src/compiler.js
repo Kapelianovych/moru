@@ -57,7 +57,6 @@ export class Compiler {
   }
 
   /**
-   *
    * @param {VirtualFile} currentFile
    * @param {string} relativeUrl
    * @returns {string}

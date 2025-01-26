@@ -1,18 +1,10 @@
-/** @import { Element } from "domhandler"; */
+/** @import { Text, Element } from "domhandler"; */
 
 /**
  * @import { Options } from "./options.js";
  * @import { HtmlNodesCollection } from "./collect-html-nodes.js";
  * @import { VirtualFile } from "./virtual-file.js";
  */
-
-import { isText } from "domhandler";
-
-import { getLocationOfHtmlNode } from "./html-nodes.js";
-import {
-  createInvalidChildOfExecutableScriptMessage,
-  createInvalidChildOfStyleElementMessage,
-} from "./diagnostics.js";
 
 const SRCSET_SEGMENT = /(\S*[^,\s])(?:\s+([\d.]+)(x|w))?/g;
 const ONE_OR_MORE_WHITESPACES = /\s+/;
@@ -230,7 +222,7 @@ export function rebaseUrls(collection, file, options) {
   }
 
   for (const clientScriptElement of collection.clientScripts) {
-    const child = clientScriptElement.firstChild;
+    const child = /** @type {Text | null} */ (clientScriptElement.firstChild);
 
     if (clientScriptElement.attribs.src) {
       clientScriptElement.attribs.src = options.resolveUrl(
@@ -240,31 +232,22 @@ export function rebaseUrls(collection, file, options) {
     }
 
     if (child) {
-      if (!isText(child)) {
-        options.diagnostics.publish(
-          createInvalidChildOfExecutableScriptMessage({
-            sourceFile: file,
-            location: getLocationOfHtmlNode(clientScriptElement),
-          }),
-        );
-      } else {
-        const matches = child.data.matchAll(
-          ESMODULE_DECLARATION_OR_EXPRESSION_WITH_STATIC_SOURCE,
-        );
+      const matches = child.data.matchAll(
+        ESMODULE_DECLARATION_OR_EXPRESSION_WITH_STATIC_SOURCE,
+      );
 
-        for (const [fullMatch, declarationUrl, expressionUrl] of matches) {
-          const newImport = declarationUrl
-            ? fullMatch.replace(
-                declarationUrl,
-                options.resolveUrl(file, declarationUrl),
-              )
-            : fullMatch.replace(
-                expressionUrl,
-                options.resolveUrl(file, expressionUrl),
-              );
+      for (const [fullMatch, declarationUrl, expressionUrl] of matches) {
+        const newImport = declarationUrl
+          ? fullMatch.replace(
+              declarationUrl,
+              options.resolveUrl(file, declarationUrl),
+            )
+          : fullMatch.replace(
+              expressionUrl,
+              options.resolveUrl(file, expressionUrl),
+            );
 
-          child.data = child.data.replace(fullMatch, newImport);
-        }
+        child.data = child.data.replace(fullMatch, newImport);
       }
     } else {
       // It's okay for a client script to not have a child.
@@ -272,24 +255,15 @@ export function rebaseUrls(collection, file, options) {
   }
 
   for (const styleElement of collection.styles) {
-    const child = styleElement.firstChild;
+    const child = /** @type {Text | null} */ (styleElement.firstChild);
 
     if (child) {
-      if (isText(child)) {
-        const matches = child.data.matchAll(CSS_URL_DEFINITION);
+      const matches = child.data.matchAll(CSS_URL_DEFINITION);
 
-        for (const [fullMatch, _quote, url] of matches) {
-          child.data = child.data.replace(
-            fullMatch,
-            fullMatch.replace(url, options.resolveUrl(file, url)),
-          );
-        }
-      } else {
-        options.diagnostics.publish(
-          createInvalidChildOfStyleElementMessage({
-            sourceFile: file,
-            location: getLocationOfHtmlNode(styleElement),
-          }),
+      for (const [fullMatch, _quote, url] of matches) {
+        child.data = child.data.replace(
+          fullMatch,
+          fullMatch.replace(url, options.resolveUrl(file, url)),
         );
       }
     } else {

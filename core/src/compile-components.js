@@ -161,11 +161,11 @@ async function evaluateChildren(
     } else {
       scopePreCompilerOptions.compilerOptions.diagnostics.publish(
         createComponentMissingExportMessage({
-          name,
-          location: getLocationOfHtmlNode(scopePreCompilerOptions.ast),
+          location: getLocationOfHtmlNode(node),
           sourceFile: scopePreCompilerOptions.file,
           componentUrl:
             scopePreCompilerOptions.htmlNodesCollection.imports[node.tagName],
+          importedVariableName: name,
         }),
       );
     }

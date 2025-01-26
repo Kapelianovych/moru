@@ -1,0 +1,12 @@
+{
+  "name": "@moru/parcel-namer",
+  "type": "module",
+  "version": "0.0.1",
+  "exports": "./src/index.js",
+  "engines": {
+    "parcel": "^2"
+  },
+  "dependencies": {
+    "@parcel/plugin": "^2"
+  }
+}
