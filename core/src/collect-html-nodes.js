@@ -72,6 +72,7 @@ const RESERVED_HTML_ELEMENT_TAGS = [
   "slot",
 ];
 const ASSIGN_ATTRIBUTE_PREFIX = "assign:";
+const SUPPORTED_IMPORT_EXTENSIONS = ["svg", "html"];
 
 /**
  * @typedef {Object} ComponentDefinition
@@ -181,13 +182,14 @@ export function collectHtmlNodes(parent, nodes, file, options) {
             );
           } else {
             const componentName =
-              getFileNameFrom(node.attribs.from, "html") ?? "";
+              getFileNameFrom(node.attribs.from, SUPPORTED_IMPORT_EXTENSIONS) ??
+              "";
 
             if (!componentName) {
               options.diagnostics.publish(
                 createInvalidNameOfImportedComponentMessage({
                   url: node.attribs.from,
-                  extension: "html",
+                  allowedExtensions: SUPPORTED_IMPORT_EXTENSIONS,
                   location: getLocationOfHtmlNode(node),
                   sourceFile: file,
                 }),

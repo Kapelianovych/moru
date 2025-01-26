@@ -56,7 +56,7 @@ export function createDiagnostics(logger) {
           break;
         case MessageTag.InvalidNameOfImportedComponent:
           logger.error({
-            message: markdown`Invalid component import url. Component's name should end with the ${md.bold(message.extension)} extension and consist of at least one character.`,
+            message: markdown`Invalid component import url. Component's name should end with one of ${message.allowedExtensions.map((extension) => md.bold(extension)).join(", ")} extensions and consist of at least one character.`,
             codeFrames,
           });
           break;
@@ -198,12 +198,12 @@ export function createDiagnostics(logger) {
 function getDiagnosticCodeHighlight(file, location, message) {
   /** @type {CodePoint} */
   const end = {
-    line: 0,
+    line: 1,
     column: 0,
   };
   /** @type {CodePoint} */
   const start = {
-    line: 0,
+    line: 1,
     column: 0,
   };
 
@@ -214,9 +214,9 @@ function getDiagnosticCodeHighlight(file, location, message) {
 
     if (character === "\n") {
       end.line = ++start.line;
-      end.line = start.column = 0;
+      end.column = start.column = 0;
     } else {
-      end.line = ++start.column;
+      end.column = ++start.column;
     }
 
     index++;

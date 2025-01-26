@@ -68,9 +68,11 @@ export class DiagnosticsReporter {
             colors.red(message.url) +
             " url.\n" +
             this.#highlightedRegion(message) +
-            "It must end with " +
-            colors.magenta(message.extension) +
-            " extension\n" +
+            "It must end with one of " +
+            message.allowedExtensions
+              .map((extension) => colors.magenta(extension))
+              .join(", ") +
+            " extensions\n" +
             "and consist of at least one character.\n",
         );
         break;

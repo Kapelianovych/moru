@@ -5,11 +5,11 @@
 
 /**
  * @param {string} url
- * @param {string} extension
+ * @param {Array<string>} extensions
  * @returns {string | void}
  */
-export function getFileNameFrom(url, extension) {
-  return new RegExp(`\\/?([^/]+)\.${extension}$`).exec(url)?.[1];
+export function getFileNameFrom(url, extensions) {
+  return new RegExp(`\\/?([^/]+)\.(?:${extensions.join("|")})$`).exec(url)?.[1];
 }
 
 /**

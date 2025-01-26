@@ -82,7 +82,7 @@ export const MessageTag = Object.freeze({
 /**
  * @typedef {Message<typeof MessageTag.InvalidNameOfImportedComponent> & {
  *   url: string;
- *   extension: string;
+ *   allowedExtensions: Array<string>;
  * }} InvalidNameOfImportedComponentMessage
  */
 

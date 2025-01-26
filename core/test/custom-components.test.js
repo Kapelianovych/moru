@@ -1,7 +1,7 @@
 /** @import { VirtualFile } from "../src/virtual-file.js"; */
 
 import { mock, suite, test } from "node:test";
-import { match, equal, deepEqual } from "node:assert/strict";
+import { ok, match, equal, deepEqual } from "node:assert/strict";
 
 import { compile } from "./compiler.js";
 import { MessageTag } from "../src/diagnostics.js";
@@ -343,5 +343,26 @@ suite("custom components", () => {
     );
 
     match(output, /^\s+<div><\/div>\s+$/);
+  });
+
+  test("svg files should be importable as HTML files", async () => {
+    const output = await compile(
+      `
+        <import from="foo.svg" />
+
+        <foo />
+      `,
+      {
+        async readFileContent() {
+          return `
+            <svg width="100" height="100">
+              <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="yellow" />
+            </svg>
+          `;
+        },
+      },
+    );
+
+    ok(output.includes("svg"));
   });
 });
