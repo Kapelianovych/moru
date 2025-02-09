@@ -20,4 +20,4 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
       - run: npm run test:core
-      - run: npm run test:vite-plugin
+      - run: npm run test:store

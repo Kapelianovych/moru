@@ -19,7 +19,6 @@ export class DiagnosticsReporter {
   #environment;
 
   /**
-   *
    * @param {Environment} environment
    */
   constructor(environment) {
@@ -34,7 +33,6 @@ export class DiagnosticsReporter {
   }
 
   /**
-   *
    * @param {AnyMessage} message
    * @returns {void}
    */
@@ -273,7 +271,6 @@ export class DiagnosticsReporter {
   }
 
   /**
-   *
    * @param {AnyMessage} message
    * @returns {string}
    */

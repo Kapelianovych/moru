@@ -3,7 +3,8 @@
 </if>
 
 <script type="module" build>
-  import { ONLY_CACHE } from "./symbols.js";
+  import { ONLY_CACHE } from "./lib/symbols.js";
+  import { getFromNamespace } from "./lib/namespace.js";
 
   /**
    * @typedef {Object} Props
@@ -27,12 +28,8 @@
     );
   }
 
-  let onlyCache = buildStore.get(ONLY_CACHE);
-
-  if (!onlyCache) {
-    onlyCache = new Map();
-    buildStore.set(ONLY_CACHE, onlyCache);
-  }
+  /** @type {Map<PropertyKey, number>} */
+  const onlyCache = getFromNamespace(buildStore, ONLY_CACHE, () => new Map());
 
   const renderedTimes = onlyCache.get(key) ?? 0;
   const shouldRender = renderedTimes < times;

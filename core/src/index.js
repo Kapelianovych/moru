@@ -5,6 +5,7 @@
  * @import { UrlCreator as _UrlCreator } from "./location.js";
  * @import { VirtualFile as _VirtualFile } from "./virtual-file.js";
  * @import { HtmlVisitor as _HtmlVisitor } from './traverse-html.js';
+ * @import { LifecycleCallback as _LifecycleCallback } from "./lifecycle.js";
  * @import { Options as _Options, BuildStore as _BuildStore } from "./options.js";
  * @import {
  *   AnyMessage as _AnyMessage,
@@ -53,6 +54,7 @@
  * @typedef {_LocalThis} LocalThis
  * @typedef {_AnyMessage} AnyMessage
  * @typedef {_Diagnostics} Diagnostics
+ * @typedef {_LifecycleCallback} LifecycleCallback
  * @typedef {_EmptyExplicitComponentAliasMessage} EmptyExplicitComponentAliasMessage
  * @typedef {_ExternalBuildScriptMessage} ExternalBuildScriptMessage
  * @typedef {_FailedBuildScriptExecutionMessage} FailedBuildScriptExecutionMessage

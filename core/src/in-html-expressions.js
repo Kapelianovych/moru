@@ -6,6 +6,7 @@
  * @import { UrlCreator } from "./location.js";
  * @import { HtmlNodesCollection } from "./collect-html-nodes.js";
  * @import { LocalThis } from "./local-this.js";
+ * @import { LifecyclePhaseSubscriber } from "./lifecycle.js";
  */
 
 import { isText } from "domhandler";
@@ -49,6 +50,7 @@ export function hasAnyInHtmlExpression(text) {
 /**
  * @param {HtmlNodesCollection} collection
  * @param {LocalThis} localThis
+ * @param {LifecyclePhaseSubscriber} onAfterRender
  * @param {VirtualFile} file
  * @param {Options} options
  * @return {Promise<void>}
@@ -65,6 +67,7 @@ export async function evaluateInHtmlExpressions(
     ...nodes
   },
   localThis,
+  onAfterRender,
   file,
   options,
 ) {
@@ -75,13 +78,27 @@ export async function evaluateInHtmlExpressions(
 
     for (const node of nodes[nodeGroupName].flat(2)) {
       if (node) {
-        await evaluateInHtmlExpressionsOf(node, localThis, url, file, options);
+        await evaluateInHtmlExpressionsOf(
+          node,
+          localThis,
+          url,
+          onAfterRender,
+          file,
+          options,
+        );
       }
     }
   }
 
   for (const { node } of components) {
-    await evaluateInHtmlExpressionsOf(node, localThis, url, file, options);
+    await evaluateInHtmlExpressionsOf(
+      node,
+      localThis,
+      url,
+      onAfterRender,
+      file,
+      options,
+    );
   }
 
   for (const name in markupDefinitions) {
@@ -90,6 +107,7 @@ export async function evaluateInHtmlExpressions(
       markupDefinitionElement,
       localThis,
       url,
+      onAfterRender,
       file,
       options,
     );
@@ -101,6 +119,7 @@ export async function evaluateInHtmlExpressions(
       portalElement,
       localThis,
       url,
+      onAfterRender,
       file,
       options,
     );
@@ -135,6 +154,7 @@ export async function evaluateInHtmlExpressions(
  * @param {Text | Element} node
  * @param {LocalThis} localThis
  * @param {UrlCreator} url
+ * @param {LifecyclePhaseSubscriber} onAfterRender
  * @param {VirtualFile} file
  * @param {Options} options
  * @returns {Promise<void>}
@@ -143,6 +163,7 @@ async function evaluateInHtmlExpressionsOf(
   node,
   localThis,
   url,
+  onAfterRender,
   file,
   options,
 ) {
@@ -153,6 +174,7 @@ async function evaluateInHtmlExpressionsOf(
         localThis,
         node,
         url,
+        onAfterRender,
         file,
         options,
       ),
@@ -170,6 +192,7 @@ async function evaluateInHtmlExpressionsOf(
         localThis,
         node,
         url,
+        onAfterRender,
         file,
         options,
       );
@@ -201,6 +224,7 @@ async function evaluateInHtmlExpressionsOf(
         localThis,
         node,
         url,
+        onAfterRender,
         file,
         options,
       );
@@ -232,6 +256,7 @@ function assignAttribute(target, attributeName, attributeValue) {
  * @param {LocalThis} localThis
  * @param {AnyNode} node
  * @param {UrlCreator} url
+ * @param {LifecyclePhaseSubscriber} onAfterRender
  * @param {VirtualFile} file
  * @param {Options} options
  * @returns {Promise<unknown>}
@@ -241,6 +266,7 @@ async function findAndEvaluateInHtmlExpressionsIn(
   localThis,
   node,
   url,
+  onAfterRender,
   file,
   options,
 ) {
@@ -262,6 +288,7 @@ async function findAndEvaluateInHtmlExpressionsIn(
         localThis,
         options.buildStore,
         url,
+        onAfterRender,
         options.dynamicallyImportJsFile,
       );
 

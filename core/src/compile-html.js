@@ -6,6 +6,7 @@
  * @import { VirtualFile } from "./virtual-file.js";
  * @import { PublicNameWithAlias } from "./run-build-scripts.js";
  * @import { HtmlNodesCollection } from "./collect-html-nodes.js";
+ * @import { Lifecycle, LifecyclePhaseSubscriber } from "./lifecycle.js";
  */
 
 import { rebaseUrls } from "./url-rebaser.js";
@@ -20,6 +21,7 @@ import { evaluateInHtmlExpressions } from "./in-html-expressions.js";
 import { evaluateMarkupDefinitions } from "./evaluate-markup-definitions.js";
 import { replaceElementWithMultiple } from "./html-nodes.js";
 import { runBuildScripts } from "./run-build-scripts.js";
+import { createLifecycle, LifecyclePhase } from "./lifecycle.js";
 import {
   collectHtmlNodes,
   createEmptyHtmlNodesCollection,
@@ -52,6 +54,7 @@ export async function compileHtml(ast, file, options) {
  * @property {VirtualFile} file
  * @property {Options} compilerOptions
  * @property {HtmlNodesCollection} htmlNodesCollection
+ * @property {Lifecycle} [lifecycle]
  */
 
 /**
@@ -70,8 +73,10 @@ async function compileModule(options) {
   /** @type {Array<PublicNameWithAlias>} */
   const publicNames = [];
 
+  options.lifecycle ??= createLifecycle();
+
   // These parts must be shared across all components of one compilation unit,
-  // because they are handled when combined the AST is ready.
+  // because they are handled when the combined AST is ready.
   nodes.slots = options.htmlNodesCollection.slots;
   nodes.fragments = options.htmlNodesCollection.fragments;
   nodes.portals = options.htmlNodesCollection.portals;
@@ -87,6 +92,7 @@ async function compileModule(options) {
     compilerOptions: options.compilerOptions,
     htmlNodesCollection: nodes,
     publicNames,
+    onAfterRender: options.lifecycle.onAfterRender,
   };
 
   await preCompileScope(scopePreCompilerOptions);
@@ -106,6 +112,8 @@ async function compileModule(options) {
     options.file,
     options.compilerOptions,
   );
+
+  await options.lifecycle.commit(LifecyclePhase.AfterRender);
 }
 
 /**
@@ -116,6 +124,7 @@ async function compileModule(options) {
  * @property {Array<PublicNameWithAlias>} publicNames
  * @property {Options} compilerOptions
  * @property {HtmlNodesCollection} htmlNodesCollection
+ * @property {LifecyclePhaseSubscriber} onAfterRender
  */
 
 /**
@@ -160,6 +169,7 @@ async function preCompileScope(options) {
     options.localThis,
     options.publicNames,
     options.ast,
+    options.onAfterRender,
     options.file,
     options.compilerOptions,
   );
@@ -167,6 +177,7 @@ async function preCompileScope(options) {
   await evaluateInHtmlExpressions(
     options.htmlNodesCollection,
     options.localThis,
+    options.onAfterRender,
     options.file,
     options.compilerOptions,
   );

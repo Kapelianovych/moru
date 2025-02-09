@@ -15,6 +15,7 @@ import { replaceElementWithMultiple } from "./html-nodes.js";
 import { createComponentMissingExportMessage } from "./diagnostics.js";
 import { getLocationOfHtmlNode, isHtmlSlottableElement } from "./html-nodes.js";
 import { augmentLocalThis } from "./local-this.js";
+import { createLifecycle } from "./lifecycle.js";
 
 /**
  * @param {ScopePreCompilerOptions} scopePreCompilerOptions
@@ -27,12 +28,8 @@ export async function compileComponents(
   preCompileScope,
   compileModule,
 ) {
-  for (const {
-    url,
-    node,
-    assignedAttributes,
-    hasAssignDefinitions,
-  } of scopePreCompilerOptions.htmlNodesCollection.components) {
+  for (const { url, node, assignedAttributes } of scopePreCompilerOptions
+    .htmlNodesCollection.components) {
     const componentContent =
       await scopePreCompilerOptions.compilerOptions.readFileContent(url);
     /** @type {VirtualFile} */
@@ -49,31 +46,38 @@ export async function compileComponents(
     /** @type {Array<HtmlSlotElement>} */
     const currentModuleSlots =
       scopePreCompilerOptions.htmlNodesCollection.slots;
+    const lifecycle = createLifecycle();
 
     scopePreCompilerOptions.compilerOptions.exports = {};
     scopePreCompilerOptions.htmlNodesCollection.slots = childSlots;
     scopePreCompilerOptions.compilerOptions.properties = node.attribs;
 
+    // Render component children right after component finishes rendering,
+    // but before it loses its context.
+    lifecycle.onAfterRender(async () => {
+      // Return back current slots, so they can be passed to potential parent component.
+      scopePreCompilerOptions.htmlNodesCollection.slots = currentModuleSlots;
+
+      if (childSlots.length) {
+        // We skipped walking over component's children because any expression inside potentially
+        // use exported value which are available only at the current point.
+        await evaluateChildren(
+          node,
+          assignedAttributes,
+          scopePreCompilerOptions,
+          preCompileScope,
+          compileModule,
+        );
+      }
+    });
+
     await compileModule({
       ast,
       file: componentFile,
+      lifecycle,
       htmlNodesCollection: scopePreCompilerOptions.htmlNodesCollection,
       compilerOptions: scopePreCompilerOptions.compilerOptions,
     });
-
-    // Return back current slots, so they can be passed to potential parent component.
-    scopePreCompilerOptions.htmlNodesCollection.slots = currentModuleSlots;
-
-    if (hasAssignDefinitions) {
-      // We skipped walking over component's children because any expression inside potentially
-      // use exported value which are available only at the current point.
-      await evaluateChildren(
-        node,
-        assignedAttributes,
-        scopePreCompilerOptions,
-        preCompileScope,
-      );
-    }
 
     scopePreCompilerOptions.compilerOptions.exports =
       currentModuleExportedValues;
@@ -136,6 +140,7 @@ function getComponentChildrenGroupedBySlots(componentElement) {
  * @param {Record<string, string>} assignedAttributes
  * @param {ScopePreCompilerOptions} scopePreCompilerOptions
  * @param {ScopePreCompiler} preCompileScope
+ * @param {ModuleCompiler} compileModule
  * @returns {Promise<void>}
  */
 async function evaluateChildren(
@@ -143,6 +148,7 @@ async function evaluateChildren(
   assignedAttributes,
   scopePreCompilerOptions,
   preCompileScope,
+  compileModule,
 ) {
   /** @type {Array<VoidFunction>} */
   const rollbacks = [];
@@ -171,7 +177,26 @@ async function evaluateChildren(
     }
   }
 
-  await preCompileScope({ ...scopePreCompilerOptions, ast: node });
+  // Save currently known components and prepare an array for children-components.
+  // At this moment only components might not be processed and all other collections
+  // are empty (apart from those which are processed after components).
+  const moduleComponents =
+    scopePreCompilerOptions.htmlNodesCollection.components;
+  const moduleNode = scopePreCompilerOptions.ast;
+
+  scopePreCompilerOptions.ast = node;
+  scopePreCompilerOptions.htmlNodesCollection.components = [];
+
+  await preCompileScope(scopePreCompilerOptions);
+  // Recursively render children components.
+  await compileComponents(
+    scopePreCompilerOptions,
+    preCompileScope,
+    compileModule,
+  );
+
+  scopePreCompilerOptions.ast = moduleNode;
+  scopePreCompilerOptions.htmlNodesCollection.components = moduleComponents;
 
   rollbacks.forEach((rollback) => rollback());
 }

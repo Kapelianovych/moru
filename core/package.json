@@ -4,7 +4,8 @@
   "version": "0.0.1",
   "exports": {
     ".": "./src/index.js",
-    "./*.html": "./components/*.html"
+    "./*.html": "./components/*.html",
+    "./*": "./components/*.js"
   },
   "dependencies": {
     "acorn": "^8",

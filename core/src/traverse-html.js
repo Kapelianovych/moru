@@ -22,7 +22,11 @@ export function traverseHtml(node, visitors, skipStartingNode = false) {
 
   if (skipStartingNode) {
     if (isParentNode) {
-      node.children.forEach((childNode) => traverseHtml(childNode, visitors));
+      node.children
+        // If element is removed in the exit method, then the children
+        // property is modified which messes up with the iteration.
+        .slice()
+        .forEach((childNode) => traverseHtml(childNode, visitors));
     }
   } else {
     const visitor = visitors.find((visitor) => visitor.matches(node));
@@ -30,7 +34,10 @@ export function traverseHtml(node, visitors, skipStartingNode = false) {
     const shouldDescend = visitor?.enter?.(node) ?? true;
 
     if (shouldDescend && isParentNode) {
-      node.children.forEach((childNode) => traverseHtml(childNode, visitors));
+      node.children
+        // Same as above.
+        .slice()
+        .forEach((childNode) => traverseHtml(childNode, visitors));
     }
 
     visitor?.exit?.(node);

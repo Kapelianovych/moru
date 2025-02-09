@@ -1,7 +1,7 @@
 {
   "name": "@moru/store",
   "version": "0.0.1",
-  "description": "Simple store implementation for the moru.",
+  "description": "Simple reactive atomic store implementation.",
   "type": "module",
   "license": "MIT",
   "author": "Yevhen Kapelianovych",
@@ -13,10 +13,5 @@
     "type": "git",
     "url": "git+https://github.com/Kapelianovych/moru.git"
   },
-  "exports": {
-    ".": "./index.js"
-  },
-  "peerDependencies": {
-    "moru": "*"
-  }
+  "exports": "./src/index.js"
 }

@@ -245,14 +245,16 @@ suite("component's export", () => {
     const publish = mock.fn();
     await compile(
       `
-        <import from="foo.html" />
+        <import from="./foo.html" />
 
-        <foo assign:variable />
+        <foo assign:variable>
+          child
+        </foo>
       `,
       {
         diagnostics: { publish },
         async readFileContent() {
-          return "";
+          return "<slot />";
         },
       },
     );

@@ -9,6 +9,7 @@
  * @import { VirtualFile } from './virtual-file.js';
  * @import { HtmlBuildScriptElement } from './html-nodes.js';
  * @import { LocalThis } from './local-this.js';
+ * @import { LifecyclePhaseSubscriber } from './lifecycle.js';
  */
 
 import { ancestor } from "acorn-walk";
@@ -66,6 +67,7 @@ import {
  * @param {LocalThis} localThis
  * @param {Array<PublicNameWithAlias>} publicNames
  * @param {Document | Element} ast
+ * @param {LifecyclePhaseSubscriber} onAfterRender
  * @param {VirtualFile} file
  * @param {Options} options
  * @returns {Promise<void>}
@@ -75,6 +77,7 @@ export async function runBuildScripts(
   localThis,
   publicNames,
   ast,
+  onAfterRender,
   file,
   options,
 ) {
@@ -109,6 +112,7 @@ export async function runBuildScripts(
           localThis,
           options.buildStore,
           url,
+          onAfterRender,
           options.dynamicallyImportJsFile,
         );
       } catch (error) {

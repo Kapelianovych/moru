@@ -80,7 +80,6 @@ const SUPPORTED_IMPORT_EXTENSIONS = ["svg", "html"];
  * @property {Element} node
  * @property {Record<string, string>} assignedAttributes Variables which are expected to be exported
  *  from a component to be used in passed children.
- * @property {boolean} hasAssignDefinitions
  */
 
 /**
@@ -503,7 +502,6 @@ export function collectHtmlNodes(parent, nodes, file, options) {
           } else if (node.tagName in nodes.imports) {
             /** @type {Record<string, string>} */
             const assignedAttributes = {};
-            let shouldWalkChildren = true;
 
             for (const attributeName in node.attribs) {
               if (attributeName.startsWith(ASSIGN_ATTRIBUTE_PREFIX)) {
@@ -515,7 +513,6 @@ export function collectHtmlNodes(parent, nodes, file, options) {
                   node.attribs[attributeName] || exportedName;
 
                 assignedAttributes[exportedName] = importedName;
-                shouldWalkChildren = false;
 
                 // We don't need to pass the let: attribute as a prop.
                 delete node.attribs[attributeName];
@@ -526,10 +523,10 @@ export function collectHtmlNodes(parent, nodes, file, options) {
               url: nodes.imports[node.tagName],
               node,
               assignedAttributes,
-              hasAssignDefinitions: !shouldWalkChildren,
             });
 
-            return shouldWalkChildren;
+            // Children are going to be evaluated if component can accept them.
+            return false;
           } else {
             if (
               node.attributes.some((attribute) =>

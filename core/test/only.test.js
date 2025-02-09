@@ -5,6 +5,8 @@ import { equal, deepEqual, match } from "node:assert/strict";
 
 import { compile } from "./compiler.js";
 import { MessageTag } from "../src/diagnostics.js";
+import { ONLY_CACHE } from "../components/lib/symbols.js";
+import { getFromNamespace } from "../components/lib/namespace.js";
 
 const onlyComponentContent = readFile(
   resolve(import.meta.dirname, "../components/only.html"),
@@ -13,7 +15,8 @@ const onlyComponentContent = readFile(
 
 async function dynamicallyImportJsFile() {
   return {
-    ONLY_CACHE: "only-cache",
+    ONLY_CACHE,
+    getFromNamespace,
   };
 }
 

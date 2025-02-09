@@ -162,7 +162,7 @@ suite("custom components", () => {
     match(output, /^\s+<div>\s+child\s+<\/div>\s+$/);
   });
 
-  test("if custom component does not have a <slot /> element, all it's children will be ignored", async () => {
+  test("if custom component does not have a <slot /> element, all of it's children will be removed from HTML", async () => {
     const output = await compile(
       `
         <import from="./nested.html" />
@@ -364,5 +364,26 @@ suite("custom components", () => {
     );
 
     ok(output.includes("svg"));
+  });
+
+  test("if component does not have <slot> elements, it's children passed from the parent component won't be evaluated", async () => {
+    const fn = mock.fn();
+    await compile(
+      `
+        <import from="./foo.html" />
+
+        <foo>
+          {{ props.fn() }}
+        </foo>
+      `,
+      {
+        properties: { fn },
+        async readFileContent() {
+          return "";
+        },
+      },
+    );
+
+    equal(fn.mock.callCount(), 0);
   });
 });

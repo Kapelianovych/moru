@@ -1,4 +1,8 @@
-/** @import { AnyNode } from 'domhandler'; */
+/**
+ * @import { Mock } from 'node:test';
+ *
+ * @import { AnyNode, Text } from 'domhandler';
+ */
 
 import { equal } from "node:assert/strict";
 import { test, suite, mock } from "node:test";
@@ -7,6 +11,7 @@ import { isTag } from "domhandler";
 import { ElementType } from "htmlparser2";
 
 import { parseHtml, traverseHtml } from "../src/index.js";
+import { removeElement } from "domutils";
 
 suite("traverseHtml", () => {
   test('should call a matching visitor over the first AST node when third argument is not provided or it is "false"', () => {
@@ -41,7 +46,6 @@ suite("traverseHtml", () => {
     traverseHtml(ast, [
       {
         /**
-         *
          * @param {AnyNode} node
          * @returns {node is AnyNode}
          */
@@ -66,7 +70,6 @@ suite("traverseHtml", () => {
     traverseHtml(ast, [
       {
         /**
-         *
          * @param {AnyNode} node
          * @returns {node is AnyNode}
          */
@@ -77,7 +80,6 @@ suite("traverseHtml", () => {
       },
       {
         /**
-         *
          * @param {AnyNode} node
          * @returns {node is AnyNode}
          */
@@ -115,5 +117,37 @@ suite("traverseHtml", () => {
     );
 
     equal(enter.mock.callCount(), 0);
+  });
+
+  test("should not skip nodes when there is a deletion case", () => {
+    /**
+     * @type {Mock<(node: AnyNode) => node is AnyNode>}
+     */
+    const matches = mock.fn();
+    const ast = parseHtml({
+      url: "something",
+      content: "<p />foo",
+    });
+
+    traverseHtml(
+      ast,
+      [
+        {
+          matches(node) {
+            return isTag(node);
+          },
+          exit(node) {
+            removeElement(node);
+          },
+        },
+        {
+          matches,
+        },
+      ],
+      true,
+    );
+
+    equal(matches.mock.callCount(), 1);
+    equal(/** @type {Text} */ (matches.mock.calls[0].arguments[0]).data, "foo");
   });
 });
