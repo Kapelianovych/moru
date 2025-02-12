@@ -488,5 +488,24 @@ suite("built-in components", () => {
         MessageTag.SingleElseElement,
       );
     });
+
+    test(
+      '"item" and "index" should be defined inside "for" loop even if ' +
+        "localThis already has constant definitions of same variables",
+      async () => {
+        const output = await compile(`
+          <for each="{{ [1, 2, 3] }}">
+            {{ item }} - {{ index }}
+          </for>
+
+          <script build>
+            const item = 'item';
+            const index = -1;
+          </script>
+        `);
+
+        match(output, /\s+1 - 0\s+2 - 1\s+3 - 2\s+/);
+      },
+    );
   });
 });

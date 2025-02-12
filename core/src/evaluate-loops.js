@@ -5,6 +5,7 @@
 
 import { prepend, removeElement } from "domutils";
 
+import { augmentLocalThis } from "./local-this.js";
 import { createNonIterableEachAttributeMessage } from "./diagnostics.js";
 import {
   getLocationOfHtmlNode,
@@ -78,18 +79,22 @@ async function loopAndEvaluate(
   options,
   fallbackElement,
 ) {
-  // Borrow possibly defined names and save their values.
-  const previousAsNameValue = options.localThis[asName];
-  const previousIndexNameValue = options.localThis[indexName];
-
   // Make cloning node a little bit more efficient.
   loopElement.attribs.each = "";
 
   for (let index = 0; index < each.length; index++) {
     const item = each[index];
 
-    options.localThis[asName] = item;
-    options.localThis[indexName] = index;
+    const rollbackAliasInjection = augmentLocalThis(
+      options.localThis,
+      asName,
+      item,
+    );
+    const rollbackItemInjection = augmentLocalThis(
+      options.localThis,
+      indexName,
+      index,
+    );
 
     const clonedLoopElement = loopElement.cloneNode(true);
 
@@ -97,15 +102,14 @@ async function loopAndEvaluate(
 
     prepend(loopElement, clonedLoopElement);
     replaceElementWithMultiple(clonedLoopElement, clonedLoopElement.children);
+
+    rollbackAliasInjection();
+    rollbackItemInjection();
   }
 
   if (fallbackElement) {
     removeElement(fallbackElement);
   }
-
-  // Restore borrowed names to their original values.
-  options.localThis[asName] = previousAsNameValue;
-  options.localThis[indexName] = previousIndexNameValue;
 }
 
 /**
