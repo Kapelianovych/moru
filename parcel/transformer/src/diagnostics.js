@@ -78,13 +78,24 @@ export function createDiagnostics(logger) {
             codeFrames,
           });
           break;
-        case MessageTag.FailedBuildScriptExecution:
-          logger.error({
-            message: markdown`An error has been detected while running the ${md.bold("build")} script.`,
-            origin: String(message.error),
-            codeFrames,
-          });
+        case MessageTag.FailedBuildScriptExecution: {
+          if (message.error instanceof Error) {
+            logger.error({
+              message: message.error.message,
+              stack: message.error.stack,
+              name: message.error.name,
+              origin: message.sourceFile.url,
+              codeFrames,
+            });
+          } else {
+            logger.error({
+              message: String(message.error),
+              origin: message.sourceFile.url,
+              codeFrames,
+            });
+          }
           break;
+        }
         case MessageTag.ProhibitedReservedComponentRemapping:
           logger.error({
             message: markdown`The ${md.bold(message.reservedComponentName)} component name is reserved and cannot be remapped.`,
