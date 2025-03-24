@@ -120,27 +120,30 @@ function createSlotContentCompilers(
     });
 
     compilersGroupedBySlotName[slotName] = async (slotElement) => {
+      const childrenHtmlNodesCollection = createEmptyHtmlNodesCollection();
+
+      childrenHtmlNodesCollection.clientScripts =
+        htmlNodesCollection.clientScripts;
+      childrenHtmlNodesCollection.exports = htmlNodesCollection.exports;
+      childrenHtmlNodesCollection.fragments = htmlNodesCollection.fragments;
+      childrenHtmlNodesCollection.getParentMarkupDefinitionFor =
+        htmlNodesCollection.getParentMarkupDefinitionFor;
+      childrenHtmlNodesCollection.imports = htmlNodesCollection.imports;
+      childrenHtmlNodesCollection.markupDefinitions =
+        htmlNodesCollection.markupDefinitions;
+      childrenHtmlNodesCollection.portals = htmlNodesCollection.portals;
+      childrenHtmlNodesCollection.raws = htmlNodesCollection.raws;
+      childrenHtmlNodesCollection.transferrableElements =
+        htmlNodesCollection.transferrableElements;
+
       const rollbacks = extendLocalThis(
         clonedComponentElement,
         assignedAttributes,
         localThis,
-        htmlNodesCollection,
+        childrenHtmlNodesCollection,
         file,
         options,
       );
-
-      const nodes = createEmptyHtmlNodesCollection();
-
-      nodes.clientScripts = htmlNodesCollection.clientScripts;
-      nodes.exports = htmlNodesCollection.exports;
-      nodes.fragments = htmlNodesCollection.fragments;
-      nodes.getParentMarkupDefinitionFor =
-        htmlNodesCollection.getParentMarkupDefinitionFor;
-      nodes.imports = htmlNodesCollection.imports;
-      nodes.markupDefinitions = htmlNodesCollection.markupDefinitions;
-      nodes.portals = htmlNodesCollection.portals;
-      nodes.raws = htmlNodesCollection.raws;
-      nodes.transferrableElements = htmlNodesCollection.transferrableElements;
 
       /** @type {ScopePreCompilerOptions} */
       const scopePreCompilerOptions = {
@@ -150,14 +153,14 @@ function createSlotContentCompilers(
         compilerOptions: options,
         onAfterRender: lifecycle.onAfterRender,
         publicNames,
-        htmlNodesCollection: nodes,
+        htmlNodesCollection: childrenHtmlNodesCollection,
       };
 
       await preCompileScope(scopePreCompilerOptions);
 
       const slotContentCompilersForComponents =
         createSlotContentCompilersForComponents(
-          htmlNodesCollection,
+          childrenHtmlNodesCollection,
           localThis,
           preCompileScope,
           lifecycle,
@@ -169,15 +172,18 @@ function createSlotContentCompilers(
         );
 
       await compileComponents(
-        nodes,
+        childrenHtmlNodesCollection,
         compileModule,
         slotContentCompilersForComponents,
         options,
       );
 
-      evaluateExports(nodes, localThis, file, options);
+      evaluateExports(childrenHtmlNodesCollection, localThis, file, options);
 
-      await evaluateLeafSlots(nodes, slotContentCompilersFromParent);
+      await evaluateLeafSlots(
+        childrenHtmlNodesCollection,
+        slotContentCompilersFromParent,
+      );
 
       replaceElementWithMultiple(slotElement, clonedComponentElement.children);
 
