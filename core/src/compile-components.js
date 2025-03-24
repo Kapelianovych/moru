@@ -1,202 +1,71 @@
-/** @import { ChildNode, Element } from "domhandler"; */
-
 /**
- * @import {
- *   ModuleCompiler,
- *   ScopePreCompiler,
- *   ScopePreCompilerOptions,
- * } from "./compile-html.js";
+ * @import { Element } from "domhandler";
+ *
+ * @import { ModuleCompiler } from "./compile-html.js";
  * @import { VirtualFile } from "./virtual-file.js";
- * @import { HtmlSlotElement } from "./html-nodes.js";
+ * @import { SlotContentCompiler } from "./slot-content-compiler.js";
+ * @import { HtmlNodesCollection } from "./collect-html-nodes.js";
+ * @import { Options } from "./options.js";
  */
 
 import { parseHtml } from "./parse-html.js";
 import { replaceElementWithMultiple } from "./html-nodes.js";
-import { createComponentMissingExportMessage } from "./diagnostics.js";
-import { getLocationOfHtmlNode, isHtmlSlottableElement } from "./html-nodes.js";
-import { augmentLocalThis } from "./local-this.js";
 import { createLifecycle } from "./lifecycle.js";
+import { createEmptyHtmlNodesCollection } from "./collect-html-nodes.js";
 
 /**
- * @param {ScopePreCompilerOptions} scopePreCompilerOptions
- * @param {ScopePreCompiler} preCompileScope
+ * @param {HtmlNodesCollection} htmlNodesCollection
  * @param {ModuleCompiler} compileModule
+ * @param {Map<Element, Record<string, SlotContentCompiler>>} slotContentCompilersByComponent
+ * @param {Options} options
  * @returns {Promise<void>}
  */
 export async function compileComponents(
-  scopePreCompilerOptions,
-  preCompileScope,
+  htmlNodesCollection,
   compileModule,
+  slotContentCompilersByComponent,
+  options,
 ) {
-  for (const { url, node, assignedAttributes } of scopePreCompilerOptions
-    .htmlNodesCollection.components) {
-    const componentContent =
-      await scopePreCompilerOptions.compilerOptions.readFileContent(url);
+  for (const { url, node } of htmlNodesCollection.components) {
+    const slotContentCompilers =
+      /** @type {Record<string, SlotContentCompiler>} */ (
+        slotContentCompilersByComponent.get(node)
+      );
+
+    const componentContent = await options.readFileContent(url);
     /** @type {VirtualFile} */
     const componentFile = {
       url,
       content: componentContent,
     };
     const ast = parseHtml(componentFile);
-    /** @type {Array<HtmlSlotElement>} */
-    const childSlots = [];
     /** @type {Record<string, unknown>} */
-    const currentModuleExportedValues =
-      scopePreCompilerOptions.compilerOptions.exports;
-    /** @type {Array<HtmlSlotElement>} */
-    const currentModuleSlots =
-      scopePreCompilerOptions.htmlNodesCollection.slots;
+    const currentModuleExportedValues = options.exports;
     const lifecycle = createLifecycle();
+    const localHtmlNodesCollection = createEmptyHtmlNodesCollection();
 
-    scopePreCompilerOptions.compilerOptions.exports = {};
-    scopePreCompilerOptions.htmlNodesCollection.slots = childSlots;
-    scopePreCompilerOptions.compilerOptions.properties = node.attribs;
+    localHtmlNodesCollection.fragments = htmlNodesCollection.fragments;
+    localHtmlNodesCollection.portals = htmlNodesCollection.portals;
+    localHtmlNodesCollection.transferrableElements =
+      htmlNodesCollection.transferrableElements;
+    localHtmlNodesCollection.raws = htmlNodesCollection.raws;
 
-    // Render component children right after component finishes rendering,
-    // but before it loses its context.
-    lifecycle.onAfterRender(async () => {
-      // Return back current slots, so they can be passed to potential parent component.
-      scopePreCompilerOptions.htmlNodesCollection.slots = currentModuleSlots;
-
-      if (childSlots.length) {
-        // We skipped walking over component's children because any expression inside potentially
-        // use exported value which are available only at the current point.
-        await evaluateChildren(
-          node,
-          assignedAttributes,
-          scopePreCompilerOptions,
-          preCompileScope,
-          compileModule,
-        );
-      }
-    });
+    options.exports = {};
+    options.properties = node.attribs;
 
     await compileModule({
       ast,
       file: componentFile,
       lifecycle,
-      htmlNodesCollection: scopePreCompilerOptions.htmlNodesCollection,
-      compilerOptions: scopePreCompilerOptions.compilerOptions,
+      htmlNodesCollection: localHtmlNodesCollection,
+      compilerOptions: options,
+      slotContentCompilersFromParent: slotContentCompilers,
     });
 
-    scopePreCompilerOptions.compilerOptions.exports =
-      currentModuleExportedValues;
-
-    const childrenGroupedBySlots = getComponentChildrenGroupedBySlots(node);
+    options.exports = currentModuleExportedValues;
 
     replaceElementWithMultiple(node, ast.children);
-
-    childSlots.forEach((slot) => {
-      const slotName = slot.attribs.name || "default";
-      const replacerNodes = childrenGroupedBySlots[slotName];
-
-      if (replacerNodes) {
-        replaceElementWithMultiple(slot, replacerNodes);
-      }
-
-      // Replace nodes only once.
-      delete childrenGroupedBySlots[slotName];
-    });
-
-    // Empty slots store to avoid populating it up the tree.
-    childSlots.length = 0;
   }
 
-  scopePreCompilerOptions.htmlNodesCollection.components.length = 0;
-}
-
-/**
- * @param {Element} componentElement
- * @returns {Record<string, Array<ChildNode>>}
- */
-function getComponentChildrenGroupedBySlots(componentElement) {
-  /** @type {Record<string, Array<ChildNode>>} */
-  const groups = {
-    default: [],
-  };
-
-  componentElement.children.forEach((childNode) => {
-    if (isHtmlSlottableElement(childNode)) {
-      const slotName = childNode.attribs.slot;
-
-      if (slotName) {
-        groups[slotName] ??= [];
-        groups[slotName].push(childNode);
-      } else {
-        groups.default.push(childNode);
-      }
-
-      delete childNode.attribs.slot;
-    } else {
-      groups.default.push(childNode);
-    }
-  });
-
-  return groups;
-}
-
-/**
- * @param {Element} node
- * @param {Record<string, string>} assignedAttributes
- * @param {ScopePreCompilerOptions} scopePreCompilerOptions
- * @param {ScopePreCompiler} preCompileScope
- * @param {ModuleCompiler} compileModule
- * @returns {Promise<void>}
- */
-async function evaluateChildren(
-  node,
-  assignedAttributes,
-  scopePreCompilerOptions,
-  preCompileScope,
-  compileModule,
-) {
-  /** @type {Array<VoidFunction>} */
-  const rollbacks = [];
-
-  for (const name in assignedAttributes) {
-    if (name in scopePreCompilerOptions.compilerOptions.exports) {
-      const importName = assignedAttributes[name];
-
-      const rollback = augmentLocalThis(
-        scopePreCompilerOptions.localThis,
-        importName,
-        scopePreCompilerOptions.compilerOptions.exports[name],
-      );
-
-      rollbacks.push(rollback);
-    } else {
-      scopePreCompilerOptions.compilerOptions.diagnostics.publish(
-        createComponentMissingExportMessage({
-          location: getLocationOfHtmlNode(node),
-          sourceFile: scopePreCompilerOptions.file,
-          componentUrl:
-            scopePreCompilerOptions.htmlNodesCollection.imports[node.tagName],
-          importedVariableName: name,
-        }),
-      );
-    }
-  }
-
-  // Save currently known components and prepare an array for children-components.
-  // At this moment only components might not be processed and all other collections
-  // are empty (apart from those which are processed after components).
-  const moduleComponents =
-    scopePreCompilerOptions.htmlNodesCollection.components;
-  const moduleNode = scopePreCompilerOptions.ast;
-
-  scopePreCompilerOptions.ast = node;
-  scopePreCompilerOptions.htmlNodesCollection.components = [];
-
-  await preCompileScope(scopePreCompilerOptions);
-  // Recursively render children components.
-  await compileComponents(
-    scopePreCompilerOptions,
-    preCompileScope,
-    compileModule,
-  );
-
-  scopePreCompilerOptions.ast = moduleNode;
-  scopePreCompilerOptions.htmlNodesCollection.components = moduleComponents;
-
-  rollbacks.forEach((rollback) => rollback());
+  htmlNodesCollection.components.length = 0;
 }

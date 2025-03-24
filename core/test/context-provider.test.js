@@ -361,4 +361,55 @@ suite("context-provider", () => {
     match(output2, /\s+1\s+/);
     match(output3, /\s+5\s+/);
   });
+
+  test(
+    "components which will eventually be inserted into " +
+      "context-provider should be evaluated in its scope",
+    async () => {
+      const output = await compile(
+        `
+          <import from="c1.html" />
+          <import from="foo.html" />
+
+          <c1>
+            <foo />
+          </c1>
+        `,
+        {
+          buildStore: new Map(),
+          resolveUrl(_file, url) {
+            return url;
+          },
+          async readFileContent(url) {
+            if (url.includes("foo")) {
+              return `
+                {{ value }}
+
+                <script type="module" build>
+                  import { useContextGetter } from './context-provider.js';
+
+                  const getContext = useContextGetter(buildStore);
+
+                  const value = getContext('wow');
+                </script>
+              `;
+            } else if (url.includes("c1")) {
+              return `
+                <import from="context-provider.html" />
+
+                <context-provider key="wow" value="passed-down context value">
+                  <slot />
+                </context-provider>
+              `;
+            } else {
+              return contextProviderComponentContent;
+            }
+          },
+          dynamicallyImportJsFile,
+        },
+      );
+
+      match(output, /^\s+passed-down context value\s+$/);
+    },
+  );
 });

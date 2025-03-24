@@ -1,12 +1,13 @@
-/** @import { Document, Element } from "domhandler"; */
-
 /**
+ * @import { Document, Element } from "domhandler";
+ *
  * @import { Options } from "./options.js";
  * @import { LocalThis } from "./local-this.js";
  * @import { VirtualFile } from "./virtual-file.js";
  * @import { PublicNameWithAlias } from "./run-build-scripts.js";
  * @import { HtmlNodesCollection } from "./collect-html-nodes.js";
  * @import { Lifecycle, LifecyclePhaseSubscriber } from "./lifecycle.js";
+ * @import { SlotContentCompiler } from "./slot-content-compiler.js";
  */
 
 import { rebaseUrls } from "./url-rebaser.js";
@@ -26,6 +27,8 @@ import {
   collectHtmlNodes,
   createEmptyHtmlNodesCollection,
 } from "./collect-html-nodes.js";
+import { evaluateLeafSlots } from "./evaluate-leaf-slots.js";
+import { createSlotContentCompilersForComponents } from "./slot-content-compiler.js";
 
 /**
  * @param {Document} ast
@@ -41,6 +44,7 @@ export async function compileHtml(ast, file, options) {
     file,
     compilerOptions: options,
     htmlNodesCollection,
+    slotContentCompilersFromParent: {},
   });
 
   evaluatePortals(htmlNodesCollection, file, options);
@@ -55,6 +59,7 @@ export async function compileHtml(ast, file, options) {
  * @property {Options} compilerOptions
  * @property {HtmlNodesCollection} htmlNodesCollection
  * @property {Lifecycle} [lifecycle]
+ * @property {Record<string, SlotContentCompiler>} slotContentCompilersFromParent
  */
 
 /**
@@ -77,7 +82,6 @@ async function compileModule(options) {
 
   // These parts must be shared across all components of one compilation unit,
   // because they are handled when the combined AST is ready.
-  nodes.slots = options.htmlNodesCollection.slots;
   nodes.fragments = options.htmlNodesCollection.fragments;
   nodes.portals = options.htmlNodesCollection.portals;
   nodes.transferrableElements =
@@ -97,13 +101,29 @@ async function compileModule(options) {
 
   await preCompileScope(scopePreCompilerOptions);
 
+  const slotContentCompilersForComponents =
+    createSlotContentCompilersForComponents(
+      nodes,
+      localThis,
+      preCompileScope,
+      options.lifecycle,
+      publicNames,
+      compileModule,
+      options.slotContentCompilersFromParent,
+      options.file,
+      options.compilerOptions,
+    );
+
   await compileComponents(
-    scopePreCompilerOptions,
-    preCompileScope,
+    nodes,
     compileModule,
+    slotContentCompilersForComponents,
+    options.compilerOptions,
   );
 
   evaluateExports(nodes, localThis, options.file, options.compilerOptions);
+
+  await evaluateLeafSlots(nodes, options.slotContentCompilersFromParent);
 
   inlineClientData(
     nodes,
@@ -143,7 +163,7 @@ async function preCompileScope(options) {
   // All imports can be defined only at the beginning of the component
   // and then are shared between all of its scopes.
   scopedNodes.imports = options.htmlNodesCollection.imports;
-  // Even though exporte can be defined at the top level and there is not point
+  // Even though export can be defined at the top level and there is no point in
   // to pass it inside every scope, it has to be passed into the first one.
   scopedNodes.exports = options.htmlNodesCollection.exports;
   // Fragments with a name should be available in nested scopes.
@@ -196,9 +216,9 @@ async function preCompileScope(options) {
 
   options.htmlNodesCollection = parentHtmlNodesCollection;
 
-  // These parts must be shared across all components of one compilation unit,
-  // because they are handled when combined the AST is ready.
+  // Collect leaf nodes gathered from scopes.
   options.htmlNodesCollection.slots.push(...scopedNodes.slots);
+  // Collect parts handled after components.
   options.htmlNodesCollection.fragments.push(...scopedNodes.fragments);
   Object.assign(options.htmlNodesCollection.portals, scopedNodes.portals);
   options.htmlNodesCollection.transferrableElements.push(
