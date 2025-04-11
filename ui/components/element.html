@@ -1,0 +1,229 @@
+<import from="@moru/core/only.html" />
+
+<only key="{{ url.current }}">
+  <style portal="{{ rootContext.stylesPortalName }}">
+    .{{ Class.Element }} {
+      display: inline-flex;
+      align-self: var(--mu-align);
+      flex-direction: var({{ CustomProperty.Direction }});
+
+      gap: var({{ CustomProperty.Spacing }});
+
+      margin:
+        var(--mu-m-top)
+        var(--mu-m-right)
+        var(--mu-m-bottom)
+        var(--mu-m-left);
+      padding: var({{ CustomProperty.Padding }});
+
+      width: var({{ CustomProperty.Width }});
+      height: var({{ CustomProperty.Height }});
+      min-width: var({{ CustomProperty.MinWidth }});
+      min-height: var({{ CustomProperty.MinHeight }});
+
+      overflow-x: var({{ CustomProperty.HorizontalClip }});
+      overflow-y: var({{ CustomProperty.VerticalClip }});
+
+      position: var({{ CustomProperty.Position }});
+      top: var({{ CustomProperty.PositionTopOffset }});
+      bottom: var({{ CustomProperty.PositionBottomOffset }});
+      left: var({{ CustomProperty.PositionLeftOffset }});
+      right: var({{ CustomProperty.PositionRightOffset }});
+      z-index: var({{ CustomProperty.PositionAxisOffset }});
+
+      text-decoration: none;
+      /* Make this style as the default instead of "none". */
+      border-style: solid;
+      border-width: 0;
+      /* Add a small transition to every element. */
+      transition-duration: 0.12s;
+
+      transform:
+        translate(var({{ CustomProperty.HorizontalMovement }}), var({{ CustomProperty.VerticalMovement }}))
+        scale(var({{ CustomProperty.Scaling }}))
+        rotate(var({{ CustomProperty.Rotation }}));
+
+      background: var({{ CustomProperty.Background }});
+
+      /* Self alignment as a child. */
+      @container style({{ CustomProperty.Direction }}: column) or style({{ CustomProperty.Direction }}: column-reverse) {
+        --mu-align: var({{ CustomProperty.HorizontalAlignment }});
+        --mu-m-left: 0;
+        --mu-m-right: 0;
+        --mu-m-top: var(--mu-margin-top);
+        --mu-m-bottom: var(--mu-margin-bottom);
+      }
+      @container style({{ CustomProperty.Direction }}: row) or style({{ CustomProperty.Direction }}: row-reverse) {
+        --mu-align: var({{ CustomProperty.VerticalAlignment }});
+        --mu-m-top: 0;
+        --mu-m-bottom: 0;
+        --mu-m-left: var(--mu-margin-left);
+        --mu-m-right: var(--mu-margin-right);
+      }
+    }
+  </style>
+</only>
+
+<style portal="{{ rootContext.stylesPortalName }}">
+  .{{ id }} {
+    {{ css }}
+  }
+</style>
+
+<export name="id" />
+<export name="classes" />
+<export name="restProps" as="rest-props" />
+
+<slot />
+
+<script type="module" build>
+  /**
+   * @import { Position } from './lib/visitors/position-visitor.js';
+   */
+
+  import { createId } from "./lib/id.js";
+  import { useRootContext } from "./lib/root-context.js";
+  import { Class, CustomProperty } from "./lib/names.js";
+  import { usePropertyCompiler } from "./lib/property.js";
+  import {
+    WidthVisitor,
+    HeightVisitor,
+    MinWidthVisitor,
+    MinHeightVisitor,
+  } from "./lib/visitors/area-visitors.js";
+  import {
+    AlignmentXVisitor,
+    AlignmentYVisitor,
+  } from "./lib/visitors/alignment-visitors.js";
+  import { PaddingVisitor } from "./lib/visitors/padding-visitor.js";
+  import {
+    MoveLeftVisitor,
+    MoveRightVisitor,
+    MoveUpVisitor,
+    MoveDownVisitor,
+  } from "./lib/visitors/movement-visitors.js";
+  import { ScalingVisitor } from "./lib/visitors/scaling-visitor.js";
+  import { RotationVisitor } from "./lib/visitors/rotation-visitor.js";
+  import { DirectionVisitor } from "./lib/visitors/direction-visitor.js";
+  import { SpacingVisitor } from "./lib/visitors/spacing-visitor.js";
+  import {
+    HorizontalClipVisitor,
+    VerticalClipVisitor,
+  } from "./lib/visitors/clip-visitors.js";
+  import { PositionVisitor } from "./lib/visitors/position-visitor.js";
+  import { BackgroundVisitor } from "./lib/visitors/background-visitor.js";
+
+  /**
+   * @typedef {Object} Props
+   * @property {string} [direction]
+   * @property {string} [align-x]
+   * @property {string} [align-y]
+   * @property {string | number} [width]
+   * @property {string | number} [height]
+   * @property {string | number} [min-width]
+   * @property {string | number} [min-height]
+   * @property {string | number} [spacing]
+   * @property {string | number} [padding]
+   * @property {string | number} [move-left]
+   * @property {string | number} [move-right]
+   * @property {string | number} [move-up]
+   * @property {string | number} [move-down]
+   * @property {string | number} [scale]
+   * @property {string | number} [rotate]
+   * @property {string} [clip-x]
+   * @property {string} [clip-y]
+   * @property {Position} [position]
+   * @property {string} [background]
+   */
+
+  const {
+    direction = "row",
+    "align-x": alignX = "left",
+    "align-y": alignY = "top",
+    width = "auto",
+    height = "auto",
+    "min-width": minWidth = "auto",
+    "min-height": minHeight = "auto",
+    spacing = 0,
+    padding = 0,
+    "move-left": moveLeft,
+    "move-right": moveRight = 0,
+    "move-up": moveUp,
+    "move-down": moveDown = 0,
+    scale = 1,
+    rotate = 0,
+    "clip-x": clipX = "initial",
+    "clip-y": clipY = "initial",
+    position = "initial",
+    background = "transparent",
+    ...restProps
+  } = /** @type {Props} */ (props);
+
+  const id = `mu-${createId()}`;
+  const rootContext = useRootContext(buildStore);
+  const compileProperty = usePropertyCompiler(buildStore);
+
+  const classes = `${Class.Element} ${id}`;
+
+  const css = [
+    compileProperty(CustomProperty.Direction, direction, {
+      visitor: DirectionVisitor,
+    }),
+    compileProperty(CustomProperty.HorizontalAlignment, alignX, {
+      visitor: AlignmentXVisitor,
+    }),
+    compileProperty(CustomProperty.VerticalAlignment, alignY, {
+      visitor: AlignmentYVisitor,
+    }),
+    compileProperty(CustomProperty.Width, String(width), {
+      visitor: WidthVisitor,
+    }),
+    compileProperty(CustomProperty.Height, String(height), {
+      visitor: HeightVisitor,
+    }),
+    compileProperty(CustomProperty.MinWidth, String(minWidth), {
+      visitor: MinWidthVisitor,
+    }),
+    compileProperty(CustomProperty.MinHeight, String(minHeight), {
+      visitor: MinHeightVisitor,
+    }),
+    compileProperty(CustomProperty.Spacing, String(spacing), {
+      visitor: SpacingVisitor,
+    }),
+    compileProperty(CustomProperty.Padding, String(padding), {
+      visitor: PaddingVisitor,
+    }),
+    compileProperty(
+      CustomProperty.HorizontalMovement,
+      String(moveLeft != null ? moveLeft : moveRight),
+      {
+        visitor: moveLeft != null ? MoveLeftVisitor : MoveRightVisitor,
+      },
+    ),
+    compileProperty(
+      CustomProperty.VerticalMovement,
+      String(moveUp != null ? moveUp : moveDown),
+      {
+        visitor: moveUp != null ? MoveUpVisitor : MoveDownVisitor,
+      },
+    ),
+    compileProperty(CustomProperty.Scaling, String(scale), {
+      visitor: ScalingVisitor,
+    }),
+    compileProperty(CustomProperty.Rotation, String(rotate), {
+      visitor: RotationVisitor,
+    }),
+    compileProperty(CustomProperty.VerticalClip, clipY, {
+      visitor: VerticalClipVisitor,
+    }),
+    compileProperty(CustomProperty.HorizontalClip, clipX, {
+      visitor: HorizontalClipVisitor,
+    }),
+    compileProperty(CustomProperty.Position, position, {
+      visitor: PositionVisitor,
+    }),
+    compileProperty(CustomProperty.Position, background, {
+      visitor: BackgroundVisitor,
+    }),
+  ].join("");
+</script>

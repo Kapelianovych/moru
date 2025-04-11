@@ -1,0 +1,30 @@
+<import from="./textual-element.html" />
+
+<textual-element
+  expand="{{ restProps }}"
+  assign:id
+  assign:classes="elementClasses"
+  assign:rest-props="elementRestProps"
+>
+  <span
+    class="
+      {{ elementClasses }}
+      {{ Class.Text }}
+      {{ classes }}
+    "
+    expand="{{ elementRestProps }}"
+  >
+    <slot />
+  </span>
+</textual-element>
+
+<script type="module" build>
+  import { Class } from "./lib/names.js";
+
+  /**
+   * @typedef {Object} Props
+   * @property {string} [class]
+   */
+
+  const { class: classes = "", ...restProps } = /** @type {Props} */ (props);
+</script>

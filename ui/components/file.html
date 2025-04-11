@@ -1,0 +1,63 @@
+<import from="@moru/core/only.html" />
+
+<import from="./element.html" />
+
+<only key="{{ url.current }}">
+  <style portal="{{ rootContext.stylesPortalName }}">
+    .{{ Class.File }} {
+      > [data-main-file-input] {
+        visibility: hidden;
+        position: fixed;
+        top: -100vh;
+        left: -100vw;
+      }
+    }
+  </style>
+</only>
+
+<element
+  expand="{{ other }}"
+  assign:classes="elementClasses"
+  assign:rest-props="restProps"
+>
+  <label
+    class="
+      {{ elementClasses }}
+      {{ Class.File }}
+      {{ classes }}
+    "
+    expand="{{ restProps }}"
+  >
+    <input
+      type="file"
+      data-main-file-input
+      accept="{{ accept }}"
+      multiple="{{ multiple }}"
+      capture="{{ capture }}"
+    />
+    <slot />
+  </label>
+</element>
+
+<script type="module" build>
+  import { Class } from "./lib/names.js";
+  import { useRootContext } from "./lib/root-context.js";
+
+  /**
+   * @typedef {Object} Props
+   * @property {string} [class]
+   * @property {string} [accept]
+   * @property {string} [multiple]
+   * @property {string} [capture]
+   */
+
+  const {
+    class: classes = "",
+    accept = "",
+    multiple = false,
+    capture = "",
+    ...other
+  } = /** @type {Props} */ (props);
+
+  const rootContext = useRootContext(buildStore);
+</script>

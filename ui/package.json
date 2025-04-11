@@ -1,0 +1,12 @@
+{
+  "name": "@moru/ui",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    "./*.html": "./components/*.html"
+  },
+  "peerDependencies": {
+    "@moru/core": "^0",
+    "lightningcss": "^1"
+  }
+}

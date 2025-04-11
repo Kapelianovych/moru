@@ -1,0 +1,90 @@
+<import from="@moru/core/only.html" />
+
+<import from="./textual-element.html" />
+
+<only key="{{ url.current }}">
+  <style portal="{{ rootContext.stylesPortalName }}">
+    .{{ Class.Input }} {
+      resize: none;
+
+      height: calc(
+        var({{ CustomProperty.TextLineHeight }}) *
+          var({{ CustomProperty.TextLines }})
+      );
+    }
+  </style>
+</only>
+
+<textual-element
+  expand="{{ other }}"
+  assign:id
+  assign:classes="elementClasses"
+  assign:rest-props="restProps"
+>
+  <style portal="{{ rootContext.stylesPortalName }}">
+    .{{ id }} {
+      {{ css }}
+    }
+  </style>
+
+  <if condition="{{ multiline != null && multiline !== false }}">
+    <textarea
+      class="
+        {{ elementClasses }}
+        {{ Class.Input }}
+        {{ classes }}
+      "
+      placeholder="{{ placeholder }}"
+      expand="{{ restProps }}"
+    />
+  </if>
+  <else>
+    <input
+      class="
+        {{ elementClasses }}
+        {{ Class.Input }}
+        {{ classes }}
+      "
+      type="{{ type }}"
+      placeholder="{{ placeholder }}"
+      expand="{{ restProps }}"
+    />
+  </else>
+</textual-element>
+
+<script type="module" build>
+  import { Class, CustomProperty } from "./lib/names.js";
+  import { useRootContext } from "./lib/root-context.js";
+  import { TextLinesVisitor } from "./lib/visitors/text-lines-visitor.js";
+  import { usePropertyCompiler } from "./lib/property.js";
+
+  /**
+   * @typedef {Object} Props
+   * @property {string} [class]
+   * @property {string} [type]
+   * @property {string | number} [lines]
+   * @property {'' | boolean} [multiline]
+   * @property {string} [placeholder]
+   */
+
+  const rootContext = useRootContext(buildStore);
+
+  const {
+    class: classes = "",
+    type = "text",
+    placeholder,
+    multiline,
+    lines = 1,
+    // Do not allow to set height explicitly.
+    height: _0,
+    ...other
+  } = /** @type {Props} */ (props);
+
+  const compileProperty = usePropertyCompiler(buildStore);
+
+  const css = [
+    compileProperty(CustomProperty.TextLines, String(lines), {
+      visitor: TextLinesVisitor,
+    }),
+  ].join("");
+</script>

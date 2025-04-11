@@ -1,0 +1,21 @@
+<import from="./element.html" />
+
+<element
+  expand="{{ other }}"
+  assign:id
+  assign:classes="elementClasses"
+  assign:rest-props="restProps"
+>
+  <video
+    class="{{ elementClasses }} mu-video {{ classes }}"
+    expand="{{ restProps }}"
+  ></video>
+</element>
+
+<script build>
+  /**
+   * @typedef {Object} Props
+   */
+
+  const { class: classes = "", ...other } = /** @type {Props} */ (props);
+</script>

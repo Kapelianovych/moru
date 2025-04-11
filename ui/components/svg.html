@@ -1,0 +1,30 @@
+<import from="./element.html" />
+
+<element
+  expand="{{ other }}"
+  assign:classes="elementClasses"
+  assign:rest-props="restProps"
+>
+  <svg
+    class="
+      {{ elementClasses }}
+      {{ Class.Svg }}
+      {{ classes }}
+    "
+    xmlns="http://www.w3.org/2000/svg"
+    expand="{{ restProps }}"
+  >
+    <slot />
+  </svg>
+</element>
+
+<script type="module" build>
+  import { Class } from "./lib/names.js";
+
+  /**
+   * @typedef {Object} Props
+   * @property {string} [class]
+   */
+
+  const { class: classes = "", ...other } = /** @type {Props} */ (props);
+</script>

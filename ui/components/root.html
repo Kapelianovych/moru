@@ -1,0 +1,100 @@
+<import from="@moru/core/only.html" />
+<import from="@moru/core/context-provider.html" />
+
+<import from="./element.html" />
+
+<only key="{{ url.current }}">
+  <style portal="{{ context.stylesPortalName }}">
+    html,
+    body {
+      height: 100%;
+      min-height: 100%;
+    }
+
+    /* Enable keyword animations */
+    @media (prefers-reduced-motion: no-preference) {
+      html {
+        interpolate-size: allow-keywords;
+      }
+    }
+
+    body {
+      margin: 0;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .{{ Class.Root }} {
+      /* Make it an offset parent. */
+      position: relative;
+      box-sizing: border-box;
+
+      * {
+        box-sizing: border-box;
+      }
+    }
+  </style>
+</only>
+
+<context-provider key="{{ ROOT_CONTEXT }}" value="{{ context }}">
+  <element
+    direction="column"
+    width="fill"
+    height="fill"
+    assign:classes="elementClasses"
+  >
+    <div
+      class="
+        {{ elementClasses }}
+        {{ Class.Root }}
+        {{ classes }}
+      "
+      expand="{{ restProps }}"
+    >
+      <slot />
+    </div>
+  </element>
+</context-provider>
+
+<script type="module" build>
+  /**
+   * @import { RootContext } from './lib/root-context.js';
+   */
+
+  import { Class } from "./lib/names.js";
+  import { ROOT_CONTEXT, createRootContext } from "./lib/root-context.js";
+
+  /**
+   * @typedef {Object} Props
+   * @property {string} [class]
+   * @property {string} [stylesheets-portal-name]
+   * @property {string} [default-measurement-unit-value]
+   * @property {string} [default-font-size]
+   * @property {string} [default-font-family]
+   * @property {string} [stylesheets-portal-name]
+   * @property {string} [default-real-text-height-ratio]
+   * @property {string} [default-text-side-offset-correction]
+   */
+
+  const {
+    class: classes = "",
+    "stylesheets-portal-name": stylesPortalName,
+    "default-measurement-unit-value": defaultCSSUnit,
+    "default-font-size": defaultFontSize,
+    "default-font-family": defaultFontFamily,
+    "default-real-text-height-ratio": defaultRealTextHeightRatio,
+    "default-text-side-offset-correction": defaultTextSideOffsetCorrection,
+    ...restProps
+  } = /** @type {Props} */ (props);
+
+  /** @type {RootContext} */
+  const context = createRootContext({
+    defaultCSSUnit,
+    defaultFontSize,
+    stylesPortalName,
+    defaultFontFamily,
+    defaultRealTextHeightRatio,
+    defaultTextSideOffsetCorrection,
+  });
+</script>

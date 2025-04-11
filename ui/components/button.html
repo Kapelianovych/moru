@@ -1,0 +1,30 @@
+<import from="./element.html" />
+
+<element
+  expand="{{ other }}"
+  assign:classes="elementClasses"
+  assign:rest-props="restProps"
+>
+  <button
+    class="
+      {{ elementClasses }}
+      {{ Class.Button }}
+      {{ classes }}
+    "
+    type="button"
+    expand="{{ restProps }}"
+  >
+    <slot />
+  </button>
+</element>
+
+<script type="module" build>
+  import { Class } from "./lib/names.js";
+
+  /**
+   * @typedef {Object} Props
+   * @property {string} [class]
+   */
+
+  const { class: classes = "", ...other } = /** @type {Props} */ (props);
+</script>

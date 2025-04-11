@@ -1,0 +1,40 @@
+<import from="./element.html" />
+
+<element
+  expand="{{ other }}"
+  assign:classes="elementClasses"
+  assign:rest-props="restProps"
+>
+  <a
+    class="
+      {{ elementClasses }}
+      {{ Class.Link }}
+      {{ classes }}
+    "
+    href="{{ url }}"
+    target="_{{ target }}"
+    expand="{{ restProps }}"
+  >
+    <slot />
+  </a>
+</element>
+
+<script type="module" build>
+  import { Class } from "./lib/names.js";
+
+  /**
+   * @typedef {Object} Props
+   * @property {string} [class]
+   * @property {string | URL} to
+   * @property {string} [target]
+   */
+
+  const {
+    class: classes = "",
+    to,
+    target = "self",
+    ...other
+  } = /** @type {Props} */ (props);
+
+  const url = typeof to === "string" ? to : to.toString();
+</script>

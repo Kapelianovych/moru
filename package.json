@@ -1,7 +1,10 @@
 {
   "type": "module",
   "workspaces": [
+    "./ui",
     "./core",
+    "./store",
+    "./website",
     "./vite-plugin",
     "./parcel/namer",
     "./parcel/config",
@@ -10,7 +13,10 @@
   ],
   "scripts": {
     "format": "prettier . --write",
-    "test:core": "node --test \"./core/test/**/*.test.js\""
+    "test:core": "node --test \"./core/test/**/*.test.js\"",
+    "test:store": "node --test \"./store/test/**/*.test.js\"",
+    "start:website": "npm start -w website",
+    "build:website": "npm run build -w website"
   },
   "devDependencies": {
     "@types/node": "^22",
