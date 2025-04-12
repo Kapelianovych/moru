@@ -7,6 +7,11 @@
   <style portal="{{ context.stylesPortalName }}">
     html,
     body {
+      /*
+       Explicitly define minimun and taken by default height,
+       so the page area will be defined for nested elements.
+       */
+      height: 100%;
       min-height: 100%;
     }
 

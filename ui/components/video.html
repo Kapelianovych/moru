@@ -22,10 +22,14 @@
       {{ Class.Video }}
       {{ classes }}
     "
+    autoplay="{{ normaliseBooleanProperty(autoplay) }}"
+    controls="{{ normaliseBooleanProperty(controls) }}"
+    loop="{{ normaliseBooleanProperty(loop) }}"
+    muted="{{ normaliseBooleanProperty(muted) }}"
     expand="{{ restProps }}"
   >
     <for each="{{ sources }}">
-      <source src="{{ item.url }}" type="{{ item.type }}" />
+      <source src="{{ item.url }}" type="video/{{ item.type }}" />
     </for>
 
     <if condition="{{ tracks?.length }}">
@@ -35,7 +39,7 @@
           kind="{{ item.kind }}"
           label="{{ item.label }}"
           srclang="{{ item.language }}"
-          default="{{ item.default != null }}"
+          default="{{ normaliseBooleanProperty(item.default) }}"
         />
       </for>
     </if>
@@ -45,6 +49,7 @@
 <script type="module" build>
   import { Class } from "./lib/names.js";
   import { useRootContext } from "./lib/root-context.js";
+  import { normaliseBooleanProperty } from "./lib/normalisers.js";
 
   /**
    * @typedef {Object} VideoSource
@@ -66,12 +71,20 @@
    * @property {string} [class]
    * @property {Array<VideoSource>} sources
    * @property {Array<TrackSource>} [tracks]
+   * @property {string | boolean} [autoplay]
+   * @property {string | boolean} [controls]
+   * @property {string | boolean} [loop]
+   * @property {string | boolean} [muted]
    */
 
   const {
     class: classes = "",
     sources,
     tracks,
+    autoplay,
+    controls,
+    loop,
+    muted,
     ...other
   } = /** @type {Props} */ (props);
 

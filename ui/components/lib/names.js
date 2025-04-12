@@ -56,4 +56,7 @@ export const CustomProperty = Object.freeze({
   ImageFit: "--mu-image-fit",
   TextLineHeight: "--mu-text-line-height",
   TextLines: "--mu-text-lines",
+  Rounded: "--mu-rounded",
+  Border: "--mu-border",
+  Shadow: "--mu-shadow",
 });
