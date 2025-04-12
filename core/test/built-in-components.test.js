@@ -390,6 +390,19 @@ suite("built-in components", () => {
         );
       },
     );
+
+    test("undefined should be treated like falsey value", async () => {
+      const output = await compile(`
+        <if condition="{{ undefined }}">
+          1
+        </if>
+        <else>
+          2
+        </else>
+      `);
+
+      match(output, /^\s*2\s*$/);
+    });
   });
 
   suite("loop", () => {

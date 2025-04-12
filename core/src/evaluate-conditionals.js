@@ -4,7 +4,7 @@
 
 import { removeElement } from "domutils";
 
-import { replaceElementWithMultiple } from "./html-nodes.js";
+import { isHtmlElseElement, replaceElementWithMultiple } from "./html-nodes.js";
 
 /**
  * @param {ScopePreCompilerOptions} options
@@ -24,7 +24,11 @@ export async function evaluateConditionals(options, preCompileScope) {
       if (node) {
         if (
           !isBranchRendered &&
-          ("condition" in node.attribs ? node.attribs.condition : true)
+          (node.attribs.condition ||
+            // We already checked that <else> comes last.
+            // Here if we encounter it, we definitely want to render
+            // its content.
+            isHtmlElseElement(node))
         ) {
           // Prevent preemptive loops evaluation.
           const loops = options.htmlNodesCollection.loops;
