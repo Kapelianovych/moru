@@ -87,13 +87,13 @@
 
   if (!sources) {
     throw new Error(
-      'A "souces" attribute is missing on the <image> component.',
+      'A "sources" attribute is missing on the <image> component.',
     );
   }
 
   if (!Array.isArray(sources)) {
     throw new Error(
-      'A "souces" attribute value has to be an array, but currently it is ' +
+      'A "sources" attribute value has to be an array, but currently it is ' +
         typeof sources +
         ".",
     );
@@ -101,7 +101,7 @@
 
   if (!sources.length) {
     throw new Error(
-      'A "souces" attribute value is an empty array, but it has to have at least one "ImageDescriptor".',
+      'A "sources" attribute value is an empty array, but it has to have at least one "ImageDescriptor".',
     );
   }
 

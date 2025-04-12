@@ -7,15 +7,80 @@
   assign:rest-props="restProps"
 >
   <video
-    class="{{ elementClasses }} mu-video {{ classes }}"
+    class="
+      {{ elementClasses }}
+      {{ Class.Video }}
+      {{ classes }}
+    "
     expand="{{ restProps }}"
-  ></video>
+  >
+    <for each="{{ sources }}">
+      <source src="{{ item.url }}" type="{{ item.type }}" />
+    </for>
+
+    <if condition="{{ tracks?.length }}">
+      <for each="{{ tracks }}">
+        <track
+          src="{{ item.url }}"
+          kind="{{ item.kind }}"
+          label="{{ item.label }}"
+          srclang="{{ item.language }}"
+          default="{{ item.default != null }}"
+        />
+      </for>
+    </if>
+  </video>
 </element>
 
-<script build>
+<script type="module" build>
+  import { Class } from "./lib/names.js";
+
   /**
-   * @typedef {Object} Props
+   * @typedef {Object} VideoSource
+   * @property {string} url
+   * @property {string} type
    */
 
-  const { class: classes = "", ...other } = /** @type {Props} */ (props);
+  /**
+   * @typedef {Object} TrackSource
+   * @property {string} url
+   * @property {string} kind
+   * @property {string} label
+   * @property {string | boolean} [default]
+   * @property {string} [language]
+   */
+
+  /**
+   * @typedef {Object} Props
+   * @property {string} [class]
+   * @property {Array<VideoSource>} sources
+   * @property {Array<TrackSource>} [tracks]
+   */
+
+  const {
+    class: classes = "",
+    sources,
+    tracks,
+    ...other
+  } = /** @type {Props} */ (props);
+
+  if (!sources) {
+    throw new Error(
+      'A "sources" attribute is missing on the <video> component.',
+    );
+  }
+
+  if (!Array.isArray(sources)) {
+    throw new Error(
+      'A "sources" attribute value has to be an array, but currently it is ' +
+        typeof sources +
+        ".",
+    );
+  }
+
+  if (!sources.length) {
+    throw new Error(
+      'A "sources" attribute value is an empty array, but it has to have at least one "VideoSource".',
+    );
+  }
 </script>

@@ -14,6 +14,7 @@ export const Class = Object.freeze({
   Input: "mu-input",
   Toggle: "mu-toggle",
   File: "mu-file",
+  Video: "mu-video",
 });
 
 /**
