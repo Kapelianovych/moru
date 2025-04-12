@@ -1,4 +1,14 @@
+<import from="@moru/core/only.html" />
+
 <import from="./element.html" />
+
+<only key="{{ url.current }}">
+  <style portal="{{ rootContext.stylesPortalName }}">
+    .{{ Class.Video }} {
+      max-width: 100%;
+    }
+  </style>
+</only>
 
 <element
   expand="{{ other }}"
@@ -34,6 +44,7 @@
 
 <script type="module" build>
   import { Class } from "./lib/names.js";
+  import { useRootContext } from "./lib/root-context.js";
 
   /**
    * @typedef {Object} VideoSource
@@ -83,4 +94,6 @@
       'A "sources" attribute value is an empty array, but it has to have at least one "VideoSource".',
     );
   }
+
+  const rootContext = useRootContext(buildStore);
 </script>
