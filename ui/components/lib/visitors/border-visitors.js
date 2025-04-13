@@ -8,6 +8,20 @@ import { CustomProperty } from "../names.js";
 
 /** @type {Visitor<DefaultCustomAtRules>} */
 export const RoundedVisitor = {
+  Token: {
+    ident(token) {
+      if (token.value === "full") {
+        return {
+          type: "token",
+          value: {
+            type: "dimension",
+            value: 700,
+            unit: "un",
+          },
+        };
+      }
+    },
+  },
   Rule: {
     custom: {
       value(rule) {
