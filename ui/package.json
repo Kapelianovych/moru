@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "type": "module",
   "exports": {
-    "./*.html": "./components/*.html"
+    "./*.html": "./components/*.html",
+    "./*": "./components/*.js"
   },
   "peerDependencies": {
     "@moru/core": "^0",

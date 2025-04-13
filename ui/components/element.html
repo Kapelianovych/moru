@@ -37,9 +37,6 @@
       border-radius: var({{ CustomProperty.Rounded }});
       box-shadow: var({{ CustomProperty.Shadow }});
 
-      /* Add a small transition to every element. */
-      transition-duration: 0.12s;
-
       transform:
         translate(var({{ CustomProperty.HorizontalMovement }}), var({{ CustomProperty.VerticalMovement }}))
         scale(var({{ CustomProperty.Scaling }}))
@@ -80,6 +77,7 @@
 
 <script type="module" build>
   /**
+   * @import { Ref } from './ref.js';
    * @import { Position } from './lib/visitors/position-visitor.js';
    */
 
@@ -122,6 +120,7 @@
 
   /**
    * @typedef {Object} Props
+   * @property {Ref} [ref]
    * @property {string} [direction]
    * @property {string} [align-x]
    * @property {string} [align-y]
@@ -147,6 +146,7 @@
    */
 
   const {
+    ref,
     direction = "row",
     "align-x": alignX = "left",
     "align-y": alignY = "top",
@@ -175,6 +175,11 @@
   const id = `mu-${createId()}`;
   const rootContext = useRootContext(buildStore);
   const compileProperty = usePropertyCompiler(buildStore);
+
+  if (ref) {
+    ref.id = id;
+    ref.selector = `.${id}`;
+  }
 
   const classes = `${Class.Element} ${id}`;
 

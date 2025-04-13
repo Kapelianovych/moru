@@ -43,6 +43,7 @@
 
 <context-provider key="{{ ROOT_CONTEXT }}" value="{{ context }}">
   <element
+    ref="{{ rootRef }}"
     direction="column"
     min-width="fill"
     min-height="fill"
@@ -58,19 +59,29 @@
     >
       <slot />
     </div>
+
+    <script type="module">
+      import { context, rootRef } from "build";
+      import { defineRootContext } from "./client/root-context.js";
+
+      defineRootContext(rootRef, context);
+    </script>
   </element>
 </context-provider>
 
 <script type="module" build>
   /**
+   * @import { Ref } from './ref.js'
    * @import { RootContext } from './lib/root-context.js';
    */
 
   import { Class } from "./lib/names.js";
+  import { createRef } from "./ref.js";
   import { ROOT_CONTEXT, createRootContext } from "./lib/root-context.js";
 
   /**
    * @typedef {Object} Props
+   * @property {Ref} [ref]
    * @property {string} [class]
    * @property {string} [stylesheets-portal-name]
    * @property {string} [default-measurement-unit-value]
@@ -82,6 +93,7 @@
    */
 
   const {
+    ref,
     class: classes = "",
     "stylesheets-portal-name": stylesPortalName,
     "default-measurement-unit-value": defaultCSSUnit,
@@ -92,8 +104,10 @@
     ...restProps
   } = /** @type {Props} */ (props);
 
-  /** @type {RootContext} */
-  const context = createRootContext({
+  /**
+   * @type {RootContext}
+   */
+  export const context = createRootContext({
     defaultCSSUnit,
     defaultFontSize,
     stylesPortalName,
@@ -101,4 +115,6 @@
     defaultRealTextHeightRatio,
     defaultTextSideOffsetCorrection,
   });
+
+  export const rootRef = ref ?? createRef();
 </script>
