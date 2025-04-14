@@ -60,3 +60,11 @@ export const CustomProperty = Object.freeze({
   Border: "--mu-border",
   Shadow: "--mu-shadow",
 });
+
+/**
+ * @enum {typeof PrivateProperties[keyof typeof PrivateProperties]}
+ */
+export const PrivateProperties = Object.freeze({
+  TypeOf: "__typeof-slkjs9d662",
+  ClientRootContext: "__client-root-context-kd8s6k3",
+});

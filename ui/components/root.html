@@ -61,10 +61,19 @@
     </div>
 
     <script type="module">
-      import { context, rootRef } from "build";
-      import { defineRootContext } from "./client/root-context.js";
+      /**
+       * @import { RootHTMLElement } from './client-root-context.js';
+       */
 
-      defineRootContext(rootRef, context);
+      import { clientRootContext, rootRef } from "build";
+
+      import { PrivateProperties } from "./lib/names.js";
+
+      const element = document.querySelector(rootRef.selector);
+
+      /** @type {RootHTMLElement} */ (element)[
+        PrivateProperties.ClientRootContext
+      ] = clientRootContext;
     </script>
   </element>
 </context-provider>
@@ -73,6 +82,7 @@
   /**
    * @import { Ref } from './ref.js'
    * @import { RootContext } from './lib/root-context.js';
+   * @import { ClientRootContext } from './client-root-context.js';
    */
 
   import { Class } from "./lib/names.js";
@@ -83,11 +93,10 @@
    * @typedef {Object} Props
    * @property {Ref} [ref]
    * @property {string} [class]
-   * @property {string} [stylesheets-portal-name]
-   * @property {string} [default-measurement-unit-value]
+   * @property {string} [styles-portal-name]
+   * @property {string} [default-measurement-unit]
    * @property {string} [default-font-size]
    * @property {string} [default-font-family]
-   * @property {string} [stylesheets-portal-name]
    * @property {string} [default-real-text-height-ratio]
    * @property {string} [default-text-side-offset-correction]
    */
@@ -95,8 +104,8 @@
   const {
     ref,
     class: classes = "",
-    "stylesheets-portal-name": stylesPortalName,
-    "default-measurement-unit-value": defaultCSSUnit,
+    "styles-portal-name": stylesPortalName,
+    "default-measurement-unit": defaultCSSUnit,
     "default-font-size": defaultFontSize,
     "default-font-family": defaultFontFamily,
     "default-real-text-height-ratio": defaultRealTextHeightRatio,
@@ -107,7 +116,7 @@
   /**
    * @type {RootContext}
    */
-  export const context = createRootContext({
+  const context = createRootContext({
     defaultCSSUnit,
     defaultFontSize,
     stylesPortalName,
@@ -117,4 +126,11 @@
   });
 
   export const rootRef = ref ?? createRef();
+
+  /**
+   * @type {ClientRootContext}
+   */
+  export const clientRootContext = {
+    defaultCSSUnit: context.defaultCSSUnit,
+  };
 </script>
