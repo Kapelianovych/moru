@@ -5,7 +5,7 @@
 <only key="{{ url.current }}">
   <style portal="{{ rootContext.stylesPortalName }}">
     .{{ Class.File }} {
-      > [data-main-file-input] {
+      > :first-child {
         visibility: hidden;
         position: fixed;
         top: -100vh;
@@ -30,9 +30,8 @@
   >
     <input
       type="file"
-      data-main-file-input
       accept="{{ accept }}"
-      multiple="{{ multiple }}"
+      multiple="{{ normaliseBooleanProperty(multiple) }}"
       capture="{{ capture }}"
     />
     <slot />
@@ -42,20 +41,21 @@
 <script type="module" build>
   import { Class } from "./lib/names.js";
   import { useRootContext } from "./lib/root-context.js";
+  import { normaliseBooleanProperty } from "./lib/normalisers.js";
 
   /**
    * @typedef {Object} Props
    * @property {string} [class]
    * @property {string} [accept]
-   * @property {string} [multiple]
+   * @property {string | boolean} [multiple]
    * @property {string} [capture]
    */
 
   const {
     class: classes = "",
-    accept = "",
-    multiple = false,
-    capture = "",
+    accept,
+    multiple,
+    capture,
     ...other
   } = /** @type {Props} */ (props);
 

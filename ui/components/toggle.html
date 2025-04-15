@@ -5,7 +5,7 @@
 <only key="{{ url.current }}">
   <style portal="{{ rootContext.stylesPortalName }}">
     .{{ Class.Toggle }} {
-      > [data-main-toggle-input] {
+      > :first-child {
         visibility: hidden;
         position: fixed;
         top: -100vh;
@@ -28,7 +28,7 @@
     "
     expand="{{ restProps }}"
   >
-    <input type="{{ group ? 'radio' : 'checkbox' }}" data-main-toggle-input />
+    <input type="{{ group ? 'radio' : 'checkbox' }}" name="{{ group }}" />
     <slot />
   </label>
 </element>
