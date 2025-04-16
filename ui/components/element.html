@@ -24,13 +24,7 @@
       overflow-x: var({{ CustomProperty.HorizontalClip }});
       overflow-y: var({{ CustomProperty.VerticalClip }});
 
-      position: var({{ CustomProperty.Position }});
-      top: var({{ CustomProperty.PositionTopOffset }});
-      bottom: var({{ CustomProperty.PositionBottomOffset }});
-      left: var({{ CustomProperty.PositionLeftOffset }});
-      right: var({{ CustomProperty.PositionRightOffset }});
-      z-index: var({{ CustomProperty.PositionAxisOffset }});
-
+      z-index: 1;
       text-decoration: none;
 
       border: var({{ CustomProperty.Border }});
@@ -60,6 +54,19 @@
         --mu-m-right: var(--mu-margin-right);
       }
     }
+
+    .{{ Class.PositionedContainer }} {
+      display: inline-flex;
+
+      position: var({{ CustomProperty.Position }});
+      top: var({{ CustomProperty.PositionTopOffset }});
+      bottom: var({{ CustomProperty.PositionBottomOffset }});
+      left: var({{ CustomProperty.PositionLeftOffset }});
+      right: var({{ CustomProperty.PositionRightOffset }});
+      z-index: var({{ CustomProperty.PositionAxisOffset }});
+      height: var({{ CustomProperty.PositionedHeight }});
+      width: var({{ CustomProperty.PositionedWidth }});
+    }
   </style>
 </only>
 
@@ -73,7 +80,20 @@
 <export name="classes" />
 <export name="restProps" as="rest-props" />
 
-<slot />
+<if condition="{{ position !== 'initial' }}">
+  <style portal="{{ rootContext.stylesPortalName }}">
+    .{{ Class.PositionedContainer }}:has(> .{{ id }}) {
+      {{ positionedContainerCss }}
+    }
+  </style>
+
+  <div class="{{ Class.PositionedContainer }}">
+    <slot />
+  </div>
+</if>
+<else>
+  <slot />
+</else>
 
 <script type="module" build>
   /**
@@ -237,9 +257,6 @@
     compileProperty(CustomProperty.HorizontalClip, clipX, {
       visitor: HorizontalClipVisitor,
     }),
-    compileProperty(CustomProperty.Position, position, {
-      visitor: PositionVisitor,
-    }),
     compileProperty(CustomProperty.Background, background, {
       visitor: BackgroundVisitor,
     }),
@@ -253,4 +270,12 @@
       visitor: ShadowVisitor,
     }),
   ].join("");
+
+  const positionedContainerCss = compileProperty(
+    CustomProperty.Position,
+    position,
+    {
+      visitor: PositionVisitor,
+    },
+  );
 </script>

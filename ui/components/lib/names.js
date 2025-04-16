@@ -15,6 +15,7 @@ export const Class = Object.freeze({
   Toggle: "mu-toggle",
   File: "mu-file",
   Video: "mu-video",
+  PositionedContainer: "mu-positioned-container",
 });
 
 /**
@@ -59,6 +60,8 @@ export const CustomProperty = Object.freeze({
   Rounded: "--mu-rounded",
   Border: "--mu-border",
   Shadow: "--mu-shadow",
+  PositionedHeight: "--mu-positioned-height",
+  PositionedWidth: "--mu-positioned-width",
 });
 
 /**

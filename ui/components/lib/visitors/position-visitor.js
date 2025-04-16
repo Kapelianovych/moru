@@ -54,7 +54,7 @@ export const PositionVisitor = {
                     ],
                   },
                 },
-                ...calculateOffsetsFor(specifiedPosition),
+                ...calculatePositionedAreaFor(specifiedPosition),
               ],
             },
           },
@@ -80,7 +80,7 @@ function getPositionValue(token) {
  * @param {Position} position
  * @returns {Array<ReturnedDeclaration>}
  */
-function calculateOffsetsFor(position) {
+function calculatePositionedAreaFor(position) {
   return [
     {
       property: "custom",
@@ -90,14 +90,14 @@ function calculateOffsetsFor(position) {
           {
             type: "token",
             value:
-              position === "above" || position === "below"
+              position === "above"
                 ? {
                     type: "ident",
                     value: "initial",
                   }
                 : {
                     type: "percentage",
-                    value: 0,
+                    value: position === "below" ? 1 : 0,
                   },
           },
         ],
@@ -111,10 +111,10 @@ function calculateOffsetsFor(position) {
           {
             type: "token",
             value:
-              position === "above" || position === "below"
+              position === "above"
                 ? {
                     type: "percentage",
-                    value: position === "above" ? 1 : 0,
+                    value: 1,
                   }
                 : {
                     type: "ident",
@@ -132,17 +132,14 @@ function calculateOffsetsFor(position) {
           {
             type: "token",
             value:
-              position === "in-front" ||
-              position === "behind-content" ||
-              position === "above" ||
-              position === "below"
+              position === "on-left"
                 ? {
-                    type: "percentage",
-                    value: 0,
-                  }
-                : {
                     type: "ident",
                     value: "initial",
+                  }
+                : {
+                    type: "percentage",
+                    value: position === "on-right" ? 1 : 0,
                   },
           },
         ],
@@ -156,10 +153,10 @@ function calculateOffsetsFor(position) {
           {
             type: "token",
             value:
-              position === "on-left" || position === "on-right"
+              position === "on-left"
                 ? {
                     type: "percentage",
-                    value: position === "on-left" ? 1 : 0,
+                    value: 1,
                   }
                 : {
                     type: "ident",
@@ -185,6 +182,48 @@ function calculateOffsetsFor(position) {
                     ? 2
                     : 1,
             },
+          },
+        ],
+      },
+    },
+    {
+      property: "custom",
+      value: {
+        name: CustomProperty.PositionedHeight,
+        value: [
+          {
+            type: "token",
+            value:
+              position === "behind-content" ||
+              position === "on-left" ||
+              position === "on-right" ||
+              position === "in-front"
+                ? {
+                    type: "percentage",
+                    value: 1,
+                  }
+                : { type: "ident", value: "auto" },
+          },
+        ],
+      },
+    },
+    {
+      property: "custom",
+      value: {
+        name: CustomProperty.PositionedWidth,
+        value: [
+          {
+            type: "token",
+            value:
+              position === "behind-content" ||
+              position === "above" ||
+              position === "below" ||
+              position === "in-front"
+                ? {
+                    type: "percentage",
+                    value: 1,
+                  }
+                : { type: "ident", value: "auto" },
           },
         ],
       },
