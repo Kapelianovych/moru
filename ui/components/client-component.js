@@ -11,17 +11,25 @@ Symbol.metadata ??= Symbol.for("Symbol.metadata");
  * @property {|
  *   Record<
  *     PropertyKey,
- *     { selector?: string; access: ClassFieldDecoratorContext['access'] }
+ *     {
+ *       selector?: string;
+ *       multiple?: boolean;
+ *       access: ClassFieldDecoratorContext['access'];
+ *     }
  *   >
  * } [ELEMENTS_CONTAINER]
  * @property {|
  *   Record<
  *     PropertyKey,
- *     { target?: string; access: ClassMethodDecoratorContext['access']; eventName: string }
+ *     {
+ *       target?: string;
+ *       access: ClassFieldDecoratorContext['access'] | ClassMethodDecoratorContext['access'];
+ *       eventName: string
+ *     }
  *   >
  * } [EVENT_LISTENERES_CONTAINER]
- * @property {Set<ClassMethodDecoratorContext['access']>} [CONNECTED_CALLBACKS]
- * @property {Set<ClassMethodDecoratorContext['access']>} [DISCONNECTED_CALLBACKS]
+ * @property {Set<ClassFieldDecoratorContext['access'] | ClassMethodDecoratorContext['access']>} [CONNECTED_CALLBACKS]
+ * @property {Set<ClassFieldDecoratorContext['access'] | ClassMethodDecoratorContext['access']>} [DISCONNECTED_CALLBACKS]
  */
 
 /**
@@ -30,8 +38,9 @@ Symbol.metadata ??= Symbol.for("Symbol.metadata");
  */
 
 /**
+ * @template {Object} A
  * @param {ComponentOptions} options
- * @returns {function({ new (): object }, ClassDecoratorContext): { new (): object }}
+ * @returns {function({ new (): A }, ClassDecoratorContext): { new (): A }}
  */
 export function Component(options) {
   return (Class, context) => {
@@ -39,7 +48,7 @@ export function Component(options) {
       static tag = options.tag;
 
       /**
-       * @type {Set<VoidFunction>}
+       * @type {Set<function(): void | VoidFunction>}
        */
       #connectCallbacks = new Set();
       /**
@@ -53,7 +62,11 @@ export function Component(options) {
         this.#attachEventListeners();
         this.#initialiseLifecycleCallbacks();
         this.#connectCallbacks.forEach((fn) => {
-          fn.call(this.#componentDefinitionInstance);
+          const dispose = fn.call(this.#componentDefinitionInstance);
+
+          if (dispose) {
+            this.#disconnectCallbacks.add(dispose);
+          }
         });
       }
 
@@ -72,9 +85,13 @@ export function Component(options) {
 
         if (elements) {
           for (const field in elements) {
-            const { selector, access } = elements[field];
+            const { selector, multiple, access } = elements[field];
 
-            const element = selector ? this.querySelector(selector) : this;
+            const element = selector
+              ? multiple
+                ? Array.from(this.querySelectorAll(selector))
+                : this.querySelector(selector)
+              : this;
 
             access.set(this.#componentDefinitionInstance, element);
           }
@@ -98,36 +115,51 @@ export function Component(options) {
           for (const methodName in eventListeners) {
             const { target, access, eventName } = eventListeners[methodName];
 
-            let targetElement;
+            /**
+             * @type {|
+             *   Document
+             *   | Window
+             *   | globalThis
+             *   | Element
+             *   | Array<Document | Window | globalThis | Element>
+             * }
+             */
+            let resolvedElementsReference;
 
             if (target) {
               switch (target) {
                 case "document":
-                  targetElement = document;
+                  resolvedElementsReference = document;
                   break;
                 case "window":
-                  targetElement = window;
+                  resolvedElementsReference = window;
                   break;
                 case "globalThis":
-                  targetElement = globalThis;
+                  resolvedElementsReference = globalThis;
                   break;
                 default:
-                  targetElement = elements?.[target].access.get(
+                  resolvedElementsReference = elements?.[target].access.get(
                     this.#componentDefinitionInstance,
                   );
               }
             } else {
-              targetElement = this;
+              resolvedElementsReference = this;
             }
 
             const boundCallback = access
               .get(this.#componentDefinitionInstance)
               .bind(this.#componentDefinitionInstance);
 
-            targetElement.addEventListener(eventName, boundCallback);
+            const resolvedElements = Array.isArray(resolvedElementsReference)
+              ? resolvedElementsReference
+              : [resolvedElementsReference];
 
-            this.#disconnectCallbacks.add(() => {
-              targetElement.removeEventListener(eventName, boundCallback);
+            resolvedElements.forEach((targetElement) => {
+              targetElement.addEventListener(eventName, boundCallback);
+
+              this.#disconnectCallbacks.add(() => {
+                targetElement.removeEventListener(eventName, boundCallback);
+              });
             });
           }
         }
@@ -159,15 +191,16 @@ export function Component(options) {
 
     customElements.define(options.tag, FinalClass);
 
-    return FinalClass;
+    return /** @type {any} */ (FinalClass);
   };
 }
 
 /**
- * @param {string} selector
+ * @param {string} [selector]
+ * @param {boolean} [multiple]
  * @returns {function(unknown, ClassFieldDecoratorContext): void}
  */
-export function Element(selector) {
+export function Element(selector, multiple) {
   return (_, context) => {
     context.metadata[ELEMENTS_CONTAINER] ??= {};
     /**
@@ -176,6 +209,7 @@ export function Element(selector) {
     (context.metadata[ELEMENTS_CONTAINER])[context.name] = {
       selector,
       access: context.access,
+      multiple,
     };
   };
 }
@@ -183,7 +217,7 @@ export function Element(selector) {
 /**
  * @param {string} eventName
  * @param {string} [target]
- * @returns {function(unknown, ClassMethodDecoratorContext): void}
+ * @returns {function(unknown, ClassFieldDecoratorContext | ClassMethodDecoratorContext): void}
  */
 export function On(eventName, target) {
   return (_, context) => {
@@ -201,7 +235,7 @@ export function On(eventName, target) {
 
 /**
  * @param {unknown} _
- * @param {ClassMethodDecoratorContext} context
+ * @param {ClassFieldDecoratorContext | ClassMethodDecoratorContext} context
  * @returns {void}
  */
 export function Connected(_, context) {
@@ -214,7 +248,7 @@ export function Connected(_, context) {
 
 /**
  * @param {unknown} _
- * @param {ClassMethodDecoratorContext} context
+ * @param {ClassFieldDecoratorContext | ClassMethodDecoratorContext} context
  * @returns {void}
  */
 export function Disconnected(_, context) {

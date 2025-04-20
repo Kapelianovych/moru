@@ -69,5 +69,4 @@ export const CustomProperty = Object.freeze({
  */
 export const PrivateProperties = Object.freeze({
   TypeOf: "__typeof-slkjs9d662",
-  ClientRootContext: "__client-root-context-kd8s6k3",
 });

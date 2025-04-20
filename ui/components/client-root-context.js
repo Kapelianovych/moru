@@ -2,19 +2,10 @@
  * @import { LengthUnit } from "lightningcss";
  *
  * @import { Ref } from "./ref.js";
+ * @import { Context } from "./client-context.js";
  */
 
-import { isRef } from "./ref.js";
-import { Class, PrivateProperties } from "./lib/names.js";
-
-/**
- * @typedef {|
- *  HTMLElement &
- *    {
- *      [PrivateProperties.ClientRootContext]: ClientRootContext
- *    }
- * } RootHTMLElement
- */
+import { createContext, useContext } from "./client-context.js";
 
 /**
  * @typedef {Object} ClientRootContext
@@ -22,17 +13,16 @@ import { Class, PrivateProperties } from "./lib/names.js";
  */
 
 /**
+ * @type {Context<ClientRootContext | null>}
+ */
+export const ClientRootContext = createContext(
+  /** @type {ClientRootContext | null} */ (null),
+);
+
+/**
  * @param {Ref | Element} elementOrRef
- * @returns {ClientRootContext}
+ * @returns {ClientRootContext | null}
  */
 export function useClientRootContext(elementOrRef) {
-  const element = isRef(elementOrRef)
-    ? document.querySelector(elementOrRef.selector)
-    : elementOrRef;
-
-  const root = element?.closest(`.${Class.Root}`);
-
-  return /** @type {RootHTMLElement} */ (root)[
-    PrivateProperties.ClientRootContext
-  ];
+  return useContext(elementOrRef, ClientRootContext);
 }

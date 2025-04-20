@@ -61,19 +61,13 @@
     </div>
 
     <script type="module">
-      /**
-       * @import { RootHTMLElement } from './client-root-context.js';
-       */
+      import { rootRef, clientRootContext } from "build";
 
-      import { clientRootContext, rootRef } from "build";
-
-      import { PrivateProperties } from "./lib/names.js";
+      import { ClientRootContext } from "./client-root-context.js";
 
       const element = document.querySelector(rootRef.selector);
 
-      /** @type {RootHTMLElement} */ (element)[
-        PrivateProperties.ClientRootContext
-      ] = clientRootContext;
+      ClientRootContext.assignTo(element, clientRootContext);
     </script>
   </element>
 </context-provider>
