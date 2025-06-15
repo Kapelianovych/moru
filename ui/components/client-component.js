@@ -113,6 +113,12 @@ export function Component(options) {
       #disconnectCallbacks = new Set();
       #componentDefinitionInstance = new Class();
 
+      constructor() {
+        super();
+
+        this.#initialisePublicMethods();
+      }
+
       connectedCallback() {
         if (document.readyState === "loading") {
           return scheduledConnectedCallbacks.push(
@@ -123,7 +129,6 @@ export function Component(options) {
         this.#injectContexts();
         this.#initialiseElements();
         this.#attachEventListeners();
-        this.#initialisePublicMethods();
         this.#initialiseContextProviders();
         this.#initialiseLifecycleCallbacks();
         this.#connectCallbacks.forEach((fn) => {
