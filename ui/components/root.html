@@ -4,7 +4,7 @@
 <import from="./element.html" />
 
 <only key="{{ url.current }}">
-  <style portal="{{ context.stylesPortalName }}">
+  <style portal="{{ context.headPortalName }}">
     html,
     body {
       /*
@@ -42,14 +42,30 @@
 </only>
 
 <context-provider key="{{ ROOT_CONTEXT }}" value="{{ context }}">
+  <script type="module" portal="{{ context.headPortalName }}">
+    import { clientRootContext } from "build";
+
+    import { Context, Component } from "./client-component.js";
+    import { ClientRootContext } from "./client-root-context.js";
+
+    @Component({ tag: "mu-root" })
+    class MuRoot {
+      @Context(ClientRootContext)
+      #createClientRootContextValue() {
+        return clientRootContext;
+      }
+    }
+  </script>
+
   <element
-    ref="{{ rootRef }}"
+    ref="{{ ref }}"
+    hidden="{{ hidden }}"
     direction="column"
     min-width="fill"
     min-height="fill"
     assign:classes="elementClasses"
   >
-    <div
+    <mu-root
       class="
         {{ elementClasses }}
         {{ Class.Root }}
@@ -58,17 +74,7 @@
       expand="{{ restProps }}"
     >
       <slot />
-    </div>
-
-    <script type="module">
-      import { rootRef, clientRootContext } from "build";
-
-      import { ClientRootContext } from "./client-root-context.js";
-
-      const element = document.querySelector(rootRef.selector);
-
-      ClientRootContext.assignTo(element, clientRootContext);
-    </script>
+    </mu-root>
   </element>
 </context-provider>
 
@@ -80,14 +86,14 @@
    */
 
   import { Class } from "./lib/names.js";
-  import { createRef } from "./ref.js";
   import { ROOT_CONTEXT, createRootContext } from "./lib/root-context.js";
 
   /**
    * @typedef {Object} Props
    * @property {Ref} [ref]
+   * @property {string} [hidden]
    * @property {string} [class]
-   * @property {string} [styles-portal-name]
+   * @property {string} [head-portal-name]
    * @property {string} [default-measurement-unit]
    * @property {string} [default-font-size]
    * @property {string} [default-font-family]
@@ -97,8 +103,9 @@
 
   const {
     ref,
+    hidden,
     class: classes = "",
-    "styles-portal-name": stylesPortalName,
+    "head-portal-name": headPortalName,
     "default-measurement-unit": defaultCSSUnit,
     "default-font-size": defaultFontSize,
     "default-font-family": defaultFontFamily,
@@ -113,13 +120,11 @@
   const context = createRootContext({
     defaultCSSUnit,
     defaultFontSize,
-    stylesPortalName,
+    headPortalName,
     defaultFontFamily,
     defaultRealTextHeightRatio,
     defaultTextSideOffsetCorrection,
   });
-
-  export const rootRef = ref ?? createRef();
 
   /**
    * @type {ClientRootContext}

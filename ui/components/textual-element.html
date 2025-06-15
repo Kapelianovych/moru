@@ -7,7 +7,7 @@
 <export name="textualElementRestProps" as="rest-props" />
 
 <only key="{{ url.current }}">
-  <style portal="{{ rootContext.stylesPortalName }}">
+  <style portal="{{ rootContext.headPortalName }}">
     .{{ Class.TextualElement }} {
       --mu-font-side-offset: calc(
         var({{ CustomProperty.FontSize }}) *
@@ -58,7 +58,7 @@
   assign:rest-props="elementRestProps"
   assign:classes="elementClasses"
 >
-  <style portal="{{ rootContext.stylesPortalName }}">
+  <style portal="{{ rootContext.headPortalName }}">
     .{{ id }} {
       {{ css }}
     }

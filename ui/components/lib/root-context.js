@@ -9,7 +9,7 @@ export const ROOT_CONTEXT = Symbol("root context");
 
 /**
  * @typedef {Object} RootContext
- * @property {string} stylesPortalName
+ * @property {string} headPortalName
  * @property {LengthUnit} defaultCSSUnit
  * @property {string} fallbackFontFamily
  * @property {string | number} defaultFontSize
@@ -27,7 +27,7 @@ export const ROOT_CONTEXT = Symbol("root context");
 export function createRootContext(initial) {
   return {
     defaultCSSUnit: initial.defaultCSSUnit ?? "rem",
-    stylesPortalName: initial.stylesPortalName ?? "head",
+    headPortalName: initial.headPortalName ?? "head",
     fallbackFontFamily:
       'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
     defaultFontSize: initial.defaultFontSize ?? "1un",
@@ -35,7 +35,7 @@ export function createRootContext(initial) {
     defaultRealTextHeightRatio: initial.defaultRealTextHeightRatio,
     defaultTextSideOffsetCorrection: initial.defaultTextSideOffsetCorrection,
     fallbackRealTextHeightRatio: 0.74,
-    fallbackTextSideOffsetCorrection: "0.05un",
+    fallbackTextSideOffsetCorrection: "0.0625un",
   };
 }
 

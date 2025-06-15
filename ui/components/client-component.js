@@ -1,3 +1,14 @@
+/**
+ * @import { Ref } from "./ref.js";
+ * @import { Context } from "./client-context.js";
+ */
+
+import { isRef } from "./ref.js";
+import { useContext } from "./client-context.js";
+
+const PUBLIC_METHODS = Symbol("public-methods");
+const CONTEXT_CONSUMERS = Symbol("context-consumers");
+const CONTEXT_PROVIDERS = Symbol("context-providers");
 const ELEMENTS_CONTAINER = Symbol("elements-container");
 const EVENT_LISTENERES_CONTAINER = Symbol("event-listeners-container");
 const CONNECTED_CALLBACKS = Symbol("connected-callbacks");
@@ -12,7 +23,7 @@ Symbol.metadata ??= Symbol.for("Symbol.metadata");
  *   Record<
  *     PropertyKey,
  *     {
- *       selector?: string;
+ *       selector?: string | Ref;
  *       multiple?: boolean;
  *       access: ClassFieldDecoratorContext['access'];
  *     }
@@ -23,13 +34,37 @@ Symbol.metadata ??= Symbol.for("Symbol.metadata");
  *     PropertyKey,
  *     {
  *       target?: string;
- *       access: ClassFieldDecoratorContext['access'] | ClassMethodDecoratorContext['access'];
+ *       access: ClassMethodDecoratorContext['access'];
  *       eventName: string
  *     }
  *   >
  * } [EVENT_LISTENERES_CONTAINER]
- * @property {Set<ClassFieldDecoratorContext['access'] | ClassMethodDecoratorContext['access']>} [CONNECTED_CALLBACKS]
- * @property {Set<ClassFieldDecoratorContext['access'] | ClassMethodDecoratorContext['access']>} [DISCONNECTED_CALLBACKS]
+ * @property {Set<ClassMethodDecoratorContext['access']>} [CONNECTED_CALLBACKS]
+ * @property {Set<ClassMethodDecoratorContext['access']>} [DISCONNECTED_CALLBACKS]
+ * @property {|
+ *   Array<
+ *     {
+ *       contextToInject: Context<any>;
+ *       access: ClassFieldDecoratorContext['access'];
+ *     }
+ *   >
+ * } [CONTEXT_CONSUMERS]
+ * @property {|
+ *   Array<
+ *     {
+ *       member(): any;
+ *       contextToProvide: Context<any>;
+ *     }
+ *   >
+ * } [CONTEXT_PROVIDERS]
+ * @property {|
+ *  Array<
+ *    {
+ *      name: string | symbol;
+ *      method(...args: Array<unknown>): unknown;
+ *    }
+ *  >
+ * } [PUBLIC_METHODS]
  */
 
 /**
@@ -38,13 +73,34 @@ Symbol.metadata ??= Symbol.for("Symbol.metadata");
  */
 
 /**
+ * @type {Array<VoidFunction>}
+ */
+const scheduledConnectedCallbacks = [];
+
+function callConnectedCallbacksInOrder() {
+  scheduledConnectedCallbacks.forEach((callback) => {
+    callback();
+  });
+  scheduledConnectedCallbacks.length = 0;
+  document.removeEventListener(
+    "readystatechange",
+    callConnectedCallbacksInOrder,
+  );
+}
+
+document.addEventListener("readystatechange", callConnectedCallbacksInOrder, {
+  once: true,
+  passive: true,
+});
+
+/**
  * @template {Object} A
  * @param {ComponentOptions} options
  * @returns {function({ new (): A }, ClassDecoratorContext): { new (): A }}
  */
 export function Component(options) {
   return (Class, context) => {
-    const FinalClass = class extends HTMLElement {
+    class FinalClass extends HTMLElement {
       static tag = options.tag;
 
       /**
@@ -58,8 +114,17 @@ export function Component(options) {
       #componentDefinitionInstance = new Class();
 
       connectedCallback() {
+        if (document.readyState === "loading") {
+          return scheduledConnectedCallbacks.push(
+            this.connectedCallback.bind(this),
+          );
+        }
+
+        this.#injectContexts();
         this.#initialiseElements();
         this.#attachEventListeners();
+        this.#initialisePublicMethods();
+        this.#initialiseContextProviders();
         this.#initialiseLifecycleCallbacks();
         this.#connectCallbacks.forEach((fn) => {
           const dispose = fn.call(this.#componentDefinitionInstance);
@@ -87,10 +152,12 @@ export function Component(options) {
           for (const field in elements) {
             const { selector, multiple, access } = elements[field];
 
-            const element = selector
+            const cssSelector = isRef(selector) ? selector.selector : selector;
+
+            const element = cssSelector
               ? multiple
-                ? Array.from(this.querySelectorAll(selector))
-                : this.querySelector(selector)
+                ? Array.from(this.querySelectorAll(cssSelector))
+                : this.querySelector(cssSelector)
               : this;
 
             access.set(this.#componentDefinitionInstance, element);
@@ -187,20 +254,66 @@ export function Component(options) {
           );
         });
       }
-    };
 
-    customElements.define(options.tag, FinalClass);
+      #injectContexts() {
+        const contexts =
+          /**
+           * @type {ComponentMetadata['CONTEXT_CONSUMERS']}
+           */
+          (context.metadata[CONTEXT_CONSUMERS]);
+
+        contexts?.forEach(({ access, contextToInject }) => {
+          const contextValue = useContext(this, contextToInject);
+
+          access.set(this.#componentDefinitionInstance, contextValue);
+        });
+      }
+
+      #initialiseContextProviders() {
+        const contexts =
+          /**
+           * @type {ComponentMetadata['CONTEXT_PROVIDERS']}
+           */
+          (context.metadata[CONTEXT_PROVIDERS]);
+
+        contexts?.forEach(({ member, contextToProvide }) => {
+          const contextValue = member.call(this.#componentDefinitionInstance);
+
+          contextToProvide.assignTo(this, contextValue);
+        });
+      }
+
+      #initialisePublicMethods() {
+        const publicMethods =
+          /**
+           * @type {ComponentMetadata['PUBLIC_METHODS']}
+           */
+          (context.metadata[PUBLIC_METHODS]);
+
+        publicMethods?.forEach(({ name, method }) => {
+          // @ts-expect-error
+          this[name] = method.bind(this.#componentDefinitionInstance);
+        });
+      }
+    }
+
+    customElements.define(FinalClass.tag, FinalClass);
 
     return /** @type {any} */ (FinalClass);
   };
 }
 
 /**
- * @param {string} [selector]
- * @param {boolean} [multiple]
+ * @typedef {Object} ElementOptions
+ * @property {boolean} [multiple]
+ */
+
+/**
+ * @param {string | Ref} [selector]
+ * @param {ElementOptions} [options]
  * @returns {function(unknown, ClassFieldDecoratorContext): void}
  */
-export function Element(selector, multiple) {
+export function Element(selector, options) {
   return (_, context) => {
     context.metadata[ELEMENTS_CONTAINER] ??= {};
     /**
@@ -209,7 +322,7 @@ export function Element(selector, multiple) {
     (context.metadata[ELEMENTS_CONTAINER])[context.name] = {
       selector,
       access: context.access,
-      multiple,
+      multiple: options?.multiple,
     };
   };
 }
@@ -217,7 +330,7 @@ export function Element(selector, multiple) {
 /**
  * @param {string} eventName
  * @param {string} [target]
- * @returns {function(unknown, ClassFieldDecoratorContext | ClassMethodDecoratorContext): void}
+ * @returns {function(unknown, ClassMethodDecoratorContext): void}
  */
 export function On(eventName, target) {
   return (_, context) => {
@@ -235,7 +348,7 @@ export function On(eventName, target) {
 
 /**
  * @param {unknown} _
- * @param {ClassFieldDecoratorContext | ClassMethodDecoratorContext} context
+ * @param {ClassMethodDecoratorContext} context
  * @returns {void}
  */
 export function Connected(_, context) {
@@ -248,7 +361,7 @@ export function Connected(_, context) {
 
 /**
  * @param {unknown} _
- * @param {ClassFieldDecoratorContext | ClassMethodDecoratorContext} context
+ * @param {ClassMethodDecoratorContext} context
  * @returns {void}
  */
 export function Disconnected(_, context) {
@@ -257,4 +370,57 @@ export function Disconnected(_, context) {
    * @type {NonNullable<ComponentMetadata['DISCONNECTED_CALLBACKS']>}
    */
   (context.metadata[DISCONNECTED_CALLBACKS]).add(context.access);
+}
+
+/**
+ * @template A
+ * @param {Context<A>} contextObject
+ * @returns {|
+ *  function(
+ *    any,
+ *    ClassFieldDecoratorContext
+ *    | ClassMethodDecoratorContext
+ *  ): void
+ * }
+ */
+export function Context(contextObject) {
+  return (member, context) => {
+    const isConsumer = context.kind === "field";
+
+    if (isConsumer) {
+      context.metadata[CONTEXT_CONSUMERS] ??= [];
+      /**
+       * @type {NonNullable<ComponentMetadata['CONTEXT_CONSUMERS']>}
+       */
+      (context.metadata[CONTEXT_CONSUMERS]).push({
+        access: context.access,
+        contextToInject: contextObject,
+      });
+    } else {
+      context.metadata[CONTEXT_PROVIDERS] ??= [];
+      /**
+       * @type {NonNullable<ComponentMetadata['CONTEXT_PROVIDERS']>}
+       */
+      (context.metadata[CONTEXT_PROVIDERS]).push({
+        member,
+        contextToProvide: contextObject,
+      });
+    }
+  };
+}
+
+/**
+ * @param {function(...Array<unknown>): unknown} method
+ * @param {ClassMethodDecoratorContext} context
+ * @returns {void}
+ */
+export function Method(method, context) {
+  context.metadata[PUBLIC_METHODS] ??= [];
+  /**
+   * @type {NonNullable<ComponentMetadata['PUBLIC_METHODS']>}
+   */
+  (context.metadata[PUBLIC_METHODS]).push({
+    name: context.name,
+    method,
+  });
 }

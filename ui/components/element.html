@@ -1,9 +1,9 @@
 <import from="@moru/core/only.html" />
 
 <only key="{{ url.current }}">
-  <style portal="{{ rootContext.stylesPortalName }}">
+  <style portal="{{ rootContext.headPortalName }}">
     .{{ Class.Element }} {
-      display: inline-flex;
+      display: var({{ CustomProperty.Hidden }});
       align-self: var(--mu-align);
       flex-direction: var({{ CustomProperty.Direction }});
 
@@ -14,7 +14,11 @@
         var(--mu-m-right)
         var(--mu-m-bottom)
         var(--mu-m-left);
-      padding: var({{ CustomProperty.Padding }});
+      padding:
+        var({{ CustomProperty.PaddingTop }})
+        var({{ CustomProperty.PaddingRight }})
+        var({{ CustomProperty.PaddingBottom }})
+        var({{ CustomProperty.PaddingLeft }});
 
       width: var({{ CustomProperty.Width }});
       height: var({{ CustomProperty.Height }});
@@ -27,7 +31,11 @@
       z-index: 1;
       text-decoration: none;
 
-      border: var({{ CustomProperty.Border }});
+      {{ CustomProperty.BorderWidth }}: 0px;
+      border:
+        var({{ CustomProperty.BorderWidth }})
+        var({{ CustomProperty.BorderStyle }})
+        var({{ CustomProperty.BorderColour }});
       border-radius: var({{ CustomProperty.Rounded }});
       box-shadow: var({{ CustomProperty.Shadow }});
 
@@ -70,7 +78,7 @@
   </style>
 </only>
 
-<style portal="{{ rootContext.stylesPortalName }}">
+<style portal="{{ rootContext.headPortalName }}">
   .{{ id }} {
     {{ css }}
   }
@@ -81,7 +89,7 @@
 <export name="restProps" as="rest-props" />
 
 <if condition="{{ position !== 'initial' }}">
-  <style portal="{{ rootContext.stylesPortalName }}">
+  <style portal="{{ rootContext.headPortalName }}">
     .{{ Class.PositionedContainer }}:has(> .{{ id }}) {
       {{ positionedContainerCss }}
     }
@@ -137,6 +145,7 @@
     BorderVisitor,
   } from "./lib/visitors/border-visitors.js";
   import { ShadowVisitor } from "./lib/visitors/shadow-visitor.js";
+  import { HiddenVisitor } from "./lib/visitors/hidden-visitor.js";
 
   /**
    * @typedef {Object} Props
@@ -163,6 +172,7 @@
    * @property {string} [rounded]
    * @property {string} [border]
    * @property {string} [shadow]
+   * @property {string} [hidden]
    */
 
   const {
@@ -172,8 +182,8 @@
     "align-y": alignY = "top",
     width = "auto",
     height = "auto",
-    "min-width": minWidth = "auto",
-    "min-height": minHeight = "auto",
+    "min-width": minWidth = 0,
+    "min-height": minHeight = 0,
     spacing = 0,
     padding = 0,
     "move-left": moveLeft,
@@ -189,6 +199,7 @@
     rounded,
     border,
     shadow,
+    hidden = "false",
     ...restProps
   } = /** @type {Props} */ (props);
 
@@ -268,6 +279,9 @@
     }),
     compileProperty(CustomProperty.Shadow, shadow, {
       visitor: ShadowVisitor,
+    }),
+    compileProperty(CustomProperty.Hidden, hidden || "true", {
+      visitor: HiddenVisitor,
     }),
   ].join("");
 

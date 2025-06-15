@@ -3,7 +3,7 @@
 <import from="./element.html" />
 
 <only key="{{ url.current }}">
-  <style portal="{{ rootContext.stylesPortalName }}">
+  <style portal="{{ rootContext.headPortalName }}">
     .{{ Class.Image }} {
       img {
         max-width: 100%;
@@ -20,7 +20,7 @@
   assign:classes="elementClasses"
   assign:rest-props="restProps"
 >
-  <style portal="{{ rootContext.stylesPortalName }}">
+  <style portal="{{ rootContext.headPortalName }}">
     .{{ id }} {
       img {
         {{ css }}

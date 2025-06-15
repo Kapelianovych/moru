@@ -31,6 +31,10 @@ export const CustomProperty = Object.freeze({
   MinHeight: "--mu-min-height",
   Spacing: "--mu-spacing",
   Padding: "--mu-padding",
+  PaddingTop: "--mu-padding-top",
+  PaddingRight: "--mu-padding-right",
+  PaddingBottom: "--mu-padding-bottom",
+  PaddingLeft: "--mu-padding-left",
   HorizontalMovement: "--mu-move-x",
   VerticalMovement: "--mu-move-y",
   HorizontalClip: "--mu-clip-x",
@@ -59,9 +63,13 @@ export const CustomProperty = Object.freeze({
   TextLines: "--mu-text-lines",
   Rounded: "--mu-rounded",
   Border: "--mu-border",
+  BorderWidth: "--mu-border-width",
+  BorderStyle: "--mu-border-style",
+  BorderColour: "--mu-border-colour",
   Shadow: "--mu-shadow",
   PositionedHeight: "--mu-positioned-height",
   PositionedWidth: "--mu-positioned-width",
+  Hidden: "--mu-hidden",
 });
 
 /**

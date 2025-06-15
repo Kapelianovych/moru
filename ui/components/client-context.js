@@ -3,6 +3,7 @@
  */
 
 import { isRef } from "./ref.js";
+import { createId } from "./lib/id.js";
 
 const CONTEXTS = Symbol("@moru/ui/contexts");
 
@@ -25,7 +26,7 @@ const CONTEXTS = Symbol("@moru/ui/contexts");
  * @returns {Context<A>}
  */
 export function createContext(defaultValue) {
-  const contextId = crypto.randomUUID();
+  const contextId = createId();
 
   return {
     id: contextId,
@@ -34,10 +35,12 @@ export function createContext(defaultValue) {
     assignTo(element, value) {
       /**
        * @type {ElementWithContexts}
-       */ (element)[CONTEXTS] ??= {};
+       */
+      (element)[CONTEXTS] ??= {};
       /**
        * @type {ElementWithContexts}
-       */ (element)[CONTEXTS][contextId] = value;
+       */
+      (element)[CONTEXTS][contextId] = value;
     },
   };
 }

@@ -131,7 +131,11 @@ function createAlignmentVisitor(axis, startSide, endSide) {
                       hasRulePreludeValue(
                         rule.prelude,
                         EndAlignmentKeyword[axis],
-                      )
+                      ) ||
+                        hasRulePreludeValue(
+                          rule.prelude,
+                          StartAlignmentKeyword[axis],
+                        )
                         ? ZERO_NUMBER_TOKEN
                         : AUTO_IDENT_TOKEN,
                     ),

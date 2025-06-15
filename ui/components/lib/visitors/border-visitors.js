@@ -1,5 +1,5 @@
 /**
- * @import { Visitor, TokenOrValue } from "lightningcss";
+ * @import { Visitor, TokenOrValue, ReturnedDeclaration } from "lightningcss";
  *
  * @import { DefaultCustomAtRules } from "../property.js";
  */
@@ -55,23 +55,21 @@ export const BorderVisitor = {
   Rule: {
     custom: {
       value(rule) {
+        const [width, , style, , colour] = /** @type {Array<TokenOrValue>} */ (
+          rule.prelude.value
+        );
+
         return {
           type: "style",
           value: {
             loc: rule.loc,
             selectors: [[{ type: "nesting" }]],
             declarations: {
-              declarations: [
-                {
-                  property: "custom",
-                  value: {
-                    name: CustomProperty.Border,
-                    value: /** @type {Array<TokenOrValue>} */ (
-                      rule.prelude.value
-                    ),
-                  },
-                },
-              ],
+              declarations: expandBorderIntoSeparateProperties(
+                width,
+                style,
+                colour,
+              ),
             },
           },
         };
@@ -79,3 +77,28 @@ export const BorderVisitor = {
     },
   },
 };
+
+/**
+ * @type {Record<number, string>}
+ */
+const INDEX_TO_PROPERTY = Object.freeze({
+  0: CustomProperty.BorderWidth,
+  1: CustomProperty.BorderStyle,
+  2: CustomProperty.BorderColour,
+});
+
+/**
+ * @param {...TokenOrValue} tokens
+ * @returns {Array<ReturnedDeclaration>}
+ */
+function expandBorderIntoSeparateProperties(...tokens) {
+  return tokens.map((token, index) => {
+    return {
+      property: "custom",
+      value: {
+        name: INDEX_TO_PROPERTY[index],
+        value: [token],
+      },
+    };
+  });
+}

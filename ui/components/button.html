@@ -1,4 +1,18 @@
+<import from="@moru/core/only.html" />
+
 <import from="./element.html" />
+
+<only key="{{ url.current }}">
+  <style portal="{{ rootContext.headPortalName }}">
+    .{{ Class.Button }} {
+      cursor: pointer;
+
+      &:disabled {
+        cursor: not-allowed;
+      }
+    }
+  </style>
+</only>
 
 <element
   expand="{{ other }}"
@@ -20,6 +34,7 @@
 
 <script type="module" build>
   import { Class } from "./lib/names.js";
+  import { useRootContext } from "./lib/root-context.js";
 
   /**
    * @typedef {Object} Props
@@ -27,4 +42,6 @@
    */
 
   const { class: classes = "", ...other } = /** @type {Props} */ (props);
+
+  const rootContext = useRootContext(buildStore);
 </script>
