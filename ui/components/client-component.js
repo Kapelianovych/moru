@@ -117,6 +117,7 @@ export function Component(options) {
         super();
 
         this.#initialisePublicMethods();
+        this.#initialiseLifecycleCallbacks();
       }
 
       connectedCallback() {
@@ -130,9 +131,9 @@ export function Component(options) {
         this.#initialiseElements();
         this.#attachEventListeners();
         this.#initialiseContextProviders();
-        this.#initialiseLifecycleCallbacks();
+
         this.#connectCallbacks.forEach((fn) => {
-          const dispose = fn.call(this.#componentDefinitionInstance);
+          const dispose = fn();
 
           if (dispose) {
             this.#disconnectCallbacks.add(dispose);
@@ -142,7 +143,7 @@ export function Component(options) {
 
       disconnectedCallback() {
         this.#disconnectCallbacks.forEach((fn) => {
-          fn.call(this.#componentDefinitionInstance);
+          fn();
         });
       }
 
@@ -250,12 +251,16 @@ export function Component(options) {
 
         connectedCallbacks?.forEach((access) => {
           this.#connectCallbacks.add(
-            access.get(this.#componentDefinitionInstance),
+            access
+              .get(this.#componentDefinitionInstance)
+              .bind(this.#componentDefinitionInstance),
           );
         });
         disconnectedCallbacks?.forEach((access) => {
           this.#disconnectCallbacks.add(
-            access.get(this.#componentDefinitionInstance),
+            access
+              .get(this.#componentDefinitionInstance)
+              .bind(this.#componentDefinitionInstance),
           );
         });
       }
