@@ -5,7 +5,7 @@
 
 import { transform, composeVisitors } from "lightningcss";
 
-import { createUnitVisitor } from "./visitors/unit-visitor.js";
+import { UnitVisitor } from "./visitors/unit-visitor.js";
 
 const Encoder = new TextEncoder();
 const Decoder = new TextDecoder();
@@ -31,8 +31,6 @@ const PLACEHOLDER_PROPERTY_RE = /@value/g;
  * @returns {PropertyCompiler}
  */
 export function usePropertyCompiler(buildStore) {
-  const unitVisitor = createUnitVisitor(buildStore);
-
   return (name, text, options = {}) => {
     if (!text) {
       return "";
@@ -57,7 +55,7 @@ export function usePropertyCompiler(buildStore) {
           prelude: "*",
         },
       },
-      visitor: composeVisitors([unitVisitor, options.visitor ?? {}]),
+      visitor: composeVisitors([UnitVisitor, options.visitor ?? {}]),
     });
 
     return Decoder.decode(code);

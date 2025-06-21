@@ -15,11 +15,6 @@
       min-height: 100%;
     }
 
-    html {
-      /* https://matthewjamestaylor.com/responsive-font-size */
-      font-size: calc(15px + 0.390625vw);
-    }
-
     /* Enable keyword animations */
     @media (prefers-reduced-motion: no-preference) {
       html {
@@ -68,8 +63,15 @@
     direction="column"
     min-width="fill"
     min-height="fill"
+    assign:id
     assign:classes="elementClasses"
   >
+    <style portal="{{ context.headPortalName }}">
+      .{{ id }} {
+        {{ css }}
+      }
+    </style>
+
     <mu-root
       class="
         {{ elementClasses }}
@@ -90,7 +92,9 @@
    * @import { ClientRootContext } from './client-root-context.js';
    */
 
-  import { Class } from "./lib/names.js";
+  import { usePropertyCompiler } from "./lib/property.js";
+  import { Class, CustomProperty } from "./lib/names.js";
+  import { MeasurementUnitVisitor } from "./lib/visitors/unit-visitor.js";
   import { ROOT_CONTEXT, createRootContext } from "./lib/root-context.js";
 
   /**
@@ -111,7 +115,9 @@
     hidden,
     class: classes = "",
     "head-portal-name": headPortalName,
-    "default-measurement-unit": defaultCSSUnit,
+    "measurement-unit":
+      // https://matthewjamestaylor.com/responsive-font-size
+      measurementUnit = "calc(15px + 0.390625vw)",
     "default-font-size": defaultFontSize,
     "default-font-family": defaultFontFamily,
     "default-real-text-height-ratio": defaultRealTextHeightRatio,
@@ -123,7 +129,6 @@
    * @type {RootContext}
    */
   const context = createRootContext({
-    defaultCSSUnit,
     defaultFontSize,
     headPortalName,
     defaultFontFamily,
@@ -134,7 +139,13 @@
   /**
    * @type {ClientRootContext}
    */
-  export const clientRootContext = {
-    defaultCSSUnit: context.defaultCSSUnit,
-  };
+  export const clientRootContext = {};
+
+  const compileProperty = usePropertyCompiler(buildStore);
+
+  const css = [
+    compileProperty(CustomProperty.MeasurementUnit, measurementUnit, {
+      visitor: MeasurementUnitVisitor,
+    }),
+  ].join("");
 </script>

@@ -1,5 +1,4 @@
 /**
- * @import { LengthUnit } from "lightningcss";
  * @import { BuildStore } from "@moru/core";
  */
 
@@ -10,7 +9,6 @@ export const ROOT_CONTEXT = Symbol("root context");
 /**
  * @typedef {Object} RootContext
  * @property {string} headPortalName
- * @property {LengthUnit} defaultCSSUnit
  * @property {string} fallbackFontFamily
  * @property {string | number} defaultFontSize
  * @property {string} [defaultFontFamily]
@@ -26,7 +24,6 @@ export const ROOT_CONTEXT = Symbol("root context");
  */
 export function createRootContext(initial) {
   return {
-    defaultCSSUnit: initial.defaultCSSUnit ?? "rem",
     headPortalName: initial.headPortalName ?? "head",
     fallbackFontFamily:
       'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',

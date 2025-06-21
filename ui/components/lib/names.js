@@ -22,6 +22,7 @@ export const Class = Object.freeze({
  * @enum {typeof CustomProperty[keyof typeof CustomProperty]}
  */
 export const CustomProperty = Object.freeze({
+  MeasurementUnit: "--mu-measurement-unit",
   Direction: "--mu-direction",
   HorizontalAlignment: "--mu-align-x",
   VerticalAlignment: "--mu-align-y",
