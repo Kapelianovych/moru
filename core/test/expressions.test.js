@@ -108,7 +108,7 @@ suite("expressions", () => {
       publish.mock.calls[0].arguments[0].tag,
       MessageTag.InvalidExpandResult,
     );
-    match(output, /<div><\/div>\s+<div><\/div>/);
+    equal(output, "<div></div><div></div>");
   });
 
   test('"expand" attribute object should be spread its entries as element attributes', async () => {
@@ -144,7 +144,7 @@ suite("expressions", () => {
       <p class="{{ undefined }}" />
     `);
 
-    match(output, /^\s+<p><\/p>\s+$/);
+    equal(output, "<p></p>");
   });
 
   test("if a text expression evaluates to undefined, then it is stringified and inserted into HTML", async () => {
@@ -154,6 +154,6 @@ suite("expressions", () => {
       </p>
     `);
 
-    match(output, /^\s+<p>\s+undefined\s+<\/p>\s+$/);
+    match(output, /^<p>\s+undefined\s+<\/p>$/);
   });
 });

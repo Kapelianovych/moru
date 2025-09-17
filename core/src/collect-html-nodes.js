@@ -485,6 +485,12 @@ export function collectHtmlNodes(parent, nodes, file, options) {
             }
           }
         },
+        exit(node) {
+          // Remove whitespace nodes as they are not of any use.
+          if (!node.data.trim()) {
+            removeElement(node);
+          }
+        },
       }),
       /** @satisfies {HtmlVisitor<Element>} */ ({
         matches: isTag,

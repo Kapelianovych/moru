@@ -67,7 +67,7 @@ suite("built-in components", () => {
         </portal>
       `);
 
-      match(output, /\s+<p>some<\/p>\s+/);
+      equal(output, "<p>some</p>");
     });
 
     test('native HTML elements can be moved into a "portal" by its name', async () => {
@@ -81,7 +81,7 @@ suite("built-in components", () => {
         </div>
       `);
 
-      match(output, /^\s+<div>.+?<\/div>\s+<hr>\s+$/s);
+      match(output, /^<div>.+?<\/div><hr>$/s);
     });
 
     test("portal's name can be computed", async () => {
@@ -99,7 +99,7 @@ suite("built-in components", () => {
         </script>
       `);
 
-      match(output, /^\s+<div>.+?<\/div>\s+<hr>\s+$/s);
+      match(output, /^<div>.+?<\/div><hr>$/s);
     });
 
     test("portal's evaluated name can not be undefined", async () => {
@@ -143,7 +143,7 @@ suite("built-in components", () => {
         </fragment>
       `);
 
-      match(output, /^\s+<div>.+?<\/div>\s+<hr>\s+$/s);
+      match(output, /^<div>.+?<\/div><hr>$/s);
     });
 
     test('markup fragment should not be moved into a "portal"', async () => {
@@ -159,7 +159,7 @@ suite("built-in components", () => {
         </fragment>
       `);
 
-      match(output, /^\s+<hr>\s+$/);
+      equal(output, "<hr>");
     });
 
     test('raws can be moved into a "portal" by its name', async () => {
@@ -175,7 +175,7 @@ suite("built-in components", () => {
         </raw>
       `);
 
-      match(output, /^\s+<div>.+?<\/div>\s+<hr>\s+$/s);
+      match(output, /^\s+<div>\s+some content\s+<\/div>\s+<hr>$/);
     });
 
     test("conditionals and loops cannot be moved to portals", async () => {
@@ -319,7 +319,7 @@ suite("built-in components", () => {
           publish1.mock.calls[0].arguments[0].tag,
           MessageTag.SingleElseElement,
         );
-        equal(output1, code1);
+        match(output1, /^<else>\s+2\s+<\/else>$/);
 
         const publish2 = mock.fn();
         const output2 = await compile(
@@ -340,7 +340,7 @@ suite("built-in components", () => {
           publish2.mock.calls[0].arguments[0].tag,
           MessageTag.SingleElseElement,
         );
-        match(output2, /\s+text in-between\s+<else>\s+2\s+<\/else>\s+/);
+        match(output2, /^\s+text in-between\s+<else>\s+2\s+<\/else>$/);
       },
     );
 
@@ -363,7 +363,7 @@ suite("built-in components", () => {
           publish1.mock.calls[0].arguments[0].tag,
           MessageTag.SingleElseIfElement,
         );
-        equal(output1, code1);
+        match(output1, /^<else-if condition="{{ true }}">\s+2\s+<\/else-if>$/);
 
         const publish2 = mock.fn();
         const output2 = await compile(
@@ -386,7 +386,7 @@ suite("built-in components", () => {
         );
         match(
           output2,
-          /\s+text in-between\s+<else-if condition="{{ true }}">\s+2\s+<\/else-if>\s+/,
+          /^\s+text in-between\s+<else-if condition="{{ true }}">\s+2\s+<\/else-if>$/,
         );
       },
     );
@@ -427,7 +427,7 @@ suite("built-in components", () => {
         `,
       );
 
-      match(output, /\s+<div><\/div>\s+<p class="foo"><\/p>\s+/);
+      equal(output, '<div></div><p class="foo"></p>');
     });
 
     test('renders the "else" element of the loop group if present when an array is empty', async () => {
@@ -494,7 +494,7 @@ suite("built-in components", () => {
         { diagnostics: { publish } },
       );
 
-      match(output, /\s+in-between\s+<else>\s+fallback\s+<\/else>\s+/);
+      match(output, /^\s+in-between\s+<else>\s+fallback\s+<\/else>$/);
       equal(publish.mock.callCount(), 1);
       equal(
         publish.mock.calls[0].arguments[0].tag,

@@ -4,7 +4,7 @@ import { test, suite } from "node:test";
 import { compile } from "./compiler.js";
 
 suite("basic", () => {
-  test("outputs raw HTML unchanged", async () => {
+  test("outputs raw HTML unchanged removing all whitespace nodes", async () => {
     const code = `
       <html>
         <head></head>
@@ -14,7 +14,7 @@ suite("basic", () => {
 
     const output = await compile(code);
 
-    equal(output, code);
+    equal(output, "<html><head></head><body></body></html>");
   });
 
   test("allows self-closing tags", async () => {

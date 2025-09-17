@@ -20,7 +20,7 @@ suite("fragment", () => {
       </fragment>
     `);
 
-    match(output, /\s+<p>hello<\/p>\s+/);
+    equal(output, "<p>hello</p>");
   });
 
   test("fragments with a name do not end up in HTML if there are no reference to it", async () => {
@@ -42,7 +42,7 @@ suite("fragment", () => {
       <foo />
     `);
 
-    match(output, /^\s+<p><\/p>\s+$/);
+    equal(output, "<p></p>");
   });
 
   test("any evaluatable statement inside markup fragments should be evaluated for each reference separately", async () => {
@@ -60,7 +60,7 @@ suite("fragment", () => {
       { properties: { fn } },
     );
 
-    match(output, /^\s+<p class="1"><\/p>\s+<p class="2"><\/p>\s+$/);
+    equal(output, '<p class="1"></p><p class="2"></p>');
     equal(fn.mock.callCount(), 2);
   });
 
@@ -75,7 +75,7 @@ suite("fragment", () => {
       </if>
     `);
 
-    match(output, /^\s+<p><\/p>\s+$/);
+    equal(output, "<p></p>");
   });
 
   test("markup fragments should not be shared by scopes on the same level", async () => {
@@ -93,7 +93,7 @@ suite("fragment", () => {
       </if>
     `);
 
-    match(output, /^\s+<p><\/p>\s+<bar><\/bar>\s+$/);
+    equal(output, "<p></p><bar></bar>");
   });
 
   test("markup fragments should not be accessible from nested scopes", async () => {
@@ -107,7 +107,7 @@ suite("fragment", () => {
       <bar />
     `);
 
-    match(output, /^\s+<bar><\/bar>\s+$/);
+    equal(output, "<bar></bar>");
   });
 
   test("it should not be possible to create markup fragments using any of the reserved element names", async () => {

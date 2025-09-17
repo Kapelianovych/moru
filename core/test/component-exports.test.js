@@ -14,7 +14,7 @@ suite("component's export", () => {
       </script>
     `);
 
-    match(output, /^\s+$/);
+    equal(output, "");
   });
 
   test("export element's children are ignored", async () => {
@@ -28,7 +28,7 @@ suite("component's export", () => {
       </script>
     `);
 
-    match(output, /^\s+$/);
+    equal(output, "");
   });
 
   test("export element can be defined only at the top-level", async () => {

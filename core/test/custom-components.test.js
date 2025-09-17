@@ -31,7 +31,7 @@ suite("custom components", () => {
       },
     );
 
-    match(output, /^\s+foo component\s+$/);
+    equal(output, "foo component");
   });
 
   test("should be able to provide an alias for the imported component", async () => {
@@ -49,7 +49,7 @@ suite("custom components", () => {
       },
     );
 
-    match(output, /^\s+component\s+$/);
+    equal(output, "component");
   });
 
   test("an element without matching component import should be left as is", async () => {
@@ -67,7 +67,7 @@ suite("custom components", () => {
       },
     );
 
-    match(output, /^\s+<non-matched-element><\/non-matched-element>\s+$/);
+    equal(output, "<non-matched-element></non-matched-element>");
   });
 
   test("should be able to provide a component for native elements", async () => {
@@ -85,7 +85,7 @@ suite("custom components", () => {
       },
     );
 
-    match(output, /^\s+p component\s+$/);
+    equal(output, "p component");
   });
 
   test("should not be able to provide a component for built-in components and scripts", async () => {
@@ -139,7 +139,7 @@ suite("custom components", () => {
       },
     );
 
-    match(output, /^\s+number 11\s+$/);
+    equal(output, "number 11");
   });
 
   test("children of the nested component should be inserted into a <slot /> element", async () => {
@@ -159,7 +159,7 @@ suite("custom components", () => {
       },
     );
 
-    match(output, /^\s+<div>\s+child\s+<\/div>\s+$/);
+    match(output, /^<div>\s+child\s+<\/div>$/);
   });
 
   test("if custom component does not have a <slot /> element, all of it's children will be removed from HTML", async () => {
@@ -179,7 +179,7 @@ suite("custom components", () => {
       },
     );
 
-    match(output, /^\s+<div><\/div>\s+$/);
+    equal(output, "<div></div>");
   });
 
   test("children of the custom component can replace named slot", async () => {
@@ -199,7 +199,7 @@ suite("custom components", () => {
       },
     );
 
-    match(output, /^\s+<div><p>child<\/p><\/div>\s+$/);
+    equal(output, "<div><p>child</p></div>");
   });
 
   test('the "fragment" can be used to group and forward children of the custom component to a named slot', async () => {
@@ -219,7 +219,7 @@ suite("custom components", () => {
       },
     );
 
-    match(output, /^\s+<div>child<\/div>\s+$/);
+    equal(output, "<div>child</div>");
   });
 
   test('the "raw" can be rendered into a names slot', async () => {
@@ -239,7 +239,7 @@ suite("custom components", () => {
       },
     );
 
-    match(output, /^\s+<div>{{ 1 }}<\/div>\s+$/);
+    equal(output, "<div>{{ 1 }}</div>");
   });
 
   test("any expression inside the custom component's children should be evaluated in a parent scope", async () => {
@@ -291,7 +291,7 @@ suite("custom components", () => {
       },
     );
 
-    match(output, /^\s+<div><\/div>\s+$/);
+    equal(output, "<div></div>");
   });
 
   test("markup fragment can not be inserted into a component as a child", async () => {
@@ -313,7 +313,7 @@ suite("custom components", () => {
       },
     );
 
-    match(output, /^\s+$/);
+    equal(output, "");
   });
 
   test("element should be passed down the component hierarchy to the leaf <slot> element", async () => {
@@ -342,7 +342,7 @@ suite("custom components", () => {
       },
     );
 
-    match(output, /^\s+<div><\/div>\s+$/);
+    equal(output, "<div></div>");
   });
 
   test("svg files should be importable as HTML files", async () => {
