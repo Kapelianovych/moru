@@ -45,15 +45,11 @@
   <script type="module" portal="{{ context.headPortalName }}">
     import { clientRootContext } from "build";
 
-    import { Context, Component } from "./client-component.js";
-    import { ClientRootContext } from "./client-root-context.js";
+    import { provide, controller } from "./client.js";
 
-    @Component({ tag: "mu-root" })
-    class MuRoot {
-      @Context(ClientRootContext)
-      #createClientRootContextValue() {
-        return clientRootContext;
-      }
+    @controller
+    class MuRootElement extends HTMLElement {
+      @provide clientRootContext = clientRootContext;
     }
   </script>
 
@@ -89,7 +85,6 @@
   /**
    * @import { Ref } from './ref.js'
    * @import { RootContext } from './lib/root-context.js';
-   * @import { ClientRootContext } from './client-root-context.js';
    */
 
   import { usePropertyCompiler } from "./lib/property.js";
@@ -136,9 +131,6 @@
     defaultTextSideOffsetCorrection,
   });
 
-  /**
-   * @type {ClientRootContext}
-   */
   export const clientRootContext = {};
 
   const compileProperty = usePropertyCompiler(buildStore);

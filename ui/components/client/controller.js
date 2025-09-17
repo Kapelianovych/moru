@@ -1,0 +1,148 @@
+import { bindActions } from "./actions.js";
+import { toKebabCase } from "./to-kebab-case.js";
+import { initialiseConsumers } from "./context.js";
+import {
+  callWatchers,
+  initialiseAttributeDefaultValues,
+  initialiseObservedAttributes,
+} from "./attributes.js";
+
+/**
+ * @typedef {HTMLElement & Record<PropertyKey, unknown> & {
+ *   $connectedCallbackCalled?: boolean;
+ *   $disposals?: Set<VoidFunction>;
+ *   $registeredConsumersPerContext?: Map<string | symbol, Set<function(unknown): void>>;
+ *   connectedCallback?(): void;
+ *   attributeChangedCallback?(name: string, oldValue: string | null, newValue: string | null): void;
+ *   disconnectedCallback?(): void;
+ *   adoptedCallback?(): void;
+ * }} CustomElement
+ */
+
+/**
+ * @typedef {{
+ *   new (): CustomElement;
+ *   prototype: CustomElement;
+ *   observedAttributes?: Array<string>;
+ * }} CustomElementClass
+ */
+
+/**
+ * @param {CustomElementClass} classConstructor
+ * @param {ClassDecoratorContext<CustomElementClass>} context
+ */
+export function controller(classConstructor, context) {
+  context.addInitializer(function () {
+    initialiseObservedAttributes(classConstructor, context.metadata);
+    initialiseConnectedCallback(classConstructor, context.metadata);
+    initialiseAttributeChangedCallback(classConstructor, context.metadata);
+    initialiseDisconnectedCallback(classConstructor);
+
+    register(classConstructor);
+  });
+}
+
+/**
+ * @param {CustomElementClass} classConstructor
+ * @param {DecoratorMetadataObject} metadata
+ */
+function initialiseConnectedCallback(classConstructor, metadata) {
+  const connectedCallback = classConstructor.prototype.connectedCallback;
+  classConstructor.prototype.connectedCallback = function () {
+    customElements.upgrade(this);
+    initialiseAttributeDefaultValues(this, metadata);
+    autoInitialiseShadowRoot(this);
+    initialiseConsumers(this, metadata);
+    bindActions(this);
+    connectedCallback?.call(this);
+
+    this.$connectedCallbackCalled = true;
+  };
+}
+
+/**
+ * @param {CustomElementClass} classConstructor
+ * @param {DecoratorMetadataObject} metadata
+ */
+function initialiseAttributeChangedCallback(classConstructor, metadata) {
+  const attributeChangedCallback =
+    classConstructor.prototype.attributeChangedCallback;
+  classConstructor.prototype.attributeChangedCallback =
+    /**
+     * @param {string} name
+     * @param {string | null} oldValue
+     * @param {string | null} newValue
+     */
+    function (name, oldValue, newValue) {
+      // If Element has attributes in HTML, then for each of them attributeChangedCallback method
+      // will be called during parsing phase (before connectedCallback method). At this time
+      // children and the rest of the document after this element are not yet initialised,
+      // so we usually want to skip those calls.
+      if (this.$connectedCallbackCalled) {
+        if (oldValue !== newValue) {
+          callWatchers(this, name, metadata);
+          attributeChangedCallback?.call(this, name, oldValue, newValue);
+        }
+      }
+    };
+}
+
+/**
+ * @param {CustomElementClass} classConstructor
+ */
+function initialiseDisconnectedCallback(classConstructor) {
+  const disconnectedCallback = classConstructor.prototype.disconnectedCallback;
+  classConstructor.prototype.disconnectedCallback = function () {
+    this.$registeredConsumersPerContext?.clear();
+    this.$disposals?.forEach((dispose) => {
+      dispose();
+    });
+    this.$disposals?.clear();
+    disconnectedCallback?.call(this);
+
+    this.$connectedCallbackCalled = false;
+  };
+}
+
+/**
+ * @param {CustomElement} controller
+ */
+function autoInitialiseShadowRoot(controller) {
+  let node = controller.previousElementSibling;
+
+  if (!node?.matches("template[data-shadow-root]")) {
+    const tag = controller.tagName.toLowerCase();
+    node = controller.ownerDocument.querySelector(
+      `template[data-controller="${tag}"][data-shadow-root]`,
+    );
+  }
+
+  if (node) {
+    const mode =
+      node.getAttribute("data-shadow-root") === "closed" ? "closed" : "open";
+
+    controller
+      .attachShadow({
+        mode,
+      })
+      .append(
+        /**
+         * @type {HTMLTemplateElement}
+         */
+        (node).content.cloneNode(true),
+      );
+  }
+}
+
+/**
+ * @param {CustomElementClass} classConstructor
+ */
+function register(classConstructor) {
+  const name = toKebabCase(classConstructor.name).replace(/-element$/, "");
+
+  if (!window.customElements.get(name)) {
+    window.customElements.define(name, classConstructor);
+    // @ts-expect-error
+    window[classConstructor.name] = window.customElements.get(name);
+  }
+}
