@@ -74,7 +74,6 @@ export function provide(_, context) {
 }
 
 /**
- *
  * @param {unknown} _
  * @param {ClassFieldDecoratorContext<CustomElement> | ClassSetterDecoratorContext<CustomElement>} context
  */

@@ -172,22 +172,9 @@ export function callWatchers(classInstance, attribute, metadata) {
      */
     (metadata.attributes);
 
-  /**
-   * @type {Set<string | symbol>}
-   */
-  const methodKeys = new Set();
-
-  attributes.forEach((attributeDescriptor) => {
-    if (attributeDescriptor.name === attribute) {
-      attributeDescriptor.observers.forEach((key) => {
-        methodKeys.add(key);
-      });
-    }
-  });
-
-  methodKeys.forEach((key) => {
+  attributes.get(attribute)?.observers.forEach((methodName) => {
     // @ts-expect-error we expect method to exist
-    classInstance[key]();
+    classInstance[methodName]();
   });
 }
 
