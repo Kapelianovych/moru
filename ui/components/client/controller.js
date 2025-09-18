@@ -49,9 +49,7 @@ export function controller(classConstructor, context) {
 function initialiseConnectedCallback(classConstructor, metadata) {
   const connectedCallback = classConstructor.prototype.connectedCallback;
   classConstructor.prototype.connectedCallback = function () {
-    customElements.upgrade(this);
     initialiseAttributeDefaultValues(this, metadata);
-    autoInitialiseShadowRoot(this);
     initialiseConsumers(this, metadata);
     bindActions(this);
     connectedCallback?.call(this);
@@ -102,36 +100,6 @@ function initialiseDisconnectedCallback(classConstructor) {
 
     this.$connectedCallbackCalled = false;
   };
-}
-
-/**
- * @param {CustomElement} controller
- */
-function autoInitialiseShadowRoot(controller) {
-  let node = controller.previousElementSibling;
-
-  if (!node?.matches("template[data-shadow-root]")) {
-    const tag = controller.tagName.toLowerCase();
-    node = controller.ownerDocument.querySelector(
-      `template[data-controller="${tag}"][data-shadow-root]`,
-    );
-  }
-
-  if (node) {
-    const mode =
-      node.getAttribute("data-shadow-root") === "closed" ? "closed" : "open";
-
-    controller
-      .attachShadow({
-        mode,
-      })
-      .append(
-        /**
-         * @type {HTMLTemplateElement}
-         */
-        (node).content.cloneNode(true),
-      );
-  }
 }
 
 /**
