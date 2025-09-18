@@ -20,7 +20,7 @@
  * @param {boolean} single
  * @returns {Array<Element> | Element | undefined}
  */
-function findTargets(controller, name, single) {
+function findTarget(controller, name, single) {
   const tag = controller.tagName.toLowerCase();
   const selector = `[data-target~="${tag}.${name}"]`;
   /**
@@ -60,14 +60,14 @@ function findTargets(controller, name, single) {
  * @param {unknown} _
  * @param {ClassFieldDecoratorContext<CustomElement>} context
  */
-export function query(_, context) {
+export function target(_, context) {
   const stringifiedName = String(context.name);
 
   context.addInitializer(function () {
     Reflect.defineProperty(this, context.name, {
       configurable: true,
       get() {
-        return findTargets(this, stringifiedName, true);
+        return findTarget(this, stringifiedName, true);
       },
     });
   });
@@ -77,14 +77,14 @@ export function query(_, context) {
  * @param {unknown} _
  * @param {ClassFieldDecoratorContext<CustomElement>} context
  */
-export function queries(_, context) {
+export function targets(_, context) {
   const stringifiedName = String(context.name);
 
   context.addInitializer(function () {
     Reflect.defineProperty(this, context.name, {
       configurable: true,
       get() {
-        return findTargets(this, stringifiedName, false);
+        return findTarget(this, stringifiedName, false);
       },
     });
   });

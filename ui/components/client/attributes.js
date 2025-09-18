@@ -196,5 +196,5 @@ export function callWatchers(classInstance, attribute, metadata) {
  * @returns {string}
  */
 function createAttributeName(propertyName) {
-  return `data-${toKebabCase(String(propertyName))}`;
+  return toKebabCase(String(propertyName));
 }

@@ -20,7 +20,7 @@ export function bindActions(controller) {
  * @param {ShadowRoot | Element} root
  */
 function bindToChildrenOf(root) {
-  for (const element of root.querySelectorAll("[data-action]")) {
+  for (const element of root.querySelectorAll("[data-actions]")) {
     bindActionAttribute(element);
   }
 }
@@ -92,9 +92,9 @@ function handleEvent(event) {
  * @returns {Iterable<Binding>}
  */
 function* bindingsOf(element) {
-  if (element.hasAttribute("data-action")) {
+  if (element.hasAttribute("data-actions")) {
     // @ts-expect-error we made sure attribute exists
-    const actions = element.getAttribute("data-action").trim().split(/\s+/);
+    const actions = element.getAttribute("data-actions").trim().split(/\s+/);
 
     for (const action of actions) {
       const eventSeparator = action.indexOf(":");
@@ -161,7 +161,7 @@ function listenForNewActions(root) {
   observer.observe(root, {
     childList: true,
     subtree: true,
-    attributeFilter: ["data-action"],
+    attributeFilter: ["data-actions"],
   });
 
   observerSubscription = {
