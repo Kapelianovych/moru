@@ -1,40 +1,34 @@
 <import from="@moru/core/only.html" />
 
-<import from="./textual-element.html" />
+<import from="./typography.html" />
 
 <only key="{{ url.current }}">
   <style portal="{{ rootContext.headPortalName }}">
     .{{ Class.Input }} {
       resize: none;
 
+      {{ CustomProperty.TextLines }}: 1;
+
       height: calc(
-        (
-          var({{ CustomProperty.TextLineHeight }})
-            * var({{ CustomProperty.TextLines }})
-        ) +
-        (
-          var({{ CustomProperty.PaddingTop }})
-            + var({{ CustomProperty.PaddingBottom }})
-        ) +
-        (
-          var({{ CustomProperty.BorderWidth }}) * 2
-        )
+        var({{ CustomProperty.TextLineHeight }}) * var({{ CustomProperty.TextLines }})
       );
     }
   </style>
 </only>
 
-<textual-element
+<typography
   expand="{{ other }}"
   assign:id
   assign:classes="elementClasses"
   assign:rest-props="restProps"
 >
-  <style portal="{{ rootContext.headPortalName }}">
-    .{{ id }} {
-      {{ css }}
-    }
-  </style>
+  <if condition="{{ css }}">
+    <style portal="{{ rootContext.headPortalName }}">
+      .{{ id }} {
+        {{ css }}
+      }
+    </style>
+  </if>
 
   <if condition="{{ multiline != null && multiline !== false }}">
     <textarea
@@ -43,7 +37,6 @@
         {{ Class.Input }}
         {{ classes }}
       "
-      placeholder="{{ placeholder }}"
       expand="{{ restProps }}"
     />
   </if>
@@ -55,45 +48,34 @@
         {{ classes }}
       "
       type="{{ type }}"
-      placeholder="{{ placeholder }}"
       expand="{{ restProps }}"
     />
   </else>
-</textual-element>
+</typography>
 
 <script type="module" build>
-  import { Class, CustomProperty } from "./lib/names.js";
   import { useRootContext } from "./lib/root-context.js";
-  import { TextLinesVisitor } from "./lib/visitors/text-lines-visitor.js";
-  import { usePropertyCompiler } from "./lib/property.js";
-
-  /**
-   * @typedef {Object} Props
-   * @property {string} [class]
-   * @property {string} [type]
-   * @property {string | number} [lines]
-   * @property {'' | boolean} [multiline]
-   * @property {string} [placeholder]
-   */
-
-  const rootContext = useRootContext(buildStore);
+  import { Class, CustomProperty } from "./lib/constants.js";
+  import {
+    compileCss,
+    createSinglePropertyTransformer,
+  } from "./lib/compile-css.js";
 
   const {
     class: classes = "",
     type = "text",
-    placeholder,
     multiline,
-    lines = 1,
-    // Do not allow to set height explicitly.
+    lines,
+    // Do not allow to set next properties explicitly.
     height: _0,
+    padding: _1,
+    border: _2,
     ...other
-  } = /** @type {Props} */ (props);
+  } = props;
 
-  const compileProperty = usePropertyCompiler(buildStore);
+  const rootContext = useRootContext(buildStore);
 
-  const css = [
-    compileProperty(CustomProperty.TextLines, String(lines), {
-      visitor: TextLinesVisitor,
-    }),
-  ].join("");
+  const css = `
+    ${compileCss(lines, createSinglePropertyTransformer(CustomProperty.TextLines))}
+  `.trim();
 </script>

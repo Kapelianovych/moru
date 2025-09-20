@@ -3,62 +3,39 @@
 
 <import from="./element.html" />
 
-<only key="{{ url.current }}">
-  <style portal="{{ context.headPortalName }}">
-    html,
-    body {
-      /*
-       Explicitly define minimun and taken by default height,
-       so the page area will be defined for nested elements.
-       */
-      height: 100%;
-      min-height: 100%;
-    }
-
-    /* Enable keyword animations */
-    @media (prefers-reduced-motion: no-preference) {
-      html {
-        interpolate-size: allow-keywords;
+<if condition="{{ includeGlobalStylesheet === '' || includeGlobalStylesheet }}">
+  <only key="{{ url.current }}">
+    <style portal="{{ context.headPortalName }}">
+      html,
+      body {
+        /*
+          Explicitly define minimun and taken by default height,
+          so the page area will be defined for nested elements.
+        */
+        height: 100%;
+        min-height: 100%;
       }
-    }
 
-    body {
-      margin: 0;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-    }
+      /* Enable keyword animations */
+      @media (prefers-reduced-motion: no-preference) {
+        html {
+          interpolate-size: allow-keywords;
+        }
+      }
 
-    .{{ Class.Root }} {
-      /* Make it an offset parent. */
-      position: relative;
-      box-sizing: border-box;
-
-      * {
+      body {
+        margin: 0;
         box-sizing: border-box;
       }
-    }
-  </style>
-</only>
+    </style>
+  </only>
+</if>
 
 <context-provider key="{{ ROOT_CONTEXT }}" value="{{ context }}">
-  <script type="module" portal="{{ context.headPortalName }}">
-    import { clientRootContext } from "build";
-
-    import { provide, controller } from "./client.js";
-
-    @controller
-    class MuRootElement extends HTMLElement {
-      @provide clientRootContext = clientRootContext;
-    }
-  </script>
-
   <element
-    ref="{{ ref }}"
+    width="fill"
+    height="fill"
     hidden="{{ hidden }}"
-    direction="column"
-    min-width="fill"
-    min-height="fill"
     assign:id
     assign:classes="elementClasses"
   >
@@ -68,7 +45,7 @@
       }
     </style>
 
-    <mu-root
+    <div
       class="
         {{ elementClasses }}
         {{ Class.Root }}
@@ -77,52 +54,33 @@
       expand="{{ restProps }}"
     >
       <slot />
-    </mu-root>
+    </div>
   </element>
 </context-provider>
 
 <script type="module" build>
-  /**
-   * @import { Ref } from './ref.js'
-   * @import { RootContext } from './lib/root-context.js';
-   */
-
-  import { usePropertyCompiler } from "./lib/property.js";
-  import { Class, CustomProperty } from "./lib/names.js";
-  import { MeasurementUnitVisitor } from "./lib/visitors/unit-visitor.js";
+  import { Class, CustomProperty } from "./lib/constants.js";
   import { ROOT_CONTEXT, createRootContext } from "./lib/root-context.js";
-
-  /**
-   * @typedef {Object} Props
-   * @property {Ref} [ref]
-   * @property {string} [hidden]
-   * @property {string} [class]
-   * @property {string} [head-portal-name]
-   * @property {string} [default-measurement-unit]
-   * @property {string} [default-font-size]
-   * @property {string} [default-font-family]
-   * @property {string} [default-real-text-height-ratio]
-   * @property {string} [default-text-side-offset-correction]
-   */
+  import {
+    compileCss,
+    createSinglePropertyTransformer,
+  } from "./lib/compile-css.js";
 
   const {
-    ref,
     hidden,
     class: classes = "",
     "head-portal-name": headPortalName,
-    "measurement-unit":
+    "measurement-unit-value":
       // https://matthewjamestaylor.com/responsive-font-size
-      measurementUnit = "calc(15px + 0.390625vw)",
+      measurementUnitValue = "calc(15px + 0.390625vw)",
     "default-font-size": defaultFontSize,
     "default-font-family": defaultFontFamily,
     "default-real-text-height-ratio": defaultRealTextHeightRatio,
     "default-text-side-offset-correction": defaultTextSideOffsetCorrection,
+    "include-global-stylesheet": includeGlobalStylesheet,
     ...restProps
-  } = /** @type {Props} */ (props);
+  } = props;
 
-  /**
-   * @type {RootContext}
-   */
   const context = createRootContext({
     defaultFontSize,
     headPortalName,
@@ -131,13 +89,11 @@
     defaultTextSideOffsetCorrection,
   });
 
-  export const clientRootContext = {};
-
-  const compileProperty = usePropertyCompiler(buildStore);
-
-  const css = [
-    compileProperty(CustomProperty.MeasurementUnit, measurementUnit, {
-      visitor: MeasurementUnitVisitor,
-    }),
-  ].join("");
+  const css = `
+    ${compileCss(measurementUnitValue, createSinglePropertyTransformer(CustomProperty.MeasurementUnit))}
+    ${compileCss(context.defaultFontSize, createSinglePropertyTransformer(CustomProperty.DefaultFontSize))}
+    ${compileCss(context.defaultRealTextHeightRatio ?? context.fallbackRealTextHeightRatio, createSinglePropertyTransformer(CustomProperty.DefaultRealTextHeightRatio))}
+    ${compileCss(context.defaultTextSideOffsetCorrection ?? context.fallbackTextSideOffsetCorrection, createSinglePropertyTransformer(CustomProperty.DefaultTextSideOffsetCorrection))}
+    ${compileCss(context.defaultFontFamily ?? context.fallbackFontFamily, createSinglePropertyTransformer("font-family"))}
+  `.trim();
 </script>

@@ -3,11 +3,10 @@
   "version": "0.0.1",
   "type": "module",
   "exports": {
-    "./*.html": "./components/*.html",
-    "./*": "./components/*.js"
+    "./client": "./client/index.js",
+    "./*.html": "./components/*.html"
   },
   "peerDependencies": {
-    "@moru/core": "^0",
-    "lightningcss": "^1"
+    "@moru/core": "^0"
   }
 }

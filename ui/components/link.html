@@ -12,7 +12,6 @@
       {{ classes }}
     "
     href="{{ url }}"
-    target="_{{ target }}"
     expand="{{ restProps }}"
   >
     <slot />
@@ -20,21 +19,9 @@
 </element>
 
 <script type="module" build>
-  import { Class } from "./lib/names.js";
+  import { Class } from "./lib/constants.js";
 
-  /**
-   * @typedef {Object} Props
-   * @property {string} [class]
-   * @property {string | URL} to
-   * @property {string} [target]
-   */
+  const { class: classes = "", href, ...other } = props;
 
-  const {
-    class: classes = "",
-    to,
-    target = "self",
-    ...other
-  } = /** @type {Props} */ (props);
-
-  const url = typeof to === "string" ? to : to.toString();
+  const url = typeof href === "string" ? href : href.toString();
 </script>

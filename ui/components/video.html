@@ -47,9 +47,8 @@
 </element>
 
 <script type="module" build>
-  import { Class } from "./lib/names.js";
+  import { Class } from "./lib/constants.js";
   import { useRootContext } from "./lib/root-context.js";
-  import { normaliseBooleanProperty } from "./lib/normalisers.js";
 
   /**
    * @typedef {Object} VideoSource
@@ -66,17 +65,6 @@
    * @property {string} [language]
    */
 
-  /**
-   * @typedef {Object} Props
-   * @property {string} [class]
-   * @property {Array<VideoSource>} sources
-   * @property {Array<TrackSource>} [tracks]
-   * @property {string | boolean} [autoplay]
-   * @property {string | boolean} [controls]
-   * @property {string | boolean} [loop]
-   * @property {string | boolean} [muted]
-   */
-
   const {
     class: classes = "",
     sources,
@@ -86,7 +74,7 @@
     loop,
     muted,
     ...other
-  } = /** @type {Props} */ (props);
+  } = props;
 
   if (!sources) {
     throw new Error(
@@ -109,4 +97,11 @@
   }
 
   const rootContext = useRootContext(buildStore);
+
+  /**
+   * @param {string | boolean | null | undefined}
+   */
+  function normaliseBooleanProperty(value) {
+    return value != null && value !== false ? "" : undefined;
+  }
 </script>

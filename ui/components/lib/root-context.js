@@ -27,7 +27,7 @@ export function createRootContext(initial) {
     headPortalName: initial.headPortalName ?? "head",
     fallbackFontFamily:
       'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
-    defaultFontSize: initial.defaultFontSize ?? "1un",
+    defaultFontSize: initial.defaultFontSize ?? "0.85un",
     defaultFontFamily: initial.defaultFontFamily,
     defaultRealTextHeightRatio: initial.defaultRealTextHeightRatio,
     defaultTextSideOffsetCorrection: initial.defaultTextSideOffsetCorrection,

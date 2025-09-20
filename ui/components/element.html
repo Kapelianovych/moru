@@ -1,79 +1,27 @@
 <import from="@moru/core/only.html" />
 
+<export name="id" />
+<export name="classes" />
+<export name="restProps" as="rest-props" />
+
 <only key="{{ url.current }}">
   <style portal="{{ rootContext.headPortalName }}">
     .{{ Class.Element }} {
-      display: var({{ CustomProperty.Hidden }});
-      align-self: var(--mu-align);
-      flex-direction: var({{ CustomProperty.Direction }});
+      {{ CustomProperty.Direction }}: ;
+      {{ CustomProperty.HorizontalMovement }}: 0;
+      {{ CustomProperty.VerticalMovement }}: 0;
+      {{ CustomProperty.Scale }}: 1;
+      {{ CustomProperty.Rotate }}: 0deg;
 
-      gap: var({{ CustomProperty.Spacing }});
-
-      margin:
-        var(--mu-m-top)
-        var(--mu-m-right)
-        var(--mu-m-bottom)
-        var(--mu-m-left);
-      padding:
-        var({{ CustomProperty.PaddingTop }})
-        var({{ CustomProperty.PaddingRight }})
-        var({{ CustomProperty.PaddingBottom }})
-        var({{ CustomProperty.PaddingLeft }});
-
-      width: var({{ CustomProperty.Width }});
-      height: var({{ CustomProperty.Height }});
-      min-width: var({{ CustomProperty.MinWidth }});
-      min-height: var({{ CustomProperty.MinHeight }});
-
-      overflow-x: var({{ CustomProperty.HorizontalClip }});
-      overflow-y: var({{ CustomProperty.VerticalClip }});
-
+      display: inline-flex;
+      align-items: flex-start;
+      position: relative;
       z-index: 1;
-      text-decoration: none;
-
-      {{ CustomProperty.BorderWidth }}: 0px;
-      border:
-        var({{ CustomProperty.BorderWidth }})
-        var({{ CustomProperty.BorderStyle }})
-        var({{ CustomProperty.BorderColour }});
-      border-radius: var({{ CustomProperty.Rounded }});
-      box-shadow: var({{ CustomProperty.Shadow }});
-
-      transform:
-        translate(var({{ CustomProperty.HorizontalMovement }}), var({{ CustomProperty.VerticalMovement }}))
-        scale(var({{ CustomProperty.Scaling }}))
-        rotate(var({{ CustomProperty.Rotation }}));
-
-      background: var({{ CustomProperty.Background }});
-
-      /* Self alignment as a child. */
-      @container style({{ CustomProperty.Direction }}: column) or style({{ CustomProperty.Direction }}: column-reverse) {
-        --mu-align: var({{ CustomProperty.HorizontalAlignment }});
-        --mu-m-left: 0;
-        --mu-m-right: 0;
-        --mu-m-top: var(--mu-margin-top);
-        --mu-m-bottom: var(--mu-margin-bottom);
-      }
-      @container style({{ CustomProperty.Direction }}: row) or style({{ CustomProperty.Direction }}: row-reverse) {
-        --mu-align: var({{ CustomProperty.VerticalAlignment }});
-        --mu-m-top: 0;
-        --mu-m-bottom: 0;
-        --mu-m-left: var(--mu-margin-left);
-        --mu-m-right: var(--mu-margin-right);
-      }
+      box-sizing: border-box;
     }
 
     .{{ Class.PositionedContainer }} {
       display: inline-flex;
-
-      position: var({{ CustomProperty.Position }});
-      top: var({{ CustomProperty.PositionTopOffset }});
-      bottom: var({{ CustomProperty.PositionBottomOffset }});
-      left: var({{ CustomProperty.PositionLeftOffset }});
-      right: var({{ CustomProperty.PositionRightOffset }});
-      z-index: var({{ CustomProperty.PositionAxisOffset }});
-      height: var({{ CustomProperty.PositionedHeight }});
-      width: var({{ CustomProperty.PositionedWidth }});
     }
   </style>
 </only>
@@ -84,11 +32,7 @@
   }
 </style>
 
-<export name="id" />
-<export name="classes" />
-<export name="restProps" as="rest-props" />
-
-<if condition="{{ position !== 'initial' }}">
+<if condition="{{ position }}">
   <style portal="{{ rootContext.headPortalName }}">
     .{{ Class.PositionedContainer }}:has(> .{{ id }}) {
       {{ positionedContainerCss }}
@@ -104,192 +48,75 @@
 </else>
 
 <script type="module" build>
-  /**
-   * @import { Ref } from './ref.js';
-   * @import { Position } from './lib/visitors/position-visitor.js';
-   */
-
-  import { createId } from "./lib/id.js";
   import { useRootContext } from "./lib/root-context.js";
-  import { Class, CustomProperty } from "./lib/names.js";
-  import { usePropertyCompiler } from "./lib/property.js";
+  import { createDisplayValue } from "./lib/transformers/display.js";
+  import { createOverflowValue } from "./lib/transformers/clip.js";
+  import { Class, CustomProperty } from "./lib/constants.js";
+  import { createPositionProperty } from "./lib/transformers/position.js";
+  import { createDirectionProperty } from "./lib/transformers/direction.js";
+  import { createAlignmentProperties } from "./lib/transformers/alignment.js";
+  import { compileTransformProperties } from "./lib/transformers/transform.js";
   import {
-    WidthVisitor,
-    HeightVisitor,
-    MinWidthVisitor,
-    MinHeightVisitor,
-  } from "./lib/visitors/area-visitors.js";
-  import {
-    AlignmentXVisitor,
-    AlignmentYVisitor,
-  } from "./lib/visitors/alignment-visitors.js";
-  import { PaddingVisitor } from "./lib/visitors/padding-visitor.js";
-  import {
-    MoveLeftVisitor,
-    MoveRightVisitor,
-    MoveUpVisitor,
-    MoveDownVisitor,
-  } from "./lib/visitors/movement-visitors.js";
-  import { ScalingVisitor } from "./lib/visitors/scaling-visitor.js";
-  import { RotationVisitor } from "./lib/visitors/rotation-visitor.js";
-  import { DirectionVisitor } from "./lib/visitors/direction-visitor.js";
-  import { SpacingVisitor } from "./lib/visitors/spacing-visitor.js";
-  import {
-    HorizontalClipVisitor,
-    VerticalClipVisitor,
-  } from "./lib/visitors/clip-visitors.js";
-  import { PositionVisitor } from "./lib/visitors/position-visitor.js";
-  import { BackgroundVisitor } from "./lib/visitors/background-visitor.js";
-  import {
-    RoundedVisitor,
-    BorderVisitor,
-  } from "./lib/visitors/border-visitors.js";
-  import { ShadowVisitor } from "./lib/visitors/shadow-visitor.js";
-  import { HiddenVisitor } from "./lib/visitors/hidden-visitor.js";
-
-  /**
-   * @typedef {Object} Props
-   * @property {Ref} [ref]
-   * @property {string} [direction]
-   * @property {string} [align-x]
-   * @property {string} [align-y]
-   * @property {string | number} [width]
-   * @property {string | number} [height]
-   * @property {string | number} [min-width]
-   * @property {string | number} [min-height]
-   * @property {string | number} [spacing]
-   * @property {string | number} [padding]
-   * @property {string | number} [move-left]
-   * @property {string | number} [move-right]
-   * @property {string | number} [move-up]
-   * @property {string | number} [move-down]
-   * @property {string | number} [scale]
-   * @property {string | number} [rotate]
-   * @property {string} [clip-x]
-   * @property {string} [clip-y]
-   * @property {Position} [position]
-   * @property {string} [background]
-   * @property {string} [rounded]
-   * @property {string} [border]
-   * @property {string} [shadow]
-   * @property {string} [hidden]
-   */
+    compileCss,
+    createSinglePropertyTransformer,
+  } from "./lib/compile-css.js";
 
   const {
-    ref,
-    direction = "row",
+    hidden,
+    vertical,
     "align-x": alignX = "left",
     "align-y": alignY = "top",
-    width = "auto",
-    height = "auto",
-    "min-width": minWidth = 0,
-    "min-height": minHeight = 0,
-    spacing = 0,
-    padding = 0,
-    "move-left": moveLeft,
-    "move-right": moveRight = 0,
-    "move-up": moveUp,
-    "move-down": moveDown = 0,
-    scale = 1,
-    rotate = 0,
-    "clip-x": clipX = "initial",
-    "clip-y": clipY = "initial",
-    position = "initial",
-    background = "transparent",
+    width,
+    height,
+    "min-width": minWidth,
+    "min-height": minHeight,
+    "max-width": maxWidth,
+    "max-height": maxHeight,
+    padding,
+    spacing,
+    "clip-x": clipX,
+    "clip-y": clipY,
+    background,
     rounded,
     border,
-    shadow = "none",
-    hidden = "false",
-    ...restProps
-  } = /** @type {Props} */ (props);
-
-  const id = `mu-${createId()}`;
-  const rootContext = useRootContext(buildStore);
-  const compileProperty = usePropertyCompiler(buildStore);
-
-  if (ref) {
-    ref.id = id;
-    ref.selector = `.${id}`;
-  }
-
-  const classes = `${Class.Element} ${id}`;
-
-  const css = [
-    compileProperty(CustomProperty.Direction, direction, {
-      visitor: DirectionVisitor,
-    }),
-    compileProperty(CustomProperty.HorizontalAlignment, alignX, {
-      visitor: AlignmentXVisitor,
-    }),
-    compileProperty(CustomProperty.VerticalAlignment, alignY, {
-      visitor: AlignmentYVisitor,
-    }),
-    compileProperty(CustomProperty.Width, String(width), {
-      visitor: WidthVisitor,
-    }),
-    compileProperty(CustomProperty.Height, String(height), {
-      visitor: HeightVisitor,
-    }),
-    compileProperty(CustomProperty.MinWidth, String(minWidth), {
-      visitor: MinWidthVisitor,
-    }),
-    compileProperty(CustomProperty.MinHeight, String(minHeight), {
-      visitor: MinHeightVisitor,
-    }),
-    compileProperty(CustomProperty.Spacing, String(spacing), {
-      visitor: SpacingVisitor,
-    }),
-    compileProperty(CustomProperty.Padding, String(padding), {
-      visitor: PaddingVisitor,
-    }),
-    compileProperty(
-      CustomProperty.HorizontalMovement,
-      String(moveLeft != null ? moveLeft : moveRight),
-      {
-        visitor: moveLeft != null ? MoveLeftVisitor : MoveRightVisitor,
-      },
-    ),
-    compileProperty(
-      CustomProperty.VerticalMovement,
-      String(moveUp != null ? moveUp : moveDown),
-      {
-        visitor: moveUp != null ? MoveUpVisitor : MoveDownVisitor,
-      },
-    ),
-    compileProperty(CustomProperty.Scaling, String(scale), {
-      visitor: ScalingVisitor,
-    }),
-    compileProperty(CustomProperty.Rotation, String(rotate), {
-      visitor: RotationVisitor,
-    }),
-    compileProperty(CustomProperty.VerticalClip, clipY, {
-      visitor: VerticalClipVisitor,
-    }),
-    compileProperty(CustomProperty.HorizontalClip, clipX, {
-      visitor: HorizontalClipVisitor,
-    }),
-    compileProperty(CustomProperty.Background, background, {
-      visitor: BackgroundVisitor,
-    }),
-    compileProperty(CustomProperty.Rounded, rounded, {
-      visitor: RoundedVisitor,
-    }),
-    compileProperty(CustomProperty.Border, border, {
-      visitor: BorderVisitor,
-    }),
-    compileProperty(CustomProperty.Shadow, shadow, {
-      visitor: ShadowVisitor,
-    }),
-    compileProperty(CustomProperty.Hidden, hidden || "true", {
-      visitor: HiddenVisitor,
-    }),
-  ].join("");
-
-  const positionedContainerCss = compileProperty(
-    CustomProperty.Position,
+    shadow,
+    "move-left": moveLeft,
+    "move-right": moveRight,
+    "move-up": moveUp,
+    "move-down": moveDown,
+    scale,
+    rotate,
     position,
-    {
-      visitor: PositionVisitor,
-    },
-  );
+    ...restProps
+  } = props;
+
+  const id = `m${crypto.randomUUID()}`;
+  const rootContext = useRootContext(buildStore);
+  const classes = `${id} ${Class.Element}`;
+
+  const css = `
+    ${compileCss(hidden, createSinglePropertyTransformer("display", createDisplayValue))}
+    ${compileCss(vertical, createDirectionProperty)}
+    ${compileCss(alignY, createAlignmentProperties("top", "bottom"))}
+    ${compileCss(alignX, createAlignmentProperties("left", "right"))}
+    ${compileCss(width, createSinglePropertyTransformer("width"))}
+    ${compileCss(height, createSinglePropertyTransformer("height"))}
+    ${compileCss(minWidth, createSinglePropertyTransformer("min-width"))}
+    ${compileCss(minHeight, createSinglePropertyTransformer("min-height"))}
+    ${compileCss(maxWidth, createSinglePropertyTransformer("max-width"))}
+    ${compileCss(maxHeight, createSinglePropertyTransformer("max-height"))}
+    ${compileCss(padding, createSinglePropertyTransformer("padding"))}
+    ${compileCss(spacing, createSinglePropertyTransformer("gap"))}
+    ${compileCss(clipX, createSinglePropertyTransformer("overflow-x", createOverflowValue))}
+    ${compileCss(clipY, createSinglePropertyTransformer("overflow-y", createOverflowValue))}
+    ${compileCss(background, createSinglePropertyTransformer("background"))}
+    ${compileCss(rounded, createSinglePropertyTransformer("border-radius"))}
+    ${compileCss(border, createSinglePropertyTransformer("border"))}
+    ${compileCss(shadow, createSinglePropertyTransformer("box-shadow"))}
+    ${compileTransformProperties(moveLeft, moveRight, moveUp, moveDown, scale, rotate)}
+  `.trim();
+
+  const positionedContainerCss = `
+    ${compileCss(position, createPositionProperty)}
+  `.trim();
 </script>

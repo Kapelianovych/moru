@@ -1,0 +1,115 @@
+<import from="@moru/core/only.html" />
+
+<import from="./element.html" />
+
+<export name="typographyId" as="id" />
+<export name="typographyClasses" as="classes" />
+<export name="typographyRestProps" as="rest-props" />
+
+<only key="{{ url.current }}">
+  <style portal="{{ rootContext.headPortalName }}">
+    .{{ Class.Typography }} {
+      --fso: calc(
+        var({{ CustomProperty.FontSize }}) *
+          (var({{ CustomProperty.TextSpacing }}) / -2)
+      );
+      {{ CustomProperty.TextSpacing }}: 0;
+      {{ CustomProperty.FontSize }}: var({{ CustomProperty.DefaultFontSize }});
+      {{ CustomProperty.RealTextHeightRatio }}: var({{ CustomProperty.DefaultRealTextHeightRatio }});
+      {{ CustomProperty.TextSideOffsetCorrection }}: var({{ CustomProperty.DefaultTextSideOffsetCorrection }});
+      /* For the <input> */
+      {{ CustomProperty.TextLineHeight }}: calc(
+        var({{ CustomProperty.RealTextHeightRatio }}) +
+          var({{ CustomProperty.TextSpacing }})
+      );
+
+      line-height: var({{ CustomProperty.TextLineHeight }});
+      font-size: var({{ CustomProperty.FontSize }});
+
+      /* Margins in pseudoelements are working only if the container is a block. */
+      display: inline-block;
+
+      &::before,
+      &::after {
+        content: "";
+        display: block;
+        height: 0;
+      }
+
+      &::before {
+        margin-bottom: calc(
+          var(--fso) + var({{ CustomProperty.TextSideOffsetCorrection }})
+        );
+      }
+
+      &::after {
+        margin-top: var(--fso);
+      }
+    }
+  </style>
+</only>
+
+<element
+  expand="{{ restProps }}"
+  assign:id
+  assign:rest-props="elementRestProps"
+  assign:classes="elementClasses"
+>
+  <if condition="{{ css }}">
+    <style portal="{{ rootContext.headPortalName }}">
+      .{{ id }} {
+        {{ css }}
+      }
+    </style>
+  </if>
+
+  <slot />
+
+  <script build>
+    typographyId = id;
+    typographyRestProps = elementRestProps;
+    typographyClasses = `${elementClasses} ${Class.Typography}`;
+  </script>
+</element>
+
+<script type="module" build>
+  import { useRootContext } from "./lib/root-context.js";
+  import { transformDensity } from "./lib/transformers/text-density.js";
+  import { Class, CustomProperty } from "./lib/constants.js";
+  import { createTextBreakingProperty } from "./lib/transformers/text-breaking.js";
+  import {
+    compileCss,
+    createSinglePropertyTransformer,
+  } from "./lib/compile-css.js";
+
+  const rootContext = useRootContext(buildStore);
+
+  const {
+    size,
+    color,
+    weight,
+    family,
+    spacing,
+    density,
+    breaking,
+    "real-height-ratio": realHeightRatio,
+    "side-offset-correction": sideOffsetCorrection,
+    ...restProps
+  } = props;
+
+  const css = `
+    ${compileCss(size, createSinglePropertyTransformer(CustomProperty.FontSize))}
+    ${compileCss(spacing, createSinglePropertyTransformer(CustomProperty.TextSpacing))}
+    ${compileCss(realHeightRatio, createSinglePropertyTransformer(CustomProperty.RealTextHeightRatio))}
+    ${compileCss(sideOffsetCorrection, createSinglePropertyTransformer(CustomProperty.TextSideOffsetCorrection))}
+    ${compileCss(color, createSinglePropertyTransformer("color"))}
+    ${compileCss(weight, createSinglePropertyTransformer("font-weight"))}
+    ${compileCss(family, createSinglePropertyTransformer("font-family"))}
+    ${compileCss(density, createSinglePropertyTransformer("letter-spacing", transformDensity))}
+    ${compileCss(breaking, createTextBreakingProperty)}
+  `.trim();
+
+  let typographyId;
+  let typographyRestProps;
+  let typographyClasses;
+</script>

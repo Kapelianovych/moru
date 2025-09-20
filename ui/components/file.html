@@ -31,7 +31,7 @@
     <input
       type="file"
       accept="{{ accept }}"
-      multiple="{{ normaliseBooleanProperty(multiple) }}"
+      multiple="{{ multiple != null && multiple !== false ? '' : undefined }}"
       capture="{{ capture }}"
     />
     <slot />
@@ -39,25 +39,10 @@
 </element>
 
 <script type="module" build>
-  import { Class } from "./lib/names.js";
+  import { Class } from "./lib/constants.js";
   import { useRootContext } from "./lib/root-context.js";
-  import { normaliseBooleanProperty } from "./lib/normalisers.js";
 
-  /**
-   * @typedef {Object} Props
-   * @property {string} [class]
-   * @property {string} [accept]
-   * @property {string | boolean} [multiple]
-   * @property {string} [capture]
-   */
-
-  const {
-    class: classes = "",
-    accept,
-    multiple,
-    capture,
-    ...other
-  } = /** @type {Props} */ (props);
+  const { class: classes = "", accept, multiple, capture, ...other } = props;
 
   const rootContext = useRootContext(buildStore);
 </script>

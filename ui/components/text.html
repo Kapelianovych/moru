@@ -1,6 +1,6 @@
-<import from="./textual-element.html" />
+<import from="./typography.html" />
 
-<textual-element
+<typography
   expand="{{ restProps }}"
   assign:id
   assign:classes="elementClasses"
@@ -16,15 +16,10 @@
   >
     <slot />
   </span>
-</textual-element>
+</typography>
 
 <script type="module" build>
-  import { Class } from "./lib/names.js";
+  import { Class } from "./lib/constants.js";
 
-  /**
-   * @typedef {Object} Props
-   * @property {string} [class]
-   */
-
-  const { class: classes = "", ...restProps } = /** @type {Props} */ (props);
+  const { class: classes = "", ...restProps } = props;
 </script>

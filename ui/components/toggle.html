@@ -34,16 +34,10 @@
 </element>
 
 <script type="module" build>
-  import { Class } from "./lib/names.js";
+  import { Class } from "./lib/constants.js";
   import { useRootContext } from "./lib/root-context.js";
 
-  /**
-   * @typedef {Object} Props
-   * @property {string} [class]
-   * @property {string} [group]
-   */
-
-  const { class: classes = "", group, ...other } = /** @type {Props} */ (props);
+  const { class: classes = "", group, ...other } = props;
 
   const rootContext = useRootContext(buildStore);
 </script>

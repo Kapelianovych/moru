@@ -7,8 +7,6 @@
     .{{ Class.Image }} {
       img {
         max-width: 100%;
-
-        object-fit: var({{ CustomProperty.ImageFit }});
       }
     }
   </style>
@@ -20,13 +18,15 @@
   assign:classes="elementClasses"
   assign:rest-props="restProps"
 >
-  <style portal="{{ rootContext.headPortalName }}">
-    .{{ id }} {
-      img {
-        {{ css }}
+  <if condition="{{ css }}">
+    <style portal="{{ rootContext.headPortalName }}">
+      .{{ id }} {
+        img {
+          {{ css }}
+        }
       }
-    }
-  </style>
+    </style>
+  </if>
 
   <picture
     class="
@@ -41,48 +41,24 @@
     </for>
     <img
       alt="{{ description }}"
-      expand="{{ createAttributesForFallbackElement() }}"
+      expand="{{ createAttributesForFallbackElement(fallbackImageDescriptor) }}"
     />
   </picture>
 </element>
 
 <script type="module" build>
-  /**
-   * @import { ImageFit } from './lib/visitors/image-fit-visitor.js';
-   */
-
-  import { Class, CustomProperty } from "./lib/names.js";
+  import { Class } from "./lib/constants.js";
   import { useRootContext } from "./lib/root-context.js";
-  import { usePropertyCompiler } from "./lib/property.js";
-  import { ImageFitVisitor } from "./lib/visitors/image-fit-visitor.js";
+  import {
+    compileCss,
+    createSinglePropertyTransformer,
+  } from "./lib/compile-css.js";
+  import {
+    createAttributesForSourceElement,
+    createAttributesForFallbackElement,
+  } from "./lib/image.js";
 
-  /**
-   * @typedef {Object} ImageDescriptor
-   * @property {string} [type]
-   * @property {string} [media]
-   * @property {Array<string>} [sizes]
-   * @property {Array<string | [string, `${number}${'w' | 'x'}`]>} urls
-   */
-
-  /**
-   * @typedef {Pick<ImageDescriptor, 'urls' | 'sizes'>} FallbackImageDescriptor
-   */
-
-  /**
-   * @typedef {Object} Props
-   * @property {string} [class]
-   * @property {ImageFit} [fit]
-   * @property {string} description
-   * @property {Array<ImageDescriptor | FallbackImageDescriptor>} sources
-   */
-
-  const {
-    class: classes = "",
-    fit = "cover",
-    sources,
-    description,
-    ...other
-  } = /** @type {Props} */ (props);
+  const { class: classes = "", fit, sources, description, ...other } = props;
 
   if (!sources) {
     throw new Error(
@@ -105,60 +81,9 @@
   }
 
   const rootContext = useRootContext(buildStore);
-  /** @type {FallbackImageDescriptor} */
   const fallbackImageDescriptor = sources.at(-1);
 
-  const compileProperty = usePropertyCompiler(buildStore);
-
-  const css = [
-    compileProperty(CustomProperty.ImageFit, fit, {
-      visitor: ImageFitVisitor,
-    }),
-  ].join("");
-
-  /**
-   * @param {ImageDescriptor['urls']} urls
-   * @returns {string}
-   */
-  function stringifySrcset(urls) {
-    return urls.reduce((accumulator, urlOrPair) => {
-      return (
-        (accumulator.length ? accumulator + ", " : "") +
-        (Array.isArray(urlOrPair)
-          ? `${urlOrPair[0]} ${urlOrPair[1]}`
-          : urlOrPair)
-      );
-    }, "");
-  }
-
-  /**
-   * @param {ImageDescriptor} imageDescriptor
-   * @returns {Object}
-   */
-  function createAttributesForSourceElement(imageDescriptor) {
-    return {
-      type: imageDescriptor.type,
-      media: imageDescriptor.media,
-      srcset: stringifySrcset(imageDescriptor.urls),
-    };
-  }
-
-  /**
-   * @returns {Object}
-   */
-  function createAttributesForFallbackElement() {
-    const attributes = {};
-
-    if (Array.isArray(fallbackImageDescriptor.urls)) {
-      attributes.srcset = stringifySrcset(fallbackImageDescriptor.urls);
-    } else {
-      attributes.src = fallbackImageDescriptor.urls;
-    }
-
-    if (fallbackImageDescriptor.sizes) {
-      attributes.sizes = fallbackImageDescriptor.sizes.join(", ");
-    }
-
-    return attributes;
-  }
+  const css = `
+    ${compileCss(fit, createSinglePropertyTransformer("object-fit"))}
+  `.trim();
 </script>
