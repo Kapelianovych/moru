@@ -1,6 +1,8 @@
-/** @import { Plugin } from "vite"; */
-
-/** @import { Environment } from "./environment.js"; */
+/**
+ * @import { Plugin } from "vite";
+ *
+ * @import { Environment } from "./environment.js";
+ */
 
 import { relative } from "node:path";
 
@@ -10,10 +12,14 @@ import { normalizePath } from "vite";
  * @implements {Plugin}
  */
 export class Bundler {
-  /** @type {Environment} */
+  /**
+   * @type {Environment}
+   */
   #environment;
 
-  /** @readonly */
+  /**
+   * @readonly
+   */
   name = "@moru/bundler";
   enforce = /** @type {const} */ ("post");
 

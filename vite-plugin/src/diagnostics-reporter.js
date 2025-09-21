@@ -2,9 +2,9 @@
  * @import { Logger } from "vite";
  * @import { Colors } from "picocolors/types.js";
  * @import { AnyMessage, Diagnostics } from "@moru/core";
+ *
+ * @import { Environment } from "./environment.js";
  */
-
-/** @import { Environment } from "./environment.js"; */
 
 import { inspect } from "node:util";
 
@@ -15,7 +15,9 @@ import { MessageTag } from "@moru/core";
  * @implements {Diagnostics}
  */
 export class DiagnosticsReporter {
-  /** @type {Environment} */
+  /**
+   *  @type {Environment}
+   */
   #environment;
 
   /**

@@ -1,6 +1,6 @@
-/** @import { Plugin, UserConfig, ResolvedConfig } from "vite"; */
-
 /**
+ * @import { Plugin, UserConfig, ResolvedConfig } from "vite";
+ *
  * @import { DeepPartial } from "./utilities.js";
  * @import { MoruEntries, PluginOptions } from "./plugin-options.js";
  */
@@ -10,7 +10,9 @@ import { join } from "node:path";
 import { globSync } from "glob";
 import { mergeConfig } from "vite";
 
-/** @type {MoruEntries} */
+/**
+ * @type {MoruEntries}
+ */
 const DEFAULT_ENTRIES_SETTINGS = {
   suffix: ".page",
   include: [""],
@@ -21,12 +23,18 @@ const DEFAULT_ENTRIES_SETTINGS = {
  * @implements {Plugin}
  */
 export class Environment {
-  /** @readonly */
+  /**
+   * @readonly
+   */
   name = "@moru/environment";
   enforce = /** @type {const} */ ("pre");
-  /** @type {PluginOptions} */
+  /**
+   * @type {PluginOptions}
+   */
   pluginOptions;
-  /** @type {ResolvedConfig} */
+  /**
+   * @type {ResolvedConfig}
+   */
   // @ts-ignore - it will be set in the configResolved method.
   viteConfiguration;
 

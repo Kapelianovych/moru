@@ -162,7 +162,7 @@ export function watch(attribute) {
 export function callAttributeWatchers(classInstance, attribute, metadata) {
   const attributes =
     /**
-     * @type {Map<string,AttributeDescriptor>}
+     * @type {Map<string, AttributeDescriptor>}
      */
     (metadata.attributes);
 

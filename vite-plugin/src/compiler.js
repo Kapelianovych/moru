@@ -1,9 +1,7 @@
 /**
  * @import { IndexHtmlTransform, Plugin } from "vite";
  * @import { Diagnostics, VirtualFile } from "@moru/core";
- */
-
-/**
+ *
  * @import  { Environment } from "./environment.js";
  */
 
@@ -75,33 +73,46 @@ export class Compiler {
           resolveUrl: self.#resolveUrlAndMarkDependency.bind(
             self,
             // @ts-expect-error vite injects this method but does not expose its presense :(
-            this.addWatchFile.bind(this),
+            this.addWatchFile?.bind(this),
           ),
           readFileContent: self.#readFileContent,
           dynamicallyImportJsFile: self.#dynamicallyImportJsFile,
         });
+        if (self.environment.pluginOptions.transform) {
+          await self.environment.pluginOptions.transform(tree, {
+            url: context.path
+              .split(sep)
+              .join("/")
+              .replace(self.environment.pluginOptions.entries.suffix, ""),
+            filePath: context.filename,
+          });
+        }
         return generateHtml(tree);
       },
     };
   }
 
   /**
-   * @param {function(string): void} addWatchFile
+   * @param {undefined | function(string): void} addWatchFile
    * @param {VirtualFile} currentFile
    * @param {string} relativeUrl
    * @returns {string}
    */
   #resolveUrlAndMarkDependency(addWatchFile, currentFile, relativeUrl) {
     const filePath = this.#resolveUrl(currentFile, relativeUrl);
-    const watchedRootDirectoryByVite = resolve(
-      this.environment.viteConfiguration.root,
-    );
 
-    if (
-      filePath.startsWith(watchedRootDirectoryByVite) &&
-      (filePath.endsWith(".html") || filePath.endsWith(".svg"))
-    ) {
-      addWatchFile(filePath);
+    // Adding additional files to Vite's watcher is possible only in watch mode.
+    if (addWatchFile) {
+      const watchedRootDirectoryByVite = resolve(
+        this.environment.viteConfiguration.root,
+      );
+
+      if (
+        filePath.startsWith(watchedRootDirectoryByVite) &&
+        (filePath.endsWith(".html") || filePath.endsWith(".svg"))
+      ) {
+        addWatchFile(filePath);
+      }
     }
 
     return filePath;

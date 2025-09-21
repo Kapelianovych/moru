@@ -1,6 +1,6 @@
-/** @import { Plugin } from "vite"; */
-
 /**
+ * @import { Plugin } from "vite";
+ *
  * @import { DeepPartial } from "./utilities.js";
  * @import { PluginOptions } from "./plugin-options.js";
  */

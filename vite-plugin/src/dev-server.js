@@ -1,6 +1,8 @@
-/** @import { Plugin, HmrContext, ModuleNode, ViteDevServer } from "vite"; */
-
-/** @import { Environment } from "./environment.js"; */
+/**
+ * @import { Plugin, HmrContext, ModuleNode, ViteDevServer } from "vite";
+ *
+ * @import { Environment } from "./environment.js";
+ */
 
 import { extname, normalize } from "node:path";
 
@@ -8,10 +10,14 @@ import { extname, normalize } from "node:path";
  * @implements {Plugin}
  */
 export class DevServer {
-  /** @type {Environment} */
+  /**
+   * @type {Environment}
+   */
   #environment;
 
-  /** @readonly */
+  /**
+   * @readonly
+   */
   name = "@moru/dev-server";
 
   /**
