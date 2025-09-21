@@ -31,11 +31,20 @@
   </only>
 </if>
 
+<only key="{{ url.current + 'own-style' }}">
+  <style portal="{{ context.headPortalName }}">
+    .{{ Class.Root }} {
+      position: relative;
+    }
+  </style>
+</only>
+
 <context-provider key="{{ ROOT_CONTEXT }}" value="{{ context }}">
   <element
     width="fill"
     height="fill"
     hidden="{{ hidden }}"
+    vertical="{{ vertical }}"
     assign:id
     assign:classes="elementClasses"
   >
@@ -68,6 +77,7 @@
 
   const {
     hidden,
+    vertical,
     class: classes = "",
     "head-portal-name": headPortalName,
     "measurement-unit-value":

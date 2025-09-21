@@ -2,6 +2,8 @@
  * @import { CustomElement } from "./controller.js";
  */
 
+import { hookIntoProperty } from "./hook-into-property.js";
+
 /**
  * @overload
  * @param {HTMLElement} controller
@@ -64,12 +66,14 @@ export function target(_, context) {
   const stringifiedName = String(context.name);
 
   context.addInitializer(function () {
-    Reflect.defineProperty(this, context.name, {
-      configurable: true,
-      get() {
+    hookIntoProperty(
+      this,
+      context.name,
+      () => {
         return findTarget(this, stringifiedName, true);
       },
-    });
+      () => {},
+    );
   });
 }
 
@@ -81,11 +85,13 @@ export function targets(_, context) {
   const stringifiedName = String(context.name);
 
   context.addInitializer(function () {
-    Reflect.defineProperty(this, context.name, {
-      configurable: true,
-      get() {
+    hookIntoProperty(
+      this,
+      context.name,
+      () => {
         return findTarget(this, stringifiedName, false);
       },
-    });
+      () => {},
+    );
   });
 }

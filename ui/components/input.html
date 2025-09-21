@@ -6,6 +6,10 @@
   <style portal="{{ rootContext.headPortalName }}">
     .{{ Class.Input }} {
       resize: none;
+      /* Do not overflow the container by default. */
+      max-width: 100%;
+      padding: 0;
+      border: none;
 
       {{ CustomProperty.TextLines }}: 1;
 

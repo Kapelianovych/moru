@@ -15,9 +15,19 @@
 
       display: inline-flex;
       align-items: flex-start;
-      position: relative;
-      z-index: 1;
       box-sizing: border-box;
+
+      &[data-debug] {
+        border: 2px dashed red;
+      }
+
+      &:has(> .{{ Class.PositionedContainer }}) {
+        position: relative;
+
+        & > * {
+          z-index: 1;
+        }
+      }
     }
 
     .{{ Class.PositionedContainer }} {

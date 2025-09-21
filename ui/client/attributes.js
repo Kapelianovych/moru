@@ -3,12 +3,12 @@
  */
 
 import { toKebabCase } from "./to-kebab-case.js";
+import { hookIntoProperty } from "./hook-into-property.js";
 
 /**
  * @typedef {Object} AttributeDescriptor
  * @property {string} name
- * @property {function(): unknown} defaultValue
- * @property {PropertyDescriptor} descriptor
+ * @property {function(this: CustomElement): void} initialise
  * @property {Set<string | symbol>} observers
  */
 
@@ -21,28 +21,26 @@ export function attribute(_, context) {
 
   const attributes =
     /**
-     * @type {Map<string,AttributeDescriptor>}
+     * @type {Map<string, AttributeDescriptor>}
      */
     (context.metadata.attributes ??= new Map());
 
-  /**
-   * @type {PropertyDescriptor}
-   */
-  const descriptor = {
-    configurable: true,
+  let get =
     /**
      * @this {CustomElement}
+     * @returns {unknown}
      */
-    get() {
+    function () {
       return this.getAttribute(attributeName) || "";
-    },
+    };
+  let set =
     /**
      * @this {CustomElement}
+     * @param {unknown} value
      */
-    set(value) {
-      this.setAttribute(attributeName, value || "");
-    },
-  };
+    function (value) {
+      this.setAttribute(attributeName, String(value));
+    };
 
   /**
    * @type {unknown}
@@ -51,15 +49,39 @@ export function attribute(_, context) {
 
   attributes.set(attributeName, {
     name: attributeName,
-    descriptor,
-    defaultValue() {
-      return attributeDefaultValue;
+    initialise() {
+      set.call(this, attributeDefaultValue);
     },
     observers: new Set(),
   });
 
   context.addInitializer(function () {
-    Reflect.defineProperty(this, context.name, descriptor);
+    if (typeof attributeDefaultValue === "number") {
+      get =
+        /**
+         * @this {CustomElement}
+         */
+        function () {
+          return Number(this.getAttribute(attributeName) || 0);
+        };
+    } else if (typeof attributeDefaultValue === "boolean") {
+      get =
+        /**
+         * @this {CustomElement}
+         */
+        function () {
+          return this.hasAttribute(attributeName);
+        };
+      set =
+        /**
+         * @this {CustomElement}
+         */
+        function (value) {
+          this.toggleAttribute(attributeName, Boolean(value));
+        };
+    }
+
+    hookIntoProperty(this, context.name, get, set);
   });
 
   /**
@@ -67,39 +89,6 @@ export function attribute(_, context) {
    */
   return (value) => {
     attributeDefaultValue = value;
-    const defaultValueType = typeof value;
-
-    if (defaultValueType === "number") {
-      descriptor.get =
-        /**
-         * @this {CustomElement}
-         */
-        function () {
-          return Number(this.getAttribute(attributeName) || 0);
-        };
-      descriptor.set =
-        /**
-         * @this {CustomElement}
-         */
-        function (value) {
-          this.setAttribute(attributeName, value);
-        };
-    } else if (defaultValueType === "boolean") {
-      descriptor.get =
-        /**
-         * @this {CustomElement}
-         */
-        function () {
-          return this.hasAttribute(attributeName);
-        };
-      descriptor.set =
-        /**
-         * @this {CustomElement}
-         */
-        function (value) {
-          this.toggleAttribute(attributeName, value);
-        };
-    }
   };
 }
 
@@ -129,10 +118,9 @@ export function initialiseAttributeDefaultValues(classInstance, metadata) {
      */
     (metadata.attributes);
 
-  attributes?.forEach(({ name, descriptor, defaultValue }) => {
+  attributes?.forEach(({ name, initialise }) => {
     if (!classInstance.hasAttribute(name)) {
-      // @ts-expect-error set method is definitely defined above
-      descriptor.set.call(classInstance, defaultValue());
+      initialise.call(classInstance);
     }
   });
 }
@@ -151,11 +139,17 @@ export function watch(attribute) {
     context.addInitializer(function () {
       const attributes =
         /**
-         * @type {Map<string,AttributeDescriptor>}
+         * @type {Map<string, AttributeDescriptor> | undefined}
          */
         (context.metadata.attributes);
+      const properties =
+        /**
+         * @type {Map<string | symbol, Set<string | symbol>> | undefined}
+         */
+        (context.metadata.properties);
 
-      attributes.get(name)?.observers.add(context.name);
+      attributes?.get(name)?.observers.add(context.name);
+      properties?.get(attribute)?.add(context.name);
     });
   };
 }
@@ -165,7 +159,7 @@ export function watch(attribute) {
  * @param {string} attribute
  * @param {DecoratorMetadataObject} metadata
  */
-export function callWatchers(classInstance, attribute, metadata) {
+export function callAttributeWatchers(classInstance, attribute, metadata) {
   const attributes =
     /**
      * @type {Map<string,AttributeDescriptor>}

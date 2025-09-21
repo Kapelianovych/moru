@@ -2,7 +2,7 @@ import { bindActions } from "./actions.js";
 import { toKebabCase } from "./to-kebab-case.js";
 import { initialiseConsumers } from "./context.js";
 import {
-  callWatchers,
+  callAttributeWatchers,
   initialiseAttributeDefaultValues,
   initialiseObservedAttributes,
 } from "./attributes.js";
@@ -78,7 +78,7 @@ function initialiseAttributeChangedCallback(classConstructor, metadata) {
       // so we usually want to skip those calls.
       if (this.$connectedCallbackCalled) {
         if (oldValue !== newValue) {
-          callWatchers(this, name, metadata);
+          callAttributeWatchers(this, name, metadata);
           attributeChangedCallback?.call(this, name, oldValue, newValue);
         }
       }

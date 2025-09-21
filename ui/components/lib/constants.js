@@ -9,7 +9,7 @@ export const Class = Object.freeze({
   Text: "t",
   Image: "i",
   Svg: "s",
-  Button: "b",
+  Button: "bt",
   Link: "l",
   Input: "in",
   Toggle: "tg",
@@ -36,5 +36,5 @@ export const CustomProperty = Object.freeze({
   TextSideOffsetCorrection: "--tsoc",
   DefaultTextSideOffsetCorrection: "--dtsoc",
   TextLines: "--tl",
-  TextLineHeight: '--tlh',
+  TextLineHeight: "--tlh",
 });

@@ -2,6 +2,8 @@
  * @import { CustomElement } from './controller.js'
  */
 
+import { hookIntoProperty } from "./hook-into-property.js";
+
 /**
  * @template Value
  * @callback ContextCallback
@@ -38,38 +40,21 @@ export function provide(_, context) {
       this.$registeredConsumersPerContext = new Map();
     }
 
-    /**
-     * @type {Set<function(unknown): void>}
-     */
-    const consumers = new Set();
+    this.$registeredConsumersPerContext.set(context.name, new Set());
 
-    this.$registeredConsumersPerContext.set(context.name, consumers);
-
-    const descriptor =
-      /**
-       * @type {TypedPropertyDescriptor<unknown>}
-       */
-      (Reflect.getOwnPropertyDescriptor(this, context.name));
-
-    Reflect.defineProperty(this, context.name, {
-      configurable: true,
-      get:
-        descriptor.get ??
-        (() => {
-          return descriptor.value;
-        }),
-      set(value) {
-        if (descriptor.set) {
-          descriptor.set.call(this, value);
-        } else {
-          descriptor.value = value;
-        }
-        consumers.forEach((consume) => {
-          consume(value);
-        });
-        return true;
+    hookIntoProperty(
+      this,
+      context.name,
+      (value) => value,
+      (value, set) => {
+        set(value);
+        this.$registeredConsumersPerContext
+          ?.get(context.name)
+          ?.forEach((consume) => {
+            consume(value);
+          });
       },
-    });
+    );
   });
 }
 

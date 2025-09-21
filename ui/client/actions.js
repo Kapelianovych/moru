@@ -60,7 +60,7 @@ function handleEvent(event) {
     /**
      * @type {Element}
      */
-    (event.target);
+    (event.currentTarget);
 
   for (const binding of bindingsOf(element)) {
     if (binding.type === event.type) {
