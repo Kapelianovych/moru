@@ -1,4 +1,4 @@
-import { ok, equal } from "node:assert/strict";
+import { equal } from "node:assert/strict";
 import { suite, test, mock } from "node:test";
 
 import { store } from "../src/index.js";
@@ -18,14 +18,6 @@ suite("store", () => {
     equal(state.get(), 2);
   });
 
-  test("hasSubscribers method should state whether there is at least one subscriber of the store", () => {
-    const state = store(1);
-
-    state.subscribe(() => {});
-
-    ok(state.hasSubscribers());
-  });
-
   test("subscription should be called when a stored value is updated", () => {
     const fn = mock.fn();
     const state = store(1);
@@ -38,18 +30,6 @@ suite("store", () => {
 
     equal(fn.mock.callCount(), 1);
     equal(fn.mock.calls[0].arguments[0], 2);
-  });
-
-  test("unsubscribe function remove the subscriber", () => {
-    const fn = mock.fn();
-    const state = store(1);
-
-    state.subscribe(fn);
-    state.unsubscribe(fn);
-
-    state.set(2);
-
-    equal(fn.mock.callCount(), 0);
   });
 
   test("subscription function returned by the subscribe method should remove the subscriber", () => {
@@ -65,23 +45,27 @@ suite("store", () => {
     equal(fn.mock.callCount(), 0);
   });
 
-  test("supplied comparator can change the way values are compared", () => {
-    const state1 = store({ foo: 1 });
-    const state2 = store(
-      { foo: 1 },
-      ({ foo: foo1 }, { foo: foo2 }) => foo1 === foo2,
-    );
+  test("store can register a function which will be called when last subscriber is unsubscribed", () => {
+    const dispose = mock.fn();
+    const state = store(1);
 
-    const fn1 = mock.fn();
-    const fn2 = mock.fn();
+    const unsubscribe = state.subscribe(() => {});
 
-    state1.subscribe(fn1);
-    state2.subscribe(fn2);
+    state.registerDispose(dispose);
 
-    state1.set({ foo: 1 });
-    state2.set({ foo: 1 });
+    unsubscribe();
 
-    equal(fn1.mock.callCount(), 1);
-    equal(fn2.mock.callCount(), 0);
+    equal(dispose.mock.callCount(), 1);
+  });
+
+  test("when last subscriber is unsubscribed internal value becomes the initial one", () => {
+    const state = store(1);
+    const unsubscribe = state.subscribe(() => {});
+
+    state.set(2);
+    equal(state.get(), 2);
+
+    unsubscribe();
+    equal(state.get(), 1);
   });
 });

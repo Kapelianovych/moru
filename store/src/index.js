@@ -1,14 +1,4 @@
 /**
- * Compares two values and states whether they are equals.
- *
- * @template Value
- * @callback Comparator
- * @param {Value} previous
- * @param {Value} next
- * @returns {boolean}
- */
-
-/**
  * @template Value
  * @callback Subscriber
  * @param {Value} value
@@ -21,189 +11,199 @@
  * @property {function(): Value} get
  * @property {function(Value): void} set
  * @property {function(Subscriber<Value>): VoidFunction} subscribe
- * @property {function(Subscriber<Value>): void} unsubscribe
- * @property {function(): boolean} hasSubscribers
+ * @property {function(VoidFunction): void} registerDispose
  */
 
 /**
  * @template Value
- * @param {Value} value
- * @param {Comparator<Value>} equals
+ * @param {Value} initialValue
  * @returns {Store<Value>}
  */
-export function store(value, equals = Object.is) {
-  /** @type {Set<Subscriber<Value>>} */
-  const subscribers = new Set();
+export function store(initialValue) {
+  let value = initialValue;
 
-  /** @type {Store<Value>['unsubscribe']} */
-  const unsubscribe = (subscriber) => {
-    subscribers.delete(subscriber);
-  };
+  /**
+   * @type {Set<Subscriber<Value>>}
+   */
+  const subscribers = new Set();
+  /**
+   * @type {Set<VoidFunction>}
+   */
+  const disposes = new Set();
 
   return {
     get() {
       return value;
     },
     set(next) {
-      if (!equals(value, next)) {
-        value = next;
-        subscribers.forEach((subscriber) => subscriber(value));
-      }
+      value = next;
+      subscribers.forEach((subscriber) => {
+        subscriber(next);
+      });
     },
     subscribe(subscriber) {
       subscribers.add(subscriber);
 
-      return () => unsubscribe(subscriber);
+      return () => {
+        subscribers.delete(subscriber);
+
+        if (!subscribers.size) {
+          disposes.forEach((dispose) => {
+            dispose();
+          });
+          disposes.clear();
+          value = initialValue;
+        }
+      };
     },
-    unsubscribe,
-    hasSubscribers() {
-      return subscribers.size > 0;
+    registerDispose(dispose) {
+      disposes.add(dispose);
     },
   };
 }
 
 /**
- * @template {Array<Store<unknown>>} Dependencies
- * @typedef {Dependencies extends []
- *   ? []
- *   : Dependencies extends [Store<infer A>, ...infer Rest extends Array<Store<unknown>>]
- *     ? [A, ...GetDependencyValueTypes<Rest>]
- *     : Dependencies extends Array<Store<infer B>>
- *       ? Array<B>
- *       : never
- * } GetDependencyValueTypes
- */
-
-/**
- * @template {Array<Store<unknown>>} Dependencies
  * @template Value
- * @typedef {(currentValue: Value | undefined, ...args: GetDependencyValueTypes<Dependencies>) => Value} Computation
+ * @template NextValue
+ * @param {Store<Value>} target
+ * @param {function(Value): NextValue} callback
+ * @returns {Store<NextValue>}
  */
+export function map(target, callback) {
+  const nextStore = store(callback(target.get()));
 
-/**
- * @template Value
- * @template {Array<Store<any>>} const Dependencies
- * @param {Dependencies} dependencies
- * @param {Computation<Dependencies, Value>} computation
- * @param {Comparator<Value>} [equals]
- * @returns {Store<Value>}
- */
-export function computed(dependencies, computation, equals) {
-  /** @type {Subscriber<void>} */
-  const computedSubscriber = () => {
-    const computedValue = computation(
-      result.get(),
-      .../** @type {GetDependencyValueTypes<Dependencies>} */ (
-        dependencies.map((store) => store.get())
-      ),
-    );
-    result.set(computedValue);
-  };
-  const subscribeToDependencies = () =>
-    dependencies.map((store) => store.subscribe(computedSubscriber));
+  const stop = forEach(target, (value) => {
+    nextStore.set(callback(value));
+  });
 
-  const result = store(/** @type {Value} */ (undefined), equals);
+  nextStore.registerDispose(stop);
 
-  /** @type {Array<VoidFunction> | undefined | null} */
-  let subscriptions;
-
-  const originalSubscribe = result.subscribe;
-  const originalUnsubscribe = result.unsubscribe;
-
-  const unsubscribeOnLastSubscriberRemoval = () => {
-    if (!result.hasSubscribers()) {
-      subscriptions?.forEach((unsubscribe) => unsubscribe());
-      subscriptions = null;
-    }
-  };
-
-  result.subscribe = (subscriber) => {
-    if (!result.hasSubscribers()) {
-      computedSubscriber();
-      subscriptions = subscribeToDependencies();
-    }
-
-    const unsubscribe = originalSubscribe(subscriber);
-
-    return () => {
-      unsubscribe();
-      unsubscribeOnLastSubscriberRemoval();
-    };
-  };
-  result.unsubscribe = (subscriber) => {
-    originalUnsubscribe(subscriber);
-    unsubscribeOnLastSubscriberRemoval();
-  };
-
-  return result;
+  return nextStore;
 }
 
 /**
- * @callback Scheduler
- * @param {VoidFunction} callback
- * @returns {void}
+ * @template Value
+ * @template NextValue
+ * @param {Store<Value>} target
+ * @param {function(Value): Store<NextValue>} callback
+ * @returns {Store<NextValue>}
+ */
+export function flatMap(target, callback) {
+  /**
+   * @type {VoidFunction | undefined}
+   */
+  let dispose;
+  const nextStore = callback(target.get());
+
+  const stop = forEach(target, (value) => {
+    dispose?.();
+    dispose = forEach(callback(value), nextStore.set);
+  });
+
+  nextStore.registerDispose(() => {
+    stop();
+    dispose?.();
+  });
+
+  return nextStore;
+}
+
+/**
+ * @template {Array<Store<any>>} Stores
+ * @typedef {{
+ *   [K in keyof Stores]: Stores[K] extends Store<infer V> ? V : never;
+ * }} StoreValues
  */
 
 /**
- * Immediately calls the provided {@link callback}.
- *
- * @type {Scheduler}
+ * @template {Array<Store<any>>} const Stores
+ * @param {Stores} stores
+ * @returns {Store<StoreValues<Stores>>}
  */
-export const immediately = (callback) => callback();
-
-/**
- * @template {Array<Store<any>>} Dependencies
- * @typedef {(
- *    ...args: GetDependencyValueTypes<Dependencies>
- *  ) => VoidFunction | null | void} Effect
- */
-
-/**
- * @template {Array<Store<any>>} const Dependencies
- * @param {Dependencies} dependencies
- * @param {Effect<Dependencies>} effect
- * @param {Scheduler} schedule
- * @returns {VoidFunction}
- */
-export function subscribe(dependencies, effect, schedule = immediately) {
-  let idle = true;
-  /** @type {VoidFunction | void | null} */
-  let cleanup;
-
-  const wrappedEffect = () => {
-    // In case, subscriptions were cancelled but a next tick was scheduled
-    // and not yet executed.
-    if (idle) return;
-
-    cleanup?.();
-    cleanup = effect.apply(
-      null,
-      /** @type {GetDependencyValueTypes<Dependencies>} */ (
-        dependencies.map((store) => store.get())
-      ),
-    );
-
-    idle = true;
-  };
-  /** @type {Subscriber<void>} */
-  const subscriber = () => {
-    if (idle) {
-      idle = false;
-
-      schedule(wrappedEffect);
-    }
-  };
-
-  const subscriptions = dependencies.map((store) =>
-    store.subscribe(subscriber),
+export function combine(stores) {
+  const nextStore = store(
+    stores.map((store) => {
+      return store.get();
+    }),
   );
 
-  // Call subscriber on creation.
-  subscriber();
+  const stops = stores.map((store) => {
+    return forEach(store, () => {
+      nextStore.set(
+        stores.map((store) => {
+          return store.get();
+        }),
+      );
+    });
+  });
 
-  return () => {
-    idle = true;
-    cleanup?.();
-    subscriptions.forEach(immediately);
-  };
+  nextStore.registerDispose(() => {
+    stops.forEach((stop) => {
+      stop();
+    });
+  });
+
+  // @ts-expect-error TS does not know type beforehand and complains about it
+  return nextStore;
+}
+
+/**
+ * @template Value
+ * @overload
+ * @param {Store<Value>} target
+ * @param {function(Value): boolean} callback
+ * @returns {Store<Value | undefined>}
+ *
+ * @overload
+ * @param {Store<Value>} target
+ * @param {function(Value): boolean} callback
+ * @param {Value} initialValue
+ * @returns {Store<Value>}
+ *
+ * @param {Store<Value>} target
+ * @param {function(Value): boolean} callback
+ * @param {Value} [initialValue]
+ * @returns {Store<Value | undefined>}
+ */
+export function filter(target, callback, initialValue) {
+  const nextStore = store(callback(target.get()) ? target.get() : initialValue);
+
+  const stop = forEach(target, (value) => {
+    if (callback(value)) {
+      nextStore.set(value);
+    }
+  });
+
+  nextStore.registerDispose(stop);
+
+  return nextStore;
+}
+
+/**
+ * @template Value
+ * @param {Store<Value>} target
+ * @returns {Store<Value>}
+ */
+export function distinct(target) {
+  let previousValue = target.get();
+
+  return filter(
+    target,
+    (value) => {
+      const same = Object.is(value, previousValue);
+      previousValue = value;
+      return !same;
+    },
+    previousValue,
+  );
+}
+
+/**
+ * @template Value
+ * @param {Store<Value>} store
+ * @param {Subscriber<Value>} callback
+ * @returns {VoidFunction}
+ */
+export function forEach(store, callback) {
+  return store.subscribe(callback);
 }
