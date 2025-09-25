@@ -115,8 +115,18 @@ function initialiseContextListener(classInstance, metadata) {
           contextRequestEvent.detail.callback(value, dispose);
         };
 
-        if (value instanceof Promise) {
-          value.then(callback);
+        if (
+          typeof (
+            /**
+             * @type {PromiseLike<unknown> | undefined | null}
+             */
+            (value)?.then
+          ) === "function"
+        ) {
+          /**
+           * @type {PromiseLike<unknown>}
+           */
+          (value).then(callback);
         } else {
           callback(value);
         }
