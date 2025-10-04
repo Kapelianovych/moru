@@ -60,15 +60,6 @@ export function createDiagnostics(logger) {
             codeFrames,
           });
           break;
-        case MessageTag.ExternalBuildScript:
-          logger.error({
-            message: markdown`${md.bold("build")} scripts cannot have the ${md.bold("src")} attribute.`,
-            hints: [
-              'Use import declaration instead: <script type="module">\n import { ... } from "...";\n</script>',
-            ],
-            codeFrames,
-          });
-          break;
         case MessageTag.UnsupportedBuildScriptReexporting:
           logger.error({
             message: markdown`The ${md.bold("build")} script cannot reexport any value.`,

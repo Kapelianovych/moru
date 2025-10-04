@@ -1,4 +1,6 @@
-/** @import { AnyNode } from "domhandler"; */
+/**
+ * @import { AnyNode } from "domhandler";
+ */
 
 import { hasChildren } from "domhandler";
 

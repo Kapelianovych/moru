@@ -1,4 +1,6 @@
-/** @import { Document } from "domhandler"; */
+/**
+ * @import { Document } from "domhandler";
+ */
 
 import render from "dom-serializer";
 

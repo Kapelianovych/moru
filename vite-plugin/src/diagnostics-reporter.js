@@ -76,20 +76,6 @@ export class DiagnosticsReporter {
             "and consist of at least one character.\n",
         );
         break;
-      case MessageTag.ExternalBuildScript:
-        this.#error(
-          "The " +
-            colors.magenta("build") +
-            " script cannot be referenced from a " +
-            colors.red("src") +
-            " attribute.\n" +
-            this.#highlightedRegion(message) +
-            "Use import declaration instead.\n" +
-            colors.blue(
-              '<script type="module" build>\nimport { /* ... */ } from "...";\\n</script>',
-            ),
-        );
-        break;
       case MessageTag.UnsupportedBuildScriptReexporting:
         this.#error(
           "The " +

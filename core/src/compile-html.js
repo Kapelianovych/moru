@@ -125,7 +125,7 @@ async function compileModule(options) {
 
   await evaluateLeafSlots(nodes, options.slotContentCompilersFromParent);
 
-  inlineClientData(
+  await inlineClientData(
     nodes,
     localThis,
     publicNames,

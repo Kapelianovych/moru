@@ -17,6 +17,7 @@ const DEFAULT_OPTIONS = {
   async readFileContent() {
     return "";
   },
+  async writeFileContent() {},
   async dynamicallyImportJsFile() {
     return {};
   },

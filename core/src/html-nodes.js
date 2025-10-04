@@ -1,6 +1,6 @@
-/** @import { AnyNode, ChildNode, Element } from 'domhandler'; */
-
 /**
+ * @import { AnyNode, ChildNode, Element } from 'domhandler';
+ *
  * @import { Cast } from "./type-utilities.js";
  * @import { Location } from "./diagnostics.js";
  */
@@ -197,6 +197,7 @@ import { append, removeElement } from "domutils";
  *   {
  *     attribs: HtmlAttributes<
  *       [
+ *         HtmlOptionalAttribute<"src">,
  *         HtmlOptionalAttribute<"type", "" | "module" | "text/javascript">,
  *         HtmlRequiredAttribute<"build">,
  *       ]

@@ -1,5 +1,5 @@
+import { ok, equal, match } from "node:assert/strict";
 import { test, suite, mock } from "node:test";
-import { ok, equal, match, deepEqual } from "node:assert/strict";
 
 import { compile } from "./compiler.js";
 import { MessageTag } from "../src/diagnostics.js";
@@ -29,22 +29,6 @@ suite("build scripts", () => {
 
     equal(publish.mock.callCount(), 1);
     equal(publish.mock.calls[0].arguments[0].tag, MessageTag.JsSyntaxError);
-  });
-
-  test('does not allow the "src" attribute in "build" scripts', async () => {
-    const publish = mock.fn();
-    await compile(
-      `
-        <script src="something" build></script>,
-      `,
-      { diagnostics: { publish } },
-    );
-
-    equal(publish.mock.callCount(), 1);
-    equal(
-      publish.mock.calls[0].arguments[0].tag,
-      MessageTag.ExternalBuildScript,
-    );
   });
 
   test('"build" scripts should have the global "props" object', async () => {
@@ -229,5 +213,25 @@ suite("build scripts", () => {
 
     equal(publish.mock.callCount(), 0);
     equal(exports.foo, 2);
+  });
+
+  test('"src" attribute is allowed in "build" scripts', async () => {
+    const call = mock.fn();
+    await compile(
+      `
+        <script src="./something.js" build></script>,
+      `,
+      {
+        properties: { call },
+        resolveUrl(_, url) {
+          return url;
+        },
+        async readFileContent() {
+          return "props.call();";
+        },
+      },
+    );
+
+    equal(call.mock.callCount(), 1);
   });
 });

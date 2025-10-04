@@ -1,5 +1,5 @@
 /**
- * @import { Plugin } from "vite";
+ * @import { PluginOption } from "vite";
  *
  * @import { DeepPartial } from "./utilities.js";
  * @import { PluginOptions } from "./plugin-options.js";
@@ -12,7 +12,7 @@ import { Environment } from "./environment.js";
 
 /**
  * @param {DeepPartial<PluginOptions>} options
- * @returns {Array<Plugin> }
+ * @returns {PluginOption}
  */
 export function moru(options = {}) {
   const environment = new Environment(options);

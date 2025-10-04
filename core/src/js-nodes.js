@@ -27,9 +27,9 @@
  *   VariableDeclaration,
  *   VariableDeclarator,
  * } from "acorn";
+ *
+ * @import { Location } from "./diagnostics.js";
  */
-
-/** @import { Location } from "./diagnostics.js"; */
 
 /**
  * @param {AnyNode} node

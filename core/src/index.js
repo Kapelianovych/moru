@@ -1,6 +1,6 @@
-/** @import { AnyNode } from 'domhandler'; */
-
 /**
+ * @import { AnyNode } from 'domhandler';
+ *
  * @import { LocalThis as _LocalThis } from "./local-this.js";
  * @import { UrlCreator as _UrlCreator } from "./location.js";
  * @import { VirtualFile as _VirtualFile } from "./virtual-file.js";
@@ -11,7 +11,6 @@
  *   AnyMessage as _AnyMessage,
  *   Diagnostics as _Diagnostics,
  *   EmptyExplicitComponentAliasMessage as _EmptyExplicitComponentAliasMessage,
- *   ExternalBuildScriptMessage as _ExternalBuildScriptMessage,
  *   FailedBuildScriptExecutionMessage as _FailedBuildScriptExecutionMessage,
  *   FailedInHtmlExpressionExecutionMessage as _FailedInHtmlExpressionExecutionMessage,
  *   InvalidExpandResultMessage as _InvalidExpandResultMessage,
@@ -56,7 +55,6 @@
  * @typedef {_Diagnostics} Diagnostics
  * @typedef {_LifecycleCallback} LifecycleCallback
  * @typedef {_EmptyExplicitComponentAliasMessage} EmptyExplicitComponentAliasMessage
- * @typedef {_ExternalBuildScriptMessage} ExternalBuildScriptMessage
  * @typedef {_FailedBuildScriptExecutionMessage} FailedBuildScriptExecutionMessage
  * @typedef {_FailedInHtmlExpressionExecutionMessage} FailedInHtmlExpressionExecutionMessage
  * @typedef {_InvalidExpandResultMessage} InvalidExpandResultMessage

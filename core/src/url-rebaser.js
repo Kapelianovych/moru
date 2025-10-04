@@ -1,6 +1,6 @@
-/** @import { Text, Element } from "domhandler"; */
-
 /**
+ * @import { Text, Element } from "domhandler";
+ *
  * @import { Options } from "./options.js";
  * @import { HtmlNodesCollection } from "./collect-html-nodes.js";
  * @import { VirtualFile } from "./virtual-file.js";

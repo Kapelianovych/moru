@@ -1,11 +1,12 @@
-/** @import { Text } from "domhandler"; */
-
 /**
+ * @import { Text } from "domhandler";
+ *
  * @import { Options } from "./options.js";
  * @import { VirtualFile } from "./virtual-file.js";
  * @import { HtmlNodesCollection } from "./collect-html-nodes.js";
  * @import { PublicNameWithAlias } from "./run-build-scripts.js";
  * @import { LocalThis } from "./local-this.js";
+ * @import { HtmlClientScriptElement } from "./html-nodes.js";
  */
 
 import { getLocationOfHtmlNode } from "./html-nodes.js";
@@ -21,9 +22,9 @@ const NAMED_IMPORT_NAME = /(\S+)(?:\s+as\s+(\S+))?/;
  * @param {Array<PublicNameWithAlias>} publicNames
  * @param {VirtualFile} file
  * @param {Options} options
- * @returns {void}
+ * @returns {Promise<void>}
  */
-export function inlineClientData(
+export async function inlineClientData(
   collection,
   localThis,
   publicNames,
@@ -31,108 +32,153 @@ export function inlineClientData(
   options,
 ) {
   for (const clientScriptElement of collection.clientScripts) {
-    const text = /** @type {Text | null} */ (clientScriptElement.firstChild);
-
-    if (text) {
-      const matches = text.data.matchAll(IMPORTS);
-
-      for (const [
-        fullMatch,
-        onlyDefaultImport,
-        defaultImportBeforeNamed,
-        namedImports,
-        defaultImportBeforeNamespace,
-        namespaceImport,
-      ] of matches) {
-        const defaultImportName =
-          onlyDefaultImport ||
-          defaultImportBeforeNamed ||
-          defaultImportBeforeNamespace;
-
-        if (defaultImportName) {
-          const alias = publicNames.find(
-            (alias) => alias.exported === "default",
-          );
-
-          if (alias) {
-            text.data = text.data.replace(
-              fullMatch,
-              `const ${defaultImportName} = JSON.parse(${stringifyClientData(
-                localThis[alias.local],
-              )});${
-                onlyDefaultImport
-                  ? ""
-                  : // Preserve original statement for named or namespaced imports to replace.
-                    fullMatch
-              }`,
-            );
-          } else {
-            options.diagnostics.publish(
-              createMissingExportedValueFromBuildMessage({
-                names: ["default"],
-                sourceFile: file,
-                location: getLocationOfHtmlNode(clientScriptElement),
-              }),
-            );
-          }
-        }
-
-        if (namespaceImport) {
-          /** @type {Record<string, unknown>} */
-          const values = {};
-
-          for (const { local, exported } of publicNames) {
-            if (exported !== "default") {
-              values[exported] = localThis[local];
-            }
-          }
-
-          text.data = text.data.replace(
-            fullMatch,
-            `const ${namespaceImport} = JSON.parse(${stringifyClientData(
-              values,
-            )});`,
-          );
-        } else if (namedImports) {
-          const [importNames, nonDeclaredPublicNames] = collectImportNames(
-            namedImports,
-            publicNames,
-          );
-
-          if (nonDeclaredPublicNames.length) {
-            options.diagnostics.publish(
-              createMissingExportedValueFromBuildMessage({
-                names: nonDeclaredPublicNames,
-                sourceFile: file,
-                location: getLocationOfHtmlNode(clientScriptElement),
-              }),
-            );
-          }
-
-          /** @type {Record<string, unknown>} */
-          const values = {};
-
-          for (const { local, exported } of importNames) {
-            values[exported] = localThis[local];
-          }
-
-          text.data = text.data.replace(
-            fullMatch,
-            `const { ${importNames
-              .map((alias) => `${alias.exported}: ${alias.clientLocal}`)
-              .join(", ")} } = JSON.parse(${stringifyClientData(values)});`,
-          );
-        } else {
-          // Do nothing.
-        }
-      }
+    if (clientScriptElement.attribs.src) {
+      const content = await options.readFileContent(
+        clientScriptElement.attribs.src,
+      );
+      const modifiedContent = replaceImportedValues(
+        content,
+        publicNames,
+        localThis,
+        clientScriptElement,
+        file,
+        options,
+      );
+      await options.writeFileContent(
+        clientScriptElement.attribs.src,
+        modifiedContent,
+      );
     } else {
-      // No need to check if "text" is an actual text, because
-      // we did that while rebasing URLs.
+      const text = /** @type {Text | null} */ (clientScriptElement.firstChild);
+
+      if (text) {
+        text.data = replaceImportedValues(
+          text.data,
+          publicNames,
+          localThis,
+          clientScriptElement,
+          file,
+          options,
+        );
+      } else {
+        // No need to check if "text" is an actual text, because
+        // we did that while rebasing URLs.
+      }
     }
   }
 
   collection.clientScripts.length = 0;
+}
+
+/**
+ * @param {string} code
+ * @param {Array<PublicNameWithAlias>} publicNames
+ * @param {LocalThis} localThis
+ * @param {HtmlClientScriptElement} clientScriptElement
+ * @param {VirtualFile} file
+ * @param {Options} options
+ * @returns {string}
+ */
+function replaceImportedValues(
+  code,
+  publicNames,
+  localThis,
+  clientScriptElement,
+  file,
+  options,
+) {
+  const matches = code.matchAll(IMPORTS);
+
+  for (const [
+    fullMatch,
+    onlyDefaultImport,
+    defaultImportBeforeNamed,
+    namedImports,
+    defaultImportBeforeNamespace,
+    namespaceImport,
+  ] of matches) {
+    const defaultImportName =
+      onlyDefaultImport ||
+      defaultImportBeforeNamed ||
+      defaultImportBeforeNamespace;
+
+    if (defaultImportName) {
+      const alias = publicNames.find((alias) => alias.exported === "default");
+
+      if (alias) {
+        code = code.replace(
+          fullMatch,
+          `const ${defaultImportName} = JSON.parse(${stringifyClientData(
+            localThis[alias.local],
+          )});${
+            onlyDefaultImport
+              ? ""
+              : // Preserve original statement for named or namespaced imports to replace.
+                fullMatch
+          }`,
+        );
+      } else {
+        options.diagnostics.publish(
+          createMissingExportedValueFromBuildMessage({
+            names: ["default"],
+            sourceFile: file,
+            location: getLocationOfHtmlNode(clientScriptElement),
+          }),
+        );
+      }
+    }
+
+    if (namespaceImport) {
+      /** @type {Record<string, unknown>} */
+      const values = {};
+
+      for (const { local, exported } of publicNames) {
+        if (exported !== "default") {
+          values[exported] = localThis[local];
+        }
+      }
+
+      code = code.replace(
+        fullMatch,
+        `const ${namespaceImport} = JSON.parse(${stringifyClientData(
+          values,
+        )});`,
+      );
+    } else if (namedImports) {
+      const [importNames, nonDeclaredPublicNames] = collectImportNames(
+        namedImports,
+        publicNames,
+      );
+
+      if (nonDeclaredPublicNames.length) {
+        options.diagnostics.publish(
+          createMissingExportedValueFromBuildMessage({
+            names: nonDeclaredPublicNames,
+            sourceFile: file,
+            location: getLocationOfHtmlNode(clientScriptElement),
+          }),
+        );
+      }
+
+      /** @type {Record<string, unknown>} */
+      const values = {};
+
+      for (const { local, exported } of importNames) {
+        values[exported] = localThis[local];
+      }
+
+      code = code.replace(
+        fullMatch,
+        `const { ${importNames
+          .map((alias) => `${alias.exported}: ${alias.clientLocal}`)
+          .join(", ")} } = JSON.parse(${stringifyClientData(values)});`,
+      );
+    } else {
+      // Do nothing.
+    }
+  }
+
+  return code;
 }
 
 /**

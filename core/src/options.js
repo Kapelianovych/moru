@@ -18,6 +18,7 @@
  * @property {(currentFile: VirtualFile, relativeUrl: string) => string} resolveUrl Resolves URLs when the current location is the same as URL of
  *   the {@link currentFile}. When {@link relativeUrl} is `build`, it **must not** resolve it, but return as is.
  * @property {(url: string) => Promise<string>} readFileContent
+ * @property {(url: string, content: string) => Promise<void>} writeFileContent
  * @property {(url: string) => Promise<Record<string, unknown>>} dynamicallyImportJsFile
  */
 

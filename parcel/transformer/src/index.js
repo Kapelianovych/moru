@@ -52,6 +52,9 @@ export default new Transformer({
           "utf8",
         );
       },
+      async writeFileContent(url, content) {
+        throw new Error("not implemented yet");
+      },
     });
 
     asset.setCode(generateHtml(ast));

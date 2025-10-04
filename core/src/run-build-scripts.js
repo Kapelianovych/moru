@@ -1,15 +1,14 @@
 /**
  * @import { Text, Element, Document } from 'domhandler';
  * @import { Node, ExpressionStatement, Identifier, Pattern, Program } from 'acorn';
- */
-
-/**
+ *
  * @import { Options } from './options.js';
  * @import { HtmlNodesCollection } from './collect-html-nodes.js';
  * @import { VirtualFile } from './virtual-file.js';
  * @import { HtmlBuildScriptElement } from './html-nodes.js';
  * @import { LocalThis } from './local-this.js';
  * @import { LifecyclePhaseSubscriber } from './lifecycle.js';
+ * @import { UrlCreator } from "./location.js";
  */
 
 import { ancestor } from "acorn-walk";
@@ -84,49 +83,34 @@ export async function runBuildScripts(
   const url = createUrlCreator(file, options);
 
   for (const buildScriptElement of collection.buildScripts) {
-    const maybeText = /** @type {Text | null} */ (
-      buildScriptElement.firstChild
-    );
+    /**
+     * @type {string | undefined}
+     */
+    let code;
 
-    if (maybeText) {
-      const code = compileAndCollectExportedVariables(
+    if (buildScriptElement.attribs.src) {
+      code = await options.readFileContent(buildScriptElement.attribs.src);
+    } else {
+      const maybeText = /** @type {Text | null} */ (
+        buildScriptElement.firstChild
+      );
+
+      code = maybeText?.data;
+    }
+
+    if (code) {
+      await runCode(
+        url,
+        code,
         buildScriptElement,
-        maybeText,
+        ast,
+        collection,
+        localThis,
         publicNames,
+        onAfterRender,
         file,
         options,
       );
-
-      if (code == null) {
-        return discardCompiledScope(collection, ast);
-      }
-
-      const runBuildScript = createAsyncStatementsJsRunner(
-        code,
-        collectGlobalVariablesForJsRunner(localThis),
-      );
-
-      try {
-        await runBuildScript(
-          options.properties,
-          localThis,
-          options.buildStore,
-          url,
-          onAfterRender,
-          options.dynamicallyImportJsFile,
-        );
-      } catch (error) {
-        options.diagnostics.publish(
-          createFailedBuildScriptExecutionMessage({
-            error,
-            sourceFile: file,
-            location: getLocationOfHtmlNode(buildScriptElement),
-          }),
-        );
-        return discardCompiledScope(collection, ast);
-      }
-    } else {
-      // No text, nothing to execute.
     }
   }
 
@@ -136,8 +120,72 @@ export async function runBuildScripts(
 }
 
 /**
+ *
+ * @param {UrlCreator} url
+ * @param {string} text
  * @param {HtmlBuildScriptElement} buildScriptElement
- * @param {Text} text
+ * @param {Document | Element} ast
+ * @param {HtmlNodesCollection} collection
+ * @param {LocalThis} localThis
+ * @param {Array<PublicNameWithAlias>} publicNames
+ * @param {LifecyclePhaseSubscriber} onAfterRender
+ * @param {VirtualFile} file
+ * @param {Options} options
+ * @returns {Promise<void>}
+ */
+async function runCode(
+  url,
+  text,
+  buildScriptElement,
+  ast,
+  collection,
+  localThis,
+  publicNames,
+  onAfterRender,
+  file,
+  options,
+) {
+  const code = compileAndCollectExportedVariables(
+    buildScriptElement,
+    text,
+    publicNames,
+    file,
+    options,
+  );
+
+  if (code == null) {
+    return discardCompiledScope(collection, ast);
+  }
+
+  const runBuildScript = createAsyncStatementsJsRunner(
+    code,
+    collectGlobalVariablesForJsRunner(localThis),
+  );
+
+  try {
+    await runBuildScript(
+      options.properties,
+      localThis,
+      options.buildStore,
+      url,
+      onAfterRender,
+      options.dynamicallyImportJsFile,
+    );
+  } catch (error) {
+    options.diagnostics.publish(
+      createFailedBuildScriptExecutionMessage({
+        error,
+        sourceFile: file,
+        location: getLocationOfHtmlNode(buildScriptElement),
+      }),
+    );
+    return discardCompiledScope(collection, ast);
+  }
+}
+
+/**
+ * @param {HtmlBuildScriptElement} buildScriptElement
+ * @param {string} text
  * @param {Array<PublicNameWithAlias>} publicNames
  * @param {VirtualFile} file
  * @param {Options} options
@@ -156,7 +204,7 @@ function compileAndCollectExportedVariables(
   let executableAst;
 
   try {
-    executableAst = parse(text.data, {
+    executableAst = parse(text, {
       sourceType,
       ecmaVersion: "latest",
     });

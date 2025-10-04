@@ -8,7 +8,6 @@ export const MessageTag = Object.freeze({
   SingleElseElement: "SingleElseElement",
   SingleElseIfElement: "SingleElseIfElement",
   InvalidNameOfImportedComponent: "InvalidNameOfImportedComponent",
-  ExternalBuildScript: "ExternalBuildScript",
   UnsupportedBuildScriptReexporting: "UnsupportedBuildScriptReexporting",
   FailedBuildScriptExecution: "FailedBuildScriptExecution",
   ProhibitedReservedComponentRemapping: "ProhibitedReservedComponentRemapping",
@@ -51,7 +50,6 @@ export const MessageTag = Object.freeze({
  * @typedef {SingleElseElementMessage
  *   | SingleElseIfElementMessage
  *   | InvalidNameOfImportedComponentMessage
- *   | ExternalBuildScriptMessage
  *   | UnsupportedBuildScriptReexportingMessage
  *   | FailedBuildScriptExecutionMessage
  *   | EmptyExplicitComponentAliasMessage
@@ -84,12 +82,6 @@ export const MessageTag = Object.freeze({
  *   url: string;
  *   allowedExtensions: Array<string>;
  * }} InvalidNameOfImportedComponentMessage
- */
-
-/**
- * @typedef {Message<typeof MessageTag.ExternalBuildScript> & {
- *   path: string;
- * }} ExternalBuildScriptMessage
  */
 
 /**
@@ -200,10 +192,6 @@ export const createSingleElseIfElementMessage = createMessageCreator(
 
 export const createInvalidNameOfImportedComponentMessage = createMessageCreator(
   MessageTag.InvalidNameOfImportedComponent,
-);
-
-export const createExternalBuildScriptMessage = createMessageCreator(
-  MessageTag.ExternalBuildScript,
 );
 
 export const createUnsupportedBuildScriptReexportingMessage =

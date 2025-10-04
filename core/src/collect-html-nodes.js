@@ -29,7 +29,6 @@ import { isHtmlElementRebaseable } from "./url-rebaser.js";
 import { traverseHtml } from "./traverse-html.js";
 import {
   createEmptyExplicitComponentAliasMessage,
-  createExternalBuildScriptMessage,
   createInvalidExportElementPositionMessage,
   createInvalidNameOfImportedComponentMessage,
   createInvalidImportComponentPositionMessage,
@@ -369,17 +368,7 @@ export function collectHtmlNodes(parent, nodes, file, options) {
           lastConditionalElementGroup = null;
           firstNonImportElementEncountered = true;
 
-          if ("src" in node.attribs) {
-            options.diagnostics.publish(
-              createExternalBuildScriptMessage({
-                path: node.attribs.src,
-                sourceFile: file,
-                location: getLocationOfHtmlNode(node),
-              }),
-            );
-          } else {
-            nodes.buildScripts.push(node);
-          }
+          nodes.buildScripts.push(node);
 
           // Build scripts cannot have children with expressions.
           return false;
@@ -520,7 +509,7 @@ export function collectHtmlNodes(parent, nodes, file, options) {
 
                 assignedAttributes[exportedName] = importedName;
 
-                // We don't need to pass the let: attribute as a prop.
+                // We don't need to pass this attribute as a prop.
                 delete node.attribs[attributeName];
               }
             }

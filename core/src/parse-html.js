@@ -1,9 +1,9 @@
 /**
  * @import { Document } from "domhandler";
  * @import { Options } from "htmlparser2";
+ *
+ * @import { VirtualFile } from "./virtual-file.js";
  */
-
-/** @import { VirtualFile } from "./virtual-file.js"; */
 
 import { parseDocument } from "htmlparser2";
 

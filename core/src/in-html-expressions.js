@@ -1,6 +1,6 @@
-/** @import { AnyNode, Element, Text } from 'domhandler'; */
-
 /**
+ * @import { AnyNode, Element, Text } from 'domhandler';
+ *
  * @import { Options } from "./options.js";
  * @import { VirtualFile } from "./virtual-file.js";
  * @import { UrlCreator } from "./location.js";
