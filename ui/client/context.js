@@ -136,7 +136,14 @@ function initialiseContextListener(classInstance, metadata) {
         ?.get(contextRequestEvent.detail.type)
         ?.add(provide);
 
-      provide(classInstance[contextRequestEvent.detail.type]);
+      provide(
+        classInstance[
+          /**
+           * @type {keyof CustomElement}
+           */
+          (contextRequestEvent.detail.type)
+        ],
+      );
 
       disposals.add(dispose);
     }
@@ -175,6 +182,8 @@ export function initialiseConsumers(classInstance, metadata) {
              * @param {VoidFunction} unsubscribe
              */
             callback(value, unsubscribe) {
+              // @ts-expect-error custom element can have any property,
+              // so this is valid even though TS does not know that
               classInstance[context] = value;
 
               disposals.add(unsubscribe);

@@ -8,7 +8,7 @@ import {
 } from "./attributes.js";
 
 /**
- * @typedef {HTMLElement & Record<PropertyKey, unknown> & {
+ * @typedef {HTMLElement & {
  *   $connectedCallbackCalled?: boolean;
  *   $disposals?: Set<VoidFunction>;
  *   $registeredConsumersPerContext?: Map<string | symbol, Set<function(unknown): void>>;
