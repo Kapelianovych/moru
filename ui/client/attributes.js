@@ -8,7 +8,6 @@ import { hookIntoProperty } from "./hook-into-property.js";
 /**
  * @typedef {Object} AttributeDescriptor
  * @property {string} name
- * @property {function(this: CustomElement): void} initialise
  * @property {Set<string | symbol>} observers
  */
 
@@ -25,44 +24,42 @@ export function attribute(_, context) {
      */
     (context.metadata.attributes ??= new Map());
 
-  let get =
-    /**
-     * @this {CustomElement}
-     * @returns {unknown}
-     */
-    function () {
-      return this.getAttribute(attributeName) || "";
-    };
-  let set =
-    /**
-     * @this {CustomElement}
-     * @param {unknown} value
-     */
-    function (value) {
-      this.setAttribute(attributeName, String(value));
-    };
-
-  /**
-   * @type {unknown}
-   */
-  let attributeDefaultValue;
-
   attributes.set(attributeName, {
     name: attributeName,
-    initialise() {
-      set.call(this, attributeDefaultValue);
-    },
     observers: new Set(),
   });
 
   context.addInitializer(function () {
+    const attributeDefaultValue = context.access.get(this);
+
+    let get =
+      /**
+       * @this {CustomElement}
+       * @returns {unknown}
+       */
+      function () {
+        return (
+          this.getAttribute(attributeName) || String(attributeDefaultValue)
+        );
+      };
+    let set =
+      /**
+       * @this {CustomElement}
+       * @param {unknown} value
+       */
+      function (value) {
+        this.setAttribute(attributeName, String(value));
+      };
+
     if (typeof attributeDefaultValue === "number") {
       get =
         /**
          * @this {CustomElement}
          */
         function () {
-          return Number(this.getAttribute(attributeName) || 0);
+          return Number(
+            this.getAttribute(attributeName) || attributeDefaultValue,
+          );
         };
     } else if (typeof attributeDefaultValue === "boolean") {
       get =
@@ -81,15 +78,12 @@ export function attribute(_, context) {
         };
     }
 
+    if (!this.hasAttribute(attributeName)) {
+      set.call(this, attributeDefaultValue);
+    }
+
     hookIntoProperty(this, context.name, get, set);
   });
-
-  /**
-   * @param {unknown} value
-   */
-  return (value) => {
-    attributeDefaultValue = value;
-  };
 }
 
 /**
@@ -104,24 +98,6 @@ export function initialiseObservedAttributes(classConstructor, metadata) {
    */
   (metadata.attributes)?.forEach(({ name }) => {
     observedAttributes.push(name);
-  });
-}
-
-/**
- * @param {CustomElement} classInstance
- * @param {DecoratorMetadataObject} metadata
- */
-export function initialiseAttributeDefaultValues(classInstance, metadata) {
-  const attributes =
-    /**
-     * @type {Array<AttributeDescriptor> | undefined}
-     */
-    (metadata.attributes);
-
-  attributes?.forEach(({ name, initialise }) => {
-    if (!classInstance.hasAttribute(name)) {
-      initialise.call(classInstance);
-    }
   });
 }
 

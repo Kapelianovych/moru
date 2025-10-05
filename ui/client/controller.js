@@ -3,7 +3,6 @@ import { toKebabCase } from "./to-kebab-case.js";
 import { initialiseConsumers } from "./context.js";
 import {
   callAttributeWatchers,
-  initialiseAttributeDefaultValues,
   initialiseObservedAttributes,
 } from "./attributes.js";
 
@@ -49,7 +48,6 @@ export function controller(classConstructor, context) {
 function initialiseConnectedCallback(classConstructor, metadata) {
   const connectedCallback = classConstructor.prototype.connectedCallback;
   classConstructor.prototype.connectedCallback = function () {
-    initialiseAttributeDefaultValues(this, metadata);
     initialiseConsumers(this, metadata);
     bindActions(this);
     connectedCallback?.call(this);
