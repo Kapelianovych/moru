@@ -37,4 +37,5 @@ export const CustomProperty = Object.freeze({
   DefaultTextSideOffsetCorrection: "--dtsoc",
   TextLines: "--tl",
   TextLineHeight: "--tlh",
+  DefaultTextColor: "--dtc",
 });

@@ -97,6 +97,7 @@
     scale,
     rotate,
     position,
+    style,
     ...restProps
   } = props;
 
@@ -124,6 +125,7 @@
     ${compileCss(border, createSinglePropertyTransformer("border"))}
     ${compileCss(shadow, createSinglePropertyTransformer("box-shadow"))}
     ${compileTransformProperties(moveLeft, moveRight, moveUp, moveDown, scale, rotate)}
+    ${compileCss(style, (css) => css, false)}
   `.trim();
 
   const positionedContainerCss = `
