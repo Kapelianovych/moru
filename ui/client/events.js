@@ -4,7 +4,7 @@
 
 /**
  * @template A
- * @typedef {Object} Emitter
+ * @typedef {Object} EventEmitter
  * @property {function(A): void} emit
  */
 
@@ -16,7 +16,7 @@
 export function event(_, context) {
   /**
    * @this {CustomElement}
-   * @returns {Emitter<A>}
+   * @returns {EventEmitter<A>}
    */
   return function () {
     const self = this;
@@ -39,13 +39,45 @@ export function event(_, context) {
 }
 
 /**
- * @param {function(Event): void} method
- * @param {ClassMethodDecoratorContext<CustomElement>} context
+ * @template {Event} E
+ * @callback EventListenerFunction
+ * @param {E} event
+ * @returns {void}
  */
-export function listen(method, context) {
+
+/**
+ * @template {Event} E
+ * @typedef {Object} EventListenerObject
+ * @property {EventListenerFunction<E>} handleEvent
+ */
+
+/**
+ * @template {Event} E
+ * @typedef {EventListenerFunction<E> | EventListenerObject<E>} EventListener
+ */
+
+/**
+ * @template {Event} E
+ * @param {unknown} _
+ * @param {|
+ *   ClassMethodDecoratorContext<CustomElement, EventListenerFunction<E>>
+ *   | ClassFieldDecoratorContext<CustomElement, EventListener<E>>
+ * } context
+ */
+export function listen(_, context) {
   context.addInitializer(function () {
-    this.addEventListener(String(context.name), (event) => {
-      method.call(this, event);
-    });
+    let listener = context.access.get(this);
+
+    if (typeof listener === "function") {
+      listener = listener.bind(this);
+    }
+
+    this.addEventListener(
+      String(context.name),
+      /**
+       * @type {EventListenerOrEventListenerObject}
+       */
+      (listener),
+    );
   });
 }
