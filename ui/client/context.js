@@ -5,20 +5,73 @@
 import { hookIntoProperty } from "./hook-into-property.js";
 
 /**
+ * @template KeyType
+ * @template ValueType
+ * @typedef {KeyType & {__context__: ValueType}} Context
+ */
+
+/**
+ * @typedef {Context<unknown, unknown>} UnknownContext
+ */
+
+/**
+ * @template {UnknownContext} T
+ * @typedef {T extends Context<infer _, infer V> ? V : never} ContextType
+ */
+
+/**
+ * @template ValueType
+ * @template [KeyType=unknown]
+ * @param {KeyType} key
+ * @returns {Context<KeyType, ValueType>}
+ */
+export function createContext(key) {
+  return (
+    /**
+     * @type {Context<KeyType, ValueType>}
+     */
+    (key)
+  );
+}
+
+/**
  * @template Value
  * @callback ContextCallback
  * @param {Value} value
- * @param {VoidFunction} unsubscribe
+ * @param {VoidFunction} [unsubscribe]
  * @returns {void}
  */
 
 /**
- * @template Type
- * @template Value
- * @typedef {Object} ContextRequest
- * @property {Type} type
- * @property {ContextCallback<Value>} callback
+ * @template {UnknownContext} T
  */
+export class ContextRequestEvent extends Event {
+  /**
+   * @type {T}
+   */
+  context;
+  /**
+   * @type {boolean | undefined}
+   */
+  subscribe;
+  /**
+   * @type {ContextCallback<ContextType<T>>}
+   */
+  callback;
+
+  /**
+   * @param {T} context
+   * @param {ContextCallback<ContextType<T>>} callback
+   * @param {boolean} [subscribe]
+   */
+  constructor(context, callback, subscribe) {
+    super("context-request", { bubbles: true, composed: true });
+
+    this.context = context;
+    this.callback = callback;
+    this.subscribe = subscribe;
+  }
+}
 
 /**
  * @param {unknown} _
@@ -83,24 +136,19 @@ function initialiseContextListener(classInstance, metadata) {
      */
     (metadata.providers);
 
-  const disposals = (classInstance.$disposals ??= new Set());
-
-  /**
-   * @param {Event} event
-   */
-  function provideContext(event) {
+  classInstance.addEventListener("context-request", (event) => {
     const contextRequestEvent =
       /**
-       * @type {CustomEvent<ContextRequest<string | symbol, unknown>>}
+       * @type {ContextRequestEvent<Context<string | symbol, unknown>>}
        */
       (event);
 
-    if (providers.has(contextRequestEvent.detail.type)) {
+    if (providers.has(contextRequestEvent.context)) {
       event.stopImmediatePropagation();
 
       const dispose = () => {
         classInstance.$registeredConsumersPerContext
-          ?.get(contextRequestEvent.detail.type)
+          ?.get(contextRequestEvent.context)
           ?.delete(provide);
       };
 
@@ -108,32 +156,18 @@ function initialiseContextListener(classInstance, metadata) {
        * @param {unknown} value
        */
       const provide = (value) => {
-        /**
-         * @type {function(unknown): void}
-         */
-        const callback = (value) => {
-          contextRequestEvent.detail.callback(value, dispose);
-        };
+        contextRequestEvent.callback(
+          value,
+          contextRequestEvent.subscribe ? dispose : undefined,
+        );
 
-        if (
-          typeof (
-            /**
-             * @type {PromiseLike<unknown> | undefined | null}
-             */
-            (value)?.then
-          ) === "function"
-        ) {
-          /**
-           * @type {PromiseLike<unknown>}
-           */
-          (value).then(callback);
-        } else {
-          callback(value);
+        if (!contextRequestEvent.subscribe) {
+          dispose();
         }
       };
 
       classInstance.$registeredConsumersPerContext
-        ?.get(contextRequestEvent.detail.type)
+        ?.get(contextRequestEvent.context)
         ?.add(provide);
 
       provide(
@@ -141,18 +175,10 @@ function initialiseContextListener(classInstance, metadata) {
           /**
            * @type {keyof CustomElement}
            */
-          (contextRequestEvent.detail.type)
+          (contextRequestEvent.context)
         ],
       );
-
-      disposals.add(dispose);
     }
-  }
-
-  classInstance.addEventListener("context-request", provideContext);
-
-  disposals.add(() => {
-    classInstance.removeEventListener("context-request", provideContext);
   });
 }
 
@@ -170,26 +196,39 @@ export function initialiseConsumers(classInstance, metadata) {
   if (consumers) {
     const disposals = (classInstance.$disposals ??= new Set());
 
-    consumers.forEach((context) => {
+    consumers.forEach((key) => {
       classInstance.dispatchEvent(
-        new CustomEvent("context-request", {
-          bubbles: true,
-          composed: true,
-          detail: {
-            type: context,
-            /**
-             * @param {unknown} value
-             * @param {VoidFunction} unsubscribe
-             */
-            callback(value, unsubscribe) {
+        new ContextRequestEvent(
+          createContext(key),
+          (value, unsubscribe) => {
+            if (
+              typeof (
+                /**
+                 * @type {PromiseLike<unknown> | undefined | null}
+                 */
+                (value)?.then
+              ) === "function"
+            ) {
+              /**
+               * @type {PromiseLike<unknown>}
+               */
+              (value).then((value) => {
+                // @ts-expect-error custom element can have any property,
+                // so this is valid even though TS does not know that
+                classInstance[key] = value;
+              });
+            } else {
               // @ts-expect-error custom element can have any property,
               // so this is valid even though TS does not know that
-              classInstance[context] = value;
+              classInstance[key] = value;
+            }
 
+            if (unsubscribe) {
               disposals.add(unsubscribe);
-            },
+            }
           },
-        }),
+          true,
+        ),
       );
     });
   }

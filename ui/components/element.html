@@ -7,11 +7,7 @@
 <only key="{{ url.current }}">
   <style portal="{{ rootContext.headPortalName }}">
     .{{ Class.Element }} {
-      {{ CustomProperty.Direction }}: ;
-      {{ CustomProperty.HorizontalMovement }}: 0;
-      {{ CustomProperty.VerticalMovement }}: 0;
-      {{ CustomProperty.Scale }}: 1;
-      {{ CustomProperty.Rotate }}: 0deg;
+      {{ CustomProperty.Direction }}: row;
 
       display: inline-flex;
       align-items: flex-start;
@@ -62,10 +58,12 @@
   import { createDisplayValue } from "./lib/transformers/display.js";
   import { createOverflowValue } from "./lib/transformers/clip.js";
   import { Class, CustomProperty } from "./lib/constants.js";
+  import { createOpacityProperty } from "./lib/transformers/opacity.js";
   import { createPositionProperty } from "./lib/transformers/position.js";
+  import { createRotationProperty } from "./lib/transformers/rotation.js";
+  import { createMovementProperty } from "./lib/transformers/movement.js";
   import { createDirectionProperty } from "./lib/transformers/direction.js";
   import { createAlignmentProperties } from "./lib/transformers/alignment.js";
-  import { compileTransformProperties } from "./lib/transformers/transform.js";
   import {
     compileCss,
     createSinglePropertyTransformer,
@@ -74,8 +72,7 @@
   const {
     hidden,
     vertical,
-    "align-x": alignX = "left",
-    "align-y": alignY = "top",
+    align,
     width,
     height,
     "min-width": minWidth,
@@ -90,10 +87,8 @@
     rounded,
     border,
     shadow,
-    "move-left": moveLeft,
-    "move-right": moveRight,
-    "move-up": moveUp,
-    "move-down": moveDown,
+    opacity,
+    move,
     scale,
     rotate,
     position,
@@ -108,8 +103,7 @@
   const css = `
     ${compileCss(hidden, createSinglePropertyTransformer("display", createDisplayValue))}
     ${compileCss(vertical, createDirectionProperty)}
-    ${compileCss(alignY, createAlignmentProperties("top", "bottom"))}
-    ${compileCss(alignX, createAlignmentProperties("left", "right"))}
+    ${compileCss(align, createAlignmentProperties)}
     ${compileCss(width, createSinglePropertyTransformer("width"))}
     ${compileCss(height, createSinglePropertyTransformer("height"))}
     ${compileCss(minWidth, createSinglePropertyTransformer("min-width"))}
@@ -124,7 +118,10 @@
     ${compileCss(rounded, createSinglePropertyTransformer("border-radius"))}
     ${compileCss(border, createSinglePropertyTransformer("border"))}
     ${compileCss(shadow, createSinglePropertyTransformer("box-shadow"))}
-    ${compileTransformProperties(moveLeft, moveRight, moveUp, moveDown, scale, rotate)}
+    ${compileCss(opacity, createOpacityProperty)}
+    ${compileCss(move, createMovementProperty)}
+    ${compileCss(scale, createSinglePropertyTransformer("scale"))}
+    ${compileCss(rotate, createRotationProperty)}
     ${compileCss(style, (css) => css, false)}
   `.trim();
 

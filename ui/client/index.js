@@ -1,10 +1,36 @@
 /**
  * @import {
+ *   Context as _Context,
+ *   ContextType as _ContextType,
+ *   UnknownContext as _UnknownContext,
+ *   ContextCallback as _ContextCallback,
+ * } from "./context.js";
+ * @import {
  *   EventEmitter as _EventEmitter,
  *   EventListener as _EventListener,
  *   EventListenerObject as _EventListenerObject,
  *   EventListenerFunction as _EventListenerFunction,
  * } from "./events.js";
+ */
+
+/**
+ * @template KeyType
+ * @template ValueType
+ * @typedef {_Context<KeyType, ValueType>} Context
+ */
+
+/**
+ * @template {UnknownContext} T
+ * @typedef {_ContextType<T>} ContextType
+ */
+
+/**
+ * @typedef {_UnknownContext} UnknownContext
+ */
+
+/**
+ * @template Value
+ * @typedef {_ContextCallback<Value>} ContextCallback
  */
 
 /**
@@ -31,5 +57,10 @@ export { property } from "./properties.js";
 export { controller } from "./controller.js";
 export { event, listen } from "./events.js";
 export { target, targets } from "./targets.js";
-export { provide, consume } from "./context.js";
 export { watch, attribute } from "./attributes.js";
+export {
+  provide,
+  consume,
+  createContext,
+  ContextRequestEvent,
+} from "./context.js";

@@ -24,10 +24,6 @@ export const Class = Object.freeze({
 export const CustomProperty = Object.freeze({
   MeasurementUnit: "--mu",
   Direction: "--d",
-  HorizontalMovement: "--hm",
-  VerticalMovement: "--vm",
-  Scale: "--s",
-  Rotate: "--r",
   FontSize: "--fs",
   DefaultFontSize: "--dfs",
   TextSpacing: "--ts",
