@@ -1,5 +1,6 @@
 import { bindActions } from "./actions.js";
 import { toKebabCase } from "./to-kebab-case.js";
+import { startObservers } from "./observers.js";
 import { initialiseConsumers } from "./context.js";
 import {
   callAttributeWatchers,
@@ -50,6 +51,7 @@ function initialiseConnectedCallback(classConstructor, metadata) {
   classConstructor.prototype.connectedCallback = function () {
     initialiseConsumers(this, metadata);
     bindActions(this);
+    startObservers(this, metadata);
     connectedCallback?.call(this);
 
     this.$connectedCallbackCalled = true;

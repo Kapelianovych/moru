@@ -1,5 +1,9 @@
 /**
  * @import {
+ *   Observer as _Observer,
+ *   ObserverSubscriber as _ObserverSubscriber,
+ * } from "./observers.js";
+ * @import {
  *   Context as _Context,
  *   ContextType as _ContextType,
  *   UnknownContext as _UnknownContext,
@@ -53,6 +57,17 @@
  * @typedef {_EventListenerObject<E>} EventListenerObject
  */
 
+/**
+ * @template A
+ * @typedef {_Observer<A>} Observer
+ */
+
+/**
+ * @template A
+ * @typedef {_ObserverSubscriber<A>} ObserverSubscriber
+ */
+
+export { observe } from "./observers.js";
 export { property } from "./properties.js";
 export { controller } from "./controller.js";
 export { event, listen } from "./events.js";
