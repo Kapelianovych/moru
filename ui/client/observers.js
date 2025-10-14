@@ -16,9 +16,10 @@
  */
 
 /**
+ * @template A
  * @typedef {Object} ObserverRecord
- * @property {function(unknown): void} consume
- * @property {ObserverSubscriber<unknown>} subscribe
+ * @property {Parameters<ObserverSubscriber<A>>[0]} consume
+ * @property {ObserverSubscriber<A>} subscribe
  */
 
 /**
@@ -32,13 +33,13 @@ export function observe(observer) {
       : observer.subscribe.bind(observer);
 
   /**
-   * @param {ObserverRecord['consume']} consume
-   * @param {ClassMethodDecoratorContext<CustomElement, ObserverRecord['consume']>} context
+   * @param {ObserverRecord<A>['consume']} consume
+   * @param {ClassMethodDecoratorContext<CustomElement, ObserverRecord<A>['consume']>} context
    */
   return (consume, context) => {
     const observers =
       /**
-       * @type {Array<ObserverRecord>}
+       * @type {Array<ObserverRecord<any>>}
        */
       (context.metadata.observers ??= []);
 
@@ -56,14 +57,14 @@ export function observe(observer) {
 export function startObservers(classInstance, metadata) {
   const observers =
     /**
-     * @type {Array<ObserverRecord>}
+     * @type {Array<ObserverRecord<unknown>>}
      */
     (metadata.observers ??= []);
 
   const disposals = (classInstance.$disposals ??= new Set());
 
   observers.forEach(({ subscribe, consume }) => {
-    const unsubscribe = subscribe(consume);
+    const unsubscribe = subscribe(consume.bind(classInstance));
 
     disposals.add(unsubscribe);
   });

@@ -43,13 +43,26 @@ function bindActionAttribute(element) {
     boundElements.set(element, boundEvents);
   }
 
-  for (const binding of bindingsOf(element)) {
-    if (!boundEvents.has(binding.type)) {
-      boundEvents.add(binding.type);
+  const boundEventsCopy = new Set(boundEvents);
 
+  for (const binding of bindingsOf(element)) {
+    // If element was removed from DOM but cached somewhere, all event listeners
+    // are preserved on it. And when that node is reattached, we do not want to
+    // duplicate any listeners.
+    if (boundEvents.has(binding.type)) {
+      boundEventsCopy.delete(binding.type);
+    } else {
+      boundEvents.add(binding.type);
       element.addEventListener(binding.type, handleEvent);
     }
   }
+
+  // We noticed that some previous events are no longer present, so we have
+  // to remove associated event listener.
+  boundEventsCopy.forEach((event) => {
+    boundEvents.delete(event);
+    element.removeEventListener(event, handleEvent);
+  });
 }
 
 /**
@@ -98,7 +111,7 @@ function* bindingsOf(element) {
 
     for (const action of actions) {
       const eventSeparator = action.indexOf(":");
-      const methodSeparator = Math.max(0, action.indexOf("#")) || action.length;
+      const methodSeparator = Math.max(0, action.indexOf(".")) || action.length;
 
       yield {
         tag: action.slice(eventSeparator + 1, methodSeparator),
