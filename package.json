@@ -5,6 +5,7 @@
     "./core",
     "./store",
     "./website",
+    "./controller",
     "./vite-plugin",
     "./parcel/namer",
     "./parcel/config",
@@ -19,7 +20,7 @@
     "build:website": "npm run build -w website"
   },
   "devDependencies": {
-    "@types/node": "^22",
+    "@types/node": "^24",
     "prettier": "^3",
     "typescript": "^5"
   }

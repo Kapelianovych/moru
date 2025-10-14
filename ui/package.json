@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "type": "module",
   "exports": {
-    "./client": "./client/index.js",
     "./*.html": "./components/*.html"
   },
   "peerDependencies": {

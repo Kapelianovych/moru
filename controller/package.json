@@ -1,0 +1,8 @@
+{
+  "name": "@moru/controller",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./source/index.js"
+  }
+}
