@@ -25,7 +25,7 @@
       {{ Class.Button }}
       {{ classes }}
     "
-    type="button"
+    type="{{ type === 'basic' ? 'button' : type }}"
     expand="{{ restProps }}"
   >
     <slot />
@@ -36,7 +36,7 @@
   import { Class } from "./lib/constants.js";
   import { useRootContext } from "./lib/root-context.js";
 
-  const { class: classes = "", ...other } = props;
+  const { class: classes = "", type, ...other } = props;
 
   const rootContext = useRootContext(buildStore);
 </script>

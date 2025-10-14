@@ -10,8 +10,10 @@
       {{ CustomProperty.Direction }}: row;
 
       display: inline-flex;
-      align-items: flex-start;
+      align-items: start;
       box-sizing: border-box;
+      /* Forbid elements to change parent's element layout. */
+      margin: 0;
 
       &[data-debug] {
         border: 2px dashed red;
@@ -56,7 +58,7 @@
 <script type="module" build>
   import { useRootContext } from "./lib/root-context.js";
   import { createDisplayValue } from "./lib/transformers/display.js";
-  import { createOverflowValue } from "./lib/transformers/clip.js";
+  import { createClipProperties } from "./lib/transformers/clip.js";
   import { Class, CustomProperty } from "./lib/constants.js";
   import { createOpacityProperty } from "./lib/transformers/opacity.js";
   import { createPositionProperty } from "./lib/transformers/position.js";
@@ -81,8 +83,7 @@
     "max-height": maxHeight,
     padding,
     spacing,
-    "clip-x": clipX,
-    "clip-y": clipY,
+    clip,
     background,
     rounded,
     border,
@@ -112,8 +113,7 @@
     ${compileCss(maxHeight, createSinglePropertyTransformer("max-height"))}
     ${compileCss(padding, createSinglePropertyTransformer("padding"))}
     ${compileCss(spacing, createSinglePropertyTransformer("gap"))}
-    ${compileCss(clipX, createSinglePropertyTransformer("overflow-x", createOverflowValue))}
-    ${compileCss(clipY, createSinglePropertyTransformer("overflow-y", createOverflowValue))}
+    ${compileCss(clip, createClipProperties)}
     ${compileCss(background, createSinglePropertyTransformer("background"))}
     ${compileCss(rounded, createSinglePropertyTransformer("border-radius"))}
     ${compileCss(border, createSinglePropertyTransformer("border"))}

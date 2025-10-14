@@ -29,9 +29,7 @@ export function createMovementProperty(css) {
     (_, value) => {
       const { x, y, z } = value.split(",").reduce(
         (accumulator, part) => {
-          const matches = MOVEMENT_RE.exec(part) ?? [];
-
-          const [, direction, distance] = matches;
+          const [, direction, distance] = MOVEMENT_RE.exec(part) ?? [];
 
           const sign =
             direction === "left" ||
