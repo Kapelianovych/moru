@@ -4,10 +4,10 @@ import { mock, suite, test } from "node:test";
 import { equal, deepEqual, match } from "node:assert/strict";
 
 import { compile } from "./compiler.js";
-import { MessageTag } from "../src/diagnostics.js";
 import { CONTEXTS } from "../components/lib/symbols.js";
+import { MessageTag } from "../src/diagnostics.js";
+import { getContext } from "../components/context.js";
 import { getFromNamespace } from "../components/lib/namespace.js";
-import { useContextGetter } from "../components/context-provider.js";
 
 const contextProviderComponentContent = readFile(
   resolve(import.meta.dirname, "../components/context-provider.html"),
@@ -17,7 +17,7 @@ const contextProviderComponentContent = readFile(
 async function dynamicallyImportJsFile() {
   return {
     CONTEXTS,
-    useContextGetter,
+    getContext,
     getFromNamespace,
   };
 }
@@ -127,13 +127,11 @@ suite("context-provider", () => {
               {{ value }}
 
               <script type="module" build>
-                import { useContextGetter } from './context-provider.js';
-
-                const getContext = useContextGetter(buildStore);
+                import { getContext } from './context.js';
 
                 await Promise.resolve();
 
-                const value = getContext('wow');
+                const value = getContext(buildStore, 'wow');
               </script>
             `;
           } else {
@@ -156,11 +154,9 @@ suite("context-provider", () => {
         <context-provider key="foo" value="bar" />
 
         <script type="module" build>
-          import { useContextGetter } from './context-provider.js';
+          import { getContext } from './context.js';
 
-          const getContext = useContextGetter(buildStore);
-
-          const value = getContext('foo');
+          const value = getContext(buildStore, 'foo');
         </script>
       `,
       {
@@ -207,11 +203,9 @@ suite("context-provider", () => {
               </context-provider>
 
               <script type="module" build>
-                import { useContextGetter } from './context-provider.js';
+                import { getContext } from './context.js';
 
-                const getContext = useContextGetter(buildStore);
-
-                const value = getContext('wow');
+                const value = getContext(buildStore, 'wow');
               </script>
             `;
           } else if (url.includes("bar")) {
@@ -221,11 +215,9 @@ suite("context-provider", () => {
               {{ value }}
 
               <script type="module" build>
-                import { useContextGetter } from './context-provider.js';
+                import { getContext } from './context.js';
 
-                const getContext = useContextGetter(buildStore);
-
-                const value = getContext('wow');
+                const value = getContext(buildStore, 'wow');
               </script>
             `;
           } else {
@@ -263,13 +255,11 @@ suite("context-provider", () => {
                 {{ value }}
 
                 <script type="module" build>
-                  import { useContextGetter } from './context-provider.js';
-
-                  const getContext = useContextGetter(buildStore);
+                  import { getContext } from './context.js';
 
                   await new Promise((resolve) => setTimeout(resolve, 40));
 
-                  const value = getContext('wow');
+                  const value = getContext(buildStore, 'wow');
                 </script>
               `;
             } else {
@@ -301,13 +291,11 @@ suite("context-provider", () => {
                 {{ value }}
 
                 <script type="module" build>
-                  import { useContextGetter } from './context-provider.js';
-
-                  const getContext = useContextGetter(buildStore);
+                  import { getContext } from './context.js';
 
                   await new Promise((resolve) => setTimeout(resolve, 60));
 
-                  const value = getContext('wow');
+                  const value = getContext(buildStore, 'wow');
                 </script>
               `;
             } else {
@@ -339,13 +327,11 @@ suite("context-provider", () => {
                 {{ value }}
 
                 <script type="module" build>
-                  import { useContextGetter } from './context-provider.js';
-
-                  const getContext = useContextGetter(buildStore);
+                  import { getContext } from './context.js';
 
                   await new Promise((resolve) => setTimeout(resolve, 20));
 
-                  const value = getContext('wow');
+                  const value = getContext(buildStore, 'wow');
                 </script>
               `;
             } else {
@@ -386,11 +372,9 @@ suite("context-provider", () => {
                 {{ value }}
 
                 <script type="module" build>
-                  import { useContextGetter } from './context-provider.js';
+                  import { getContext } from './context.js';
 
-                  const getContext = useContextGetter(buildStore);
-
-                  const value = getContext('wow');
+                  const value = getContext(buildStore, 'wow');
                 </script>
               `;
             } else if (url.includes("c1")) {

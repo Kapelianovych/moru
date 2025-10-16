@@ -2,7 +2,7 @@
  * @import { BuildStore } from "@moru/core";
  */
 
-import { useContextGetter } from "@moru/core/context-provider";
+import { getContext } from "@moru/core/context";
 
 export const ROOT_CONTEXT = Symbol("root context");
 
@@ -41,7 +41,5 @@ export function createRootContext(initial) {
  * @returns {RootContext}
  */
 export function useRootContext(buildStore) {
-  const getContext = useContextGetter(buildStore);
-
-  return getContext(ROOT_CONTEXT);
+  return getContext(buildStore, ROOT_CONTEXT);
 }

@@ -1,0 +1,26 @@
+<export name="value" />
+
+<slot />
+
+<script type="module" build>
+  import { getContext } from "./context.js";
+
+  /**
+   * @typedef {Object} Props
+   * @property {PropertyKey} key
+   */
+
+  const { key } =
+    /**
+     * @type {Props}
+     */
+    (props);
+
+  if (key === undefined) {
+    throw new Error(
+      `<context-consumer> must have the "key" attribute with a defined value.`,
+    );
+  }
+
+  const value = getContext(buildStore, key);
+</script>

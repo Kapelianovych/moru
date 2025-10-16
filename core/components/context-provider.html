@@ -11,7 +11,11 @@
    * @property {A} value
    */
 
-  const { key, value } = /** @type {Props} */ (props);
+  const { key, value } =
+    /**
+     * @type {Props}
+     */
+    (props);
 
   if (key === undefined) {
     throw new Error(
@@ -25,9 +29,13 @@
     );
   }
 
-  /** @type {Map<PropertyKey, unknown>} */
+  /**
+   * @type {Map<PropertyKey, unknown>}
+   */
   const contexts = getFromNamespace(buildStore, CONTEXTS, () => new Map());
-  /** @type {unknown} */
+  /**
+   * @type {unknown}
+   */
   const previousContextValue = getFromNamespace(contexts, key);
 
   contexts.set(key, value);

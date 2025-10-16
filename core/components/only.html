@@ -12,7 +12,11 @@
    * @property {number} [times = 1]
    */
 
-  const { key, times = 1 } = /** @type {Props} */ (props);
+  const { key, times = 1 } =
+    /**
+     * @type {Props}
+     */
+    (props);
 
   if (key === undefined) {
     throw new Error(
@@ -28,7 +32,9 @@
     );
   }
 
-  /** @type {Map<PropertyKey, number>} */
+  /**
+   * @type {Map<PropertyKey, number>}
+   */
   const onlyCache = getFromNamespace(buildStore, ONLY_CACHE, () => new Map());
 
   const renderedTimes = onlyCache.get(key) ?? 0;
