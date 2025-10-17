@@ -1,21 +1,27 @@
 /**
  * @template {Element} T
+ * @template A
  * @param {T} target
  * @param {string | symbol} name
- * @param {function(this: T, unknown): unknown} get
- * @param {function(this: T, unknown, function(unknown): void): void} set
+ * @param {function(this: T, A): A} get
+ * @param {function(this: T, A, function(A): void, A): void} set
  */
 export function hookIntoProperty(target, name, get, set) {
   const descriptor =
     /**
-     * @type {TypedPropertyDescriptor<unknown>}
+     * @type {TypedPropertyDescriptor<A>}
      */
     (Reflect.getOwnPropertyDescriptor(target, name));
 
   const getValueFromOriginalProperty =
     descriptor.get ??
     (() => {
-      return descriptor.value;
+      return (
+        /**
+         * @type {A}
+         */
+        (descriptor.value)
+      );
     });
   const setValueToOriginalProperty =
     descriptor.set ??
@@ -28,8 +34,16 @@ export function hookIntoProperty(target, name, get, set) {
     get() {
       return get.call(target, getValueFromOriginalProperty());
     },
+    /**
+     * @param {A} value
+     */
     set(value) {
-      set.call(target, value, setValueToOriginalProperty);
+      set.call(
+        target,
+        value,
+        setValueToOriginalProperty,
+        get.call(target, getValueFromOriginalProperty()),
+      );
     },
   });
 }

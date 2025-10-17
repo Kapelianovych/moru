@@ -1,7 +1,5 @@
 import { bindActions } from "./actions.js";
 import { toKebabCase } from "./to-kebab-case.js";
-import { startObservers } from "./observers.js";
-import { initialiseConsumers } from "./context.js";
 import {
   callAttributeWatchers,
   initialiseObservedAttributes,
@@ -9,9 +7,9 @@ import {
 
 /**
  * @typedef {HTMLElement & {
- *   $connectedCallbackCalled?: boolean;
- *   $disposals?: Set<VoidFunction>;
- *   $registeredConsumersPerContext?: Map<string | symbol, Set<function(unknown): void>>;
+ *   $connectedCallbackCalled: boolean;
+ *   $initialisers: Set<function(CustomElement, DecoratorMetadataObject): void>;
+ *   $disposals: Set<function(CustomElement, DecoratorMetadataObject): void>;
  *   connectedCallback?(): void;
  *   attributeChangedCallback?(name: string, oldValue: string | null, newValue: string | null): void;
  *   disconnectedCallback?(): void;
@@ -33,13 +31,23 @@ import {
  */
 export function controller(classConstructor, context) {
   context.addInitializer(function () {
+    initialiseProperties(classConstructor);
     initialiseObservedAttributes(classConstructor, context.metadata);
     initialiseConnectedCallback(classConstructor, context.metadata);
     initialiseAttributeChangedCallback(classConstructor, context.metadata);
-    initialiseDisconnectedCallback(classConstructor);
+    initialiseDisconnectedCallback(classConstructor, context.metadata);
 
     register(classConstructor);
   });
+}
+
+/**
+ * @param {CustomElementClass} classConstructor
+ */
+function initialiseProperties(classConstructor) {
+  classConstructor.prototype.$connectedCallbackCalled = false;
+  classConstructor.prototype.$initialisers = new Set();
+  classConstructor.prototype.$disposals = new Set();
 }
 
 /**
@@ -49,11 +57,12 @@ export function controller(classConstructor, context) {
 function initialiseConnectedCallback(classConstructor, metadata) {
   const connectedCallback = classConstructor.prototype.connectedCallback;
   classConstructor.prototype.connectedCallback = function () {
-    initialiseConsumers(this, metadata);
     bindActions(this);
-    startObservers(this, metadata);
+    this.$initialisers.forEach((initialise) => {
+      initialise(this, metadata);
+    });
+    this.$initialisers.clear();
     connectedCallback?.call(this);
-
     this.$connectedCallbackCalled = true;
   };
 }
@@ -87,17 +96,16 @@ function initialiseAttributeChangedCallback(classConstructor, metadata) {
 
 /**
  * @param {CustomElementClass} classConstructor
+ * @param {DecoratorMetadataObject} metadata
  */
-function initialiseDisconnectedCallback(classConstructor) {
+function initialiseDisconnectedCallback(classConstructor, metadata) {
   const disconnectedCallback = classConstructor.prototype.disconnectedCallback;
   classConstructor.prototype.disconnectedCallback = function () {
-    this.$registeredConsumersPerContext?.clear();
-    this.$disposals?.forEach((dispose) => {
-      dispose();
-    });
-    this.$disposals?.clear();
     disconnectedCallback?.call(this);
-
+    this.$disposals.forEach((dispose) => {
+      dispose(this, metadata);
+    });
+    this.$disposals.clear();
     this.$connectedCallbackCalled = false;
   };
 }

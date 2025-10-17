@@ -37,35 +37,12 @@ export function observe(observer) {
    * @param {ClassMethodDecoratorContext<CustomElement, ObserverRecord<A>['consume']>} context
    */
   return (consume, context) => {
-    const observers =
-      /**
-       * @type {Array<ObserverRecord<any>>}
-       */
-      (context.metadata.observers ??= []);
+    context.addInitializer(function () {
+      this.$initialisers.add(() => {
+        const unsubscribe = subscribe(consume.bind(this));
 
-    observers.push({
-      consume,
-      subscribe,
+        this.$disposals.add(unsubscribe);
+      });
     });
   };
-}
-
-/**
- * @param {CustomElement} classInstance
- * @param {DecoratorMetadataObject} metadata
- */
-export function startObservers(classInstance, metadata) {
-  const observers =
-    /**
-     * @type {Array<ObserverRecord<unknown>>}
-     */
-    (metadata.observers ??= []);
-
-  const disposals = (classInstance.$disposals ??= new Set());
-
-  observers.forEach(({ subscribe, consume }) => {
-    const unsubscribe = subscribe(consume.bind(classInstance));
-
-    disposals.add(unsubscribe);
-  });
 }

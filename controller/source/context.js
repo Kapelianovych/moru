@@ -5,9 +5,16 @@
 import { hookIntoProperty } from "./hook-into-property.js";
 
 /**
+ * @private
+ * @typedef {Object} ContextualisedCustomElement
+ * @property {boolean} [$areConsumersInitialised]
+ * @property {Map<string | symbol, Set<function(unknown): void>>} [$registeredConsumersPerContext]
+ */
+
+/**
  * @template KeyType
  * @template ValueType
- * @typedef {KeyType & {__context__: ValueType}} Context
+ * @typedef {KeyType & { __context__: ValueType }} Context
  */
 
 /**
@@ -75,7 +82,14 @@ export class ContextRequestEvent extends Event {
 
 /**
  * @param {unknown} _
- * @param {ClassFieldDecoratorContext<CustomElement> | ClassGetterDecoratorContext<CustomElement>} context
+ * @param {|
+ *   ClassFieldDecoratorContext<
+ *     CustomElement & ContextualisedCustomElement
+ *   >
+ *   | ClassGetterDecoratorContext<
+ *       CustomElement & ContextualisedCustomElement
+ *     >
+ * } context
  */
 export function provide(_, context) {
   const providers =
@@ -88,24 +102,29 @@ export function provide(_, context) {
 
   context.addInitializer(function () {
     if (!this.$registeredConsumersPerContext) {
-      initialiseContextListener(this, context.metadata);
-
+      initialiseContextListener(this, providers);
       this.$registeredConsumersPerContext = new Map();
     }
 
     this.$registeredConsumersPerContext.set(context.name, new Set());
 
+    this.$disposals.add(() => {
+      this.$registeredConsumersPerContext?.delete(context.name);
+    });
+
     hookIntoProperty(
       this,
       context.name,
       (value) => value,
-      (value, set) => {
-        set(value);
-        this.$registeredConsumersPerContext
-          ?.get(context.name)
-          ?.forEach((consume) => {
-            consume(value);
-          });
+      (value, set, currentValue) => {
+        if (!Object.is(value, currentValue)) {
+          set(value);
+          this.$registeredConsumersPerContext
+            ?.get(context.name)
+            ?.forEach((consume) => {
+              consume(value);
+            });
+        }
       },
     );
   });
@@ -116,26 +135,16 @@ export function provide(_, context) {
  * @param {ClassFieldDecoratorContext<CustomElement> | ClassSetterDecoratorContext<CustomElement>} context
  */
 export function consume(_, context) {
-  const consumers =
-    /**
-     * @type {Set<string | symbol>}
-     */
-    (context.metadata.consumers ??= new Set());
-
-  consumers.add(context.name);
+  context.addInitializer(function () {
+    initialiseConsumer(this, context.name);
+  });
 }
 
 /**
- * @param {CustomElement} classInstance
- * @param {DecoratorMetadataObject} metadata
+ * @param {CustomElement & ContextualisedCustomElement} classInstance
+ * @param {Set<string | symbol>} providers
  */
-function initialiseContextListener(classInstance, metadata) {
-  const providers =
-    /**
-     * @type {Set<string | symbol>}
-     */
-    (metadata.providers);
-
+function initialiseContextListener(classInstance, providers) {
   classInstance.addEventListener("context-request", (event) => {
     const contextRequestEvent =
       /**
@@ -184,52 +193,24 @@ function initialiseContextListener(classInstance, metadata) {
 
 /**
  * @param {CustomElement} classInstance
- * @param {DecoratorMetadataObject} metadata
+ * @param {string | symbol} key
  */
-export function initialiseConsumers(classInstance, metadata) {
-  const consumers =
-    /**
-     * @type {Set<string | symbol> | undefined}
-     */
-    (metadata.consumers);
+function initialiseConsumer(classInstance, key) {
+  classInstance.$initialisers.add(() => {
+    classInstance.dispatchEvent(
+      new ContextRequestEvent(
+        createContext(key),
+        (value, unsubscribe) => {
+          // @ts-expect-error custom element can have any property,
+          // so this is valid even though TS does not know that
+          classInstance[key] = value;
 
-  if (consumers) {
-    const disposals = (classInstance.$disposals ??= new Set());
-
-    consumers.forEach((key) => {
-      classInstance.dispatchEvent(
-        new ContextRequestEvent(
-          createContext(key),
-          (value, unsubscribe) => {
-            if (
-              typeof (
-                /**
-                 * @type {PromiseLike<unknown> | undefined | null}
-                 */
-                (value)?.then
-              ) === "function"
-            ) {
-              /**
-               * @type {PromiseLike<unknown>}
-               */
-              (value).then((value) => {
-                // @ts-expect-error custom element can have any property,
-                // so this is valid even though TS does not know that
-                classInstance[key] = value;
-              });
-            } else {
-              // @ts-expect-error custom element can have any property,
-              // so this is valid even though TS does not know that
-              classInstance[key] = value;
-            }
-
-            if (unsubscribe) {
-              disposals.add(unsubscribe);
-            }
-          },
-          true,
-        ),
-      );
-    });
-  }
+          if (unsubscribe) {
+            classInstance.$disposals.add(unsubscribe);
+          }
+        },
+        true,
+      ),
+    );
+  });
 }

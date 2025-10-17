@@ -6,12 +6,6 @@ import { toKebabCase } from "./to-kebab-case.js";
 import { hookIntoProperty } from "./hook-into-property.js";
 
 /**
- * @typedef {Object} AttributeDescriptor
- * @property {string} name
- * @property {Set<string | symbol>} observers
- */
-
-/**
  * @param {unknown} _
  * @param {ClassFieldDecoratorContext<CustomElement>} context
  */
@@ -20,14 +14,11 @@ export function attribute(_, context) {
 
   const attributes =
     /**
-     * @type {Map<string, AttributeDescriptor>}
+     * @type {Map<string, Set<string | symbol>>}
      */
     (context.metadata.attributes ??= new Map());
 
-  attributes.set(attributeName, {
-    name: attributeName,
-    observers: new Set(),
-  });
+  attributes.set(attributeName, new Set());
 
   context.addInitializer(function () {
     const attributeDefaultValue = context.access.get(this);
@@ -94,39 +85,37 @@ export function initialiseObservedAttributes(classConstructor, metadata) {
   const observedAttributes = (classConstructor.observedAttributes ??= []);
 
   /**
-   * @type {Array<AttributeDescriptor> | undefined}
+   * @type {Map<string, Set<string | symbol>> | undefined}
    */
-  (metadata.attributes)?.forEach(({ name }) => {
+  (metadata.attributes)?.forEach((_, name) => {
     observedAttributes.push(name);
   });
 }
 
 /**
- * @param {string | symbol} attribute
+ * @param {string | symbol} field
  */
-export function watch(attribute) {
-  const name = createAttributeName(attribute);
+export function watch(field) {
+  const attributeName = createAttributeName(field);
 
   /**
    * @param {unknown} _
    * @param {ClassMethodDecoratorContext<CustomElement>} context
    */
   return (_, context) => {
-    context.addInitializer(function () {
-      const attributes =
-        /**
-         * @type {Map<string, AttributeDescriptor> | undefined}
-         */
-        (context.metadata.attributes);
-      const properties =
-        /**
-         * @type {Map<string | symbol, Set<string | symbol>> | undefined}
-         */
-        (context.metadata.properties);
+    const attributes =
+      /**
+       * @type {Map<string, Set<string | symbol>> | undefined}
+       */
+      (context.metadata.attributes);
+    const properties =
+      /**
+       * @type {Map<string | symbol, Set<string | symbol>> | undefined}
+       */
+      (context.metadata.properties);
 
-      attributes?.get(name)?.observers.add(context.name);
-      properties?.get(attribute)?.add(context.name);
-    });
+    attributes?.get(attributeName)?.add(context.name);
+    properties?.get(field)?.add(context.name);
   };
 }
 
@@ -138,11 +127,11 @@ export function watch(attribute) {
 export function callAttributeWatchers(classInstance, attribute, metadata) {
   const attributes =
     /**
-     * @type {Map<string, AttributeDescriptor>}
+     * @type {Map<string, Set<string | symbol>>}
      */
     (metadata.attributes);
 
-  attributes.get(attribute)?.observers.forEach((methodName) => {
+  attributes.get(attribute)?.forEach((methodName) => {
     // @ts-expect-error we expect method to exist
     classInstance[methodName]();
   });

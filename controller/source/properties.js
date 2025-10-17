@@ -22,12 +22,14 @@ export function property(_, context) {
       this,
       context.name,
       (value) => value,
-      (value, set) => {
-        set(value);
-        properties.get(context.name)?.forEach((watcher) => {
-          // @ts-expect-error method signature does not exist yet
-          this[watcher]();
-        });
+      (value, set, currentValue) => {
+        if (!Object.is(value, currentValue)) {
+          set(value);
+          properties.get(context.name)?.forEach((watcher) => {
+            // @ts-expect-error method signature does not exist yet
+            this[watcher]();
+          });
+        }
       },
     );
   });
