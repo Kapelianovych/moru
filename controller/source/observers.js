@@ -38,11 +38,26 @@ export function observe(observer) {
    */
   return (consume, context) => {
     context.addInitializer(function () {
-      this.$initialisers?.add(() => {
-        const unsubscribe = subscribe(consume.bind(this));
-
-        this.$disposals?.add(unsubscribe);
-      });
+      initialiseSubscription(this, subscribe, consume.bind(this));
     });
   };
+}
+
+/**
+ * @template A
+ * @param {CustomElement} classInstance
+ * @param {ObserverSubscriber<A>} subscribe
+ * @param {ObserverRecord<A>['consume']} consume
+ * @returns {void}
+ */
+function initialiseSubscription(classInstance, subscribe, consume) {
+  classInstance.$initialisers?.add(() => {
+    const unsubscribe = subscribe(consume);
+
+    classInstance.$disposals?.add(unsubscribe);
+    classInstance.$disposals?.add(() => {
+      // Initialise subscription again in case node will be reattached to DOM.
+      initialiseSubscription(classInstance, subscribe, consume);
+    });
+  });
 }
