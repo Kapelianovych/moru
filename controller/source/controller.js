@@ -6,21 +6,37 @@ import {
 } from "./attributes.js";
 
 /**
- * @typedef {HTMLElement & {
- *   $connectedCallbackCalled: boolean;
- *   $initialisers: Set<function(CustomElement, DecoratorMetadataObject): void>;
- *   $disposals: Set<function(CustomElement, DecoratorMetadataObject): void>;
- *   connectedCallback?(): void;
- *   attributeChangedCallback?(name: string, oldValue: string | null, newValue: string | null): void;
- *   disconnectedCallback?(): void;
- *   adoptedCallback?(): void;
- * }} CustomElement
+ * These properties are deliberately marked as optional to not enforce them onto
+ * user's controllers even though they are always initialised.
+ *
+ * @package
+ * @typedef {Object} InternalElementProperties
+ * @property {boolean} [$connectedCallbackCalled]
+ * @property {Set<function(CustomElement, DecoratorMetadataObject): void>} [$initialisers]
+ * @property {Set<function(CustomElement, DecoratorMetadataObject): void>} [$disposals]
+ */
+
+/**
+ * @typedef {Object} ElementLifecycleCallbacks
+ * @property {function(): void} [connectedCallback]
+ * @property {function(string, string | null, string | null): void} [attributeChangedCallback]
+ * @property {function(): void} [disconnectedCallback]
+ * @property {function(): void} [adoptedCallback]
+ * @property {function(HTMLFormElement): void} [formAssociatedCallback]
+ * @property {function(): void} [formResetCallback]
+ * @property {function(boolean): void} [formDisabledCallback]
+ * @property {function(string | File | FormData, 'restore' | 'autocomplete'): void} [formStateRestoreCallback]
+ */
+
+/**
+ * @typedef {HTMLElement & InternalElementProperties & ElementLifecycleCallbacks} CustomElement
  */
 
 /**
  * @typedef {{
  *   new (): CustomElement;
  *   prototype: CustomElement;
+ *   formAssociated?: boolean;
  *   observedAttributes?: Array<string>;
  * }} CustomElementClass
  */
@@ -58,10 +74,10 @@ function initialiseConnectedCallback(classConstructor, metadata) {
   const connectedCallback = classConstructor.prototype.connectedCallback;
   classConstructor.prototype.connectedCallback = function () {
     bindActions(this);
-    this.$initialisers.forEach((initialise) => {
+    this.$initialisers?.forEach((initialise) => {
       initialise(this, metadata);
     });
-    this.$initialisers.clear();
+    this.$initialisers?.clear();
     connectedCallback?.call(this);
     this.$connectedCallbackCalled = true;
   };
@@ -102,10 +118,10 @@ function initialiseDisconnectedCallback(classConstructor, metadata) {
   const disconnectedCallback = classConstructor.prototype.disconnectedCallback;
   classConstructor.prototype.disconnectedCallback = function () {
     disconnectedCallback?.call(this);
-    this.$disposals.forEach((dispose) => {
+    this.$disposals?.forEach((dispose) => {
       dispose(this, metadata);
     });
-    this.$disposals.clear();
+    this.$disposals?.clear();
     this.$connectedCallbackCalled = false;
   };
 }

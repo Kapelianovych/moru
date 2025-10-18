@@ -192,7 +192,7 @@ function initialiseContextListener(classInstance, providers) {
  * @param {string | symbol} key
  */
 function initialiseConsumer(classInstance, key) {
-  classInstance.$initialisers.add(() => {
+  classInstance.$initialisers?.add(() => {
     classInstance.dispatchEvent(
       new ContextRequestEvent(
         createContext(key),
@@ -202,7 +202,7 @@ function initialiseConsumer(classInstance, key) {
           classInstance[key] = value;
 
           if (unsubscribe) {
-            classInstance.$disposals.add(unsubscribe);
+            classInstance.$disposals?.add(unsubscribe);
           }
         },
         true,
@@ -210,7 +210,7 @@ function initialiseConsumer(classInstance, key) {
     );
   });
 
-  classInstance.$disposals.add(() => {
+  classInstance.$disposals?.add(() => {
     // Initialise consumer again in case node will be reattached to DOM.
     initialiseConsumer(classInstance, key);
   });

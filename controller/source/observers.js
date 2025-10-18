@@ -38,10 +38,10 @@ export function observe(observer) {
    */
   return (consume, context) => {
     context.addInitializer(function () {
-      this.$initialisers.add(() => {
+      this.$initialisers?.add(() => {
         const unsubscribe = subscribe(consume.bind(this));
 
-        this.$disposals.add(unsubscribe);
+        this.$disposals?.add(unsubscribe);
       });
     });
   };
