@@ -108,10 +108,6 @@ export function provide(_, context) {
 
     this.$registeredConsumersPerContext.set(context.name, new Set());
 
-    this.$disposals.add(() => {
-      this.$registeredConsumersPerContext?.delete(context.name);
-    });
-
     hookIntoProperty(
       this,
       context.name,
@@ -212,5 +208,10 @@ function initialiseConsumer(classInstance, key) {
         true,
       ),
     );
+  });
+
+  classInstance.$disposals.add(() => {
+    // Initialise consumer again in case node will be reattached to DOM.
+    initialiseConsumer(classInstance, key);
   });
 }
