@@ -67,12 +67,14 @@
  * @typedef {_ObserverSubscriber<A>} ObserverSubscriber
  */
 
+export { bound } from "./bound.js";
 export { observe } from "./observers.js";
 export { property } from "./properties.js";
 export { controller } from "./controller.js";
 export { event, listen } from "./events.js";
 export { target, targets } from "./targets.js";
 export { watch, attribute } from "./attributes.js";
+export { inject, service, container } from "./di.js";
 export {
   provide,
   consume,
