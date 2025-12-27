@@ -81,19 +81,19 @@ function initialiseInjectRequest(classInstance, request) {
           provide(service) {
             request.provide.call(classInstance, service);
 
-            classInstance.$disposals?.add(() => {
-              if (!service.constructor[Symbol.metadata].singleton) {
+            if (!service.constructor[Symbol.metadata].singleton) {
+              classInstance.$disposals?.add(() => {
                 service.dispose?.();
-              }
-            });
+              });
+            }
           },
         },
       }),
     );
-  });
 
-  classInstance.$disposals?.add(() => {
-    initialiseInjectRequest(classInstance, request);
+    classInstance.$disposals?.add(() => {
+      initialiseInjectRequest(classInstance, request);
+    });
   });
 }
 
