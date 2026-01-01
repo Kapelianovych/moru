@@ -1,0 +1,11 @@
+{
+  "name": "@moru/server",
+  "type": "module",
+  "version": "0.0.1",
+  "exports": {
+    ".": "./source/index.js"
+  },
+  "dependencies": {
+    "mime": "^4"
+  }
+}

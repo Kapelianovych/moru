@@ -107,6 +107,7 @@ export class Compiler {
           writeFileContent: self.#writeFileContent.bind(self),
           dynamicallyImportJsFile: self.#dynamicallyImportJsFile,
         });
+
         if (self.#environment.pluginOptions.transform) {
           await self.#environment.pluginOptions.transform(tree, {
             url: context.path
@@ -139,7 +140,7 @@ export class Compiler {
 
       if (
         filePath.startsWith(watchedRootDirectoryByVite) &&
-        (filePath.endsWith(".html") || filePath.endsWith(".svg"))
+        (filePath.startsWith(".") || filePath.startsWith("/"))
       ) {
         addWatchFile(filePath);
       }

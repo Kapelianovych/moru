@@ -4,6 +4,7 @@
     "./ui",
     "./core",
     "./store",
+    "./server",
     "./website",
     "./controller",
     "./vite-plugin",

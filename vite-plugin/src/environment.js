@@ -15,7 +15,7 @@ import { mergeConfig } from "vite";
  */
 const DEFAULT_ENTRIES_SETTINGS = {
   suffix: ".page",
-  include: [""],
+  include: [],
   exclude: ["node_modules/**"],
 };
 
@@ -39,10 +39,10 @@ export class Environment {
   viteConfiguration;
 
   /**
-   * @param {UserConfig} _config
+   * @param {UserConfig} config
    * @returns {UserConfig}
    */
-  config = (_config) => {
+  config = (config) => {
     const foldersToStart = this.pluginOptions.entries.include.join(",").trim();
     const htmlFiles = globSync(
       join(
