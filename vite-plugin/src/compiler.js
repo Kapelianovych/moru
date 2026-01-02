@@ -138,10 +138,7 @@ export class Compiler {
         this.#environment.viteConfiguration.root,
       );
 
-      if (
-        filePath.startsWith(watchedRootDirectoryByVite) &&
-        (filePath.startsWith(".") || filePath.startsWith("/"))
-      ) {
+      if (filePath.startsWith(watchedRootDirectoryByVite)) {
         addWatchFile(filePath);
       }
     }
