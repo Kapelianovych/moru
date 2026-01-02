@@ -14,7 +14,6 @@ import {
  * @enum {typeof HttpMethod[keyof typeof HttpMethod]}
  */
 export const HttpMethod = Object.freeze({
-  All: "*",
   Get: "get",
   Put: "put",
   Post: "post",
@@ -42,10 +41,7 @@ export function route(options) {
     const url = extractUrl(request);
     const requestMethod = extractMethod(request);
 
-    if (
-      (options.method === HttpMethod.All || requestMethod === options.method) &&
-      pathRegExp.test(url.pathname)
-    ) {
+    if (requestMethod === options.method && pathRegExp.test(url.pathname)) {
       const parameters = extractPathParameters(pathRegExp, url.pathname);
       assignCustomData(
         request,
