@@ -51,11 +51,11 @@ export function observe(observer) {
  * @returns {void}
  */
 function initialiseSubscription(classInstance, subscribe, consume) {
-  classInstance.$initialisers?.add(() => {
+  classInstance.$initialisers?.().add(() => {
     const unsubscribe = subscribe(consume);
 
-    classInstance.$disposals?.add(unsubscribe);
-    classInstance.$disposals?.add(() => {
+    classInstance.$disposals?.().add(unsubscribe);
+    classInstance.$disposals?.().add(() => {
       // Initialise subscription again in case node will be reattached to DOM.
       initialiseSubscription(classInstance, subscribe, consume);
     });

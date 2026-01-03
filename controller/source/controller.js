@@ -11,9 +11,10 @@ import {
  *
  * @package
  * @typedef {Object} InternalElementProperties
- * @property {boolean} [$connectedCallbackCalled]
- * @property {Set<function(CustomElement, DecoratorMetadataObject): void>} [$initialisers]
- * @property {Set<function(CustomElement, DecoratorMetadataObject): void>} [$disposals]
+ * @property {function(): boolean} [$connectedCallbackCalled]
+ * @property {function(boolean): void} [$setConnectedCallbackCalled]
+ * @property {function(): Set<function(CustomElement, DecoratorMetadataObject): void>} [$initialisers]
+ * @property {function(): Set<function(CustomElement, DecoratorMetadataObject): void>} [$disposals]
  */
 
 /**
@@ -58,12 +59,45 @@ export function controller(classConstructor, context) {
 }
 
 /**
+ * @typedef {Object} InternalElementRuntimeProperties
+ * @property {boolean} [$connectedCallbackCalledProperty]
+ * @property {Set<function(CustomElement, DecoratorMetadataObject): void>} [$initialisersProperty]
+ * @property {Set<function(CustomElement, DecoratorMetadataObject): void>} [$disposalsProperty]
+ */
+
+/**
  * @param {CustomElementClass} classConstructor
  */
 function initialiseProperties(classConstructor) {
-  classConstructor.prototype.$connectedCallbackCalled = false;
-  classConstructor.prototype.$initialisers = new Set();
-  classConstructor.prototype.$disposals = new Set();
+  classConstructor.prototype.$connectedCallbackCalled =
+    /**
+     * @this {CustomElement & InternalElementRuntimeProperties}
+     */
+    function () {
+      return this.$connectedCallbackCalledProperty ?? false;
+    };
+  classConstructor.prototype.$setConnectedCallbackCalled =
+    /**
+     * @this {CustomElement & InternalElementRuntimeProperties}
+     * @param {boolean} value
+     */
+    function (value) {
+      this.$connectedCallbackCalledProperty = value;
+    };
+  classConstructor.prototype.$initialisers =
+    /**
+     * @this {CustomElement & InternalElementRuntimeProperties}
+     */
+    function () {
+      return (this.$initialisersProperty ??= new Set());
+    };
+  classConstructor.prototype.$disposals =
+    /**
+     * @this {CustomElement & InternalElementRuntimeProperties}
+     */
+    function () {
+      return (this.$disposalsProperty ??= new Set());
+    };
 }
 
 /**
@@ -74,12 +108,12 @@ function initialiseConnectedCallback(classConstructor, metadata) {
   const connectedCallback = classConstructor.prototype.connectedCallback;
   classConstructor.prototype.connectedCallback = function () {
     bindActions(this);
-    this.$initialisers?.forEach((initialise) => {
+    this.$initialisers?.().forEach((initialise) => {
       initialise(this, metadata);
     });
-    this.$initialisers?.clear();
+    this.$initialisers?.().clear();
     connectedCallback?.call(this);
-    this.$connectedCallbackCalled = true;
+    this.$setConnectedCallbackCalled?.(true);
   };
 }
 
@@ -101,7 +135,7 @@ function initialiseAttributeChangedCallback(classConstructor, metadata) {
       // will be called during parsing phase (before connectedCallback method). At this time
       // children and the rest of the document after this element are not yet initialised,
       // so we usually want to skip those calls.
-      if (this.$connectedCallbackCalled) {
+      if (this.$connectedCallbackCalled?.()) {
         if (oldValue !== newValue) {
           callAttributeWatchers(this, name, metadata);
           attributeChangedCallback?.call(this, name, oldValue, newValue);
@@ -118,11 +152,11 @@ function initialiseDisconnectedCallback(classConstructor, metadata) {
   const disconnectedCallback = classConstructor.prototype.disconnectedCallback;
   classConstructor.prototype.disconnectedCallback = function () {
     disconnectedCallback?.call(this);
-    this.$disposals?.forEach((dispose) => {
+    this.$disposals?.().forEach((dispose) => {
       dispose(this, metadata);
     });
-    this.$disposals?.clear();
-    this.$connectedCallbackCalled = false;
+    this.$disposals?.().clear();
+    this.$setConnectedCallbackCalled?.(false);
   };
 }
 

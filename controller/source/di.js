@@ -94,20 +94,20 @@ export function inject(_, context) {
  * @param {InjectRequestOptions} request
  */
 function initialiseInjectRequest(classInstance, request) {
-  classInstance.$initialisers?.add(() => {
+  classInstance.$initialisers?.().add(() => {
     classInstance.dispatchEvent(
       new InjectRequestEvent(request.name, (service) => {
         request.provide.call(classInstance, service);
 
         if (!service.constructor[Symbol.metadata].singleton) {
-          classInstance.$disposals?.add(() => {
+          classInstance.$disposals?.().add(() => {
             service.dispose?.();
           });
         }
       }),
     );
 
-    classInstance.$disposals?.add(() => {
+    classInstance.$disposals?.().add(() => {
       initialiseInjectRequest(classInstance, request);
     });
   });
@@ -252,13 +252,13 @@ export function container(...serviceClasses) {
       }
 
       #setupCacheDisposal() {
-        this.$disposals?.add(() => {
+        this.$disposals?.().add(() => {
           for (const [, service] of this.#cache) {
             service.dispose?.();
           }
           this.#cache.clear();
 
-          this.$initialisers?.add(() => {
+          this.$initialisers?.().add(() => {
             this.#setupCacheDisposal();
           });
         });
