@@ -8,12 +8,38 @@ import { listen } from "./events.js";
 // so it might be missing.
 Symbol.metadata ??= Symbol("symbol.metadata");
 
-const INJECT_EVENT_NAME = "inject-request-service";
+const INJECT_REQUEST_EVENT_NAME = "inject-request";
 
 /**
- * @typedef {Object} InjectRequest
- * @property {string} name
- * @property {function(Service): void} provide
+ * @callback ProvideCallback
+ * @param {Service} service
+ * @returns {void}
+ */
+
+export class InjectRequestEvent extends Event {
+  /**
+   * @type {string}
+   */
+  name;
+  /**
+   * @type {ProvideCallback}
+   */
+  provide;
+
+  /**
+   * @param {string} name
+   * @param {ProvideCallback} provide
+   */
+  constructor(name, provide) {
+    super(INJECT_REQUEST_EVENT_NAME, { bubbles: true, composed: true });
+
+    this.name = name;
+    this.provide = provide;
+  }
+}
+
+/**
+ * @typedef {Pick<InjectRequestEvent, 'name' | 'provide'>} InjectRequestOptions
  */
 
 /**
@@ -23,12 +49,12 @@ const INJECT_EVENT_NAME = "inject-request-service";
 export function inject(_, context) {
   const dependencies =
     /**
-     * @type {Array<InjectRequest>}
+     * @type {Array<InjectRequestOptions>}
      */
     (context.metadata.dependencies ??= []);
   const name = String(context.name);
   /**
-   * @type {InjectRequest}
+   * @type {InjectRequestOptions}
    */
   const request = {
     name: context.private ? name.slice(1) : name,
@@ -65,29 +91,19 @@ export function inject(_, context) {
 
 /**
  * @param {CustomElement} classInstance
- * @param {InjectRequest} request
+ * @param {InjectRequestOptions} request
  */
 function initialiseInjectRequest(classInstance, request) {
   classInstance.$initialisers?.add(() => {
     classInstance.dispatchEvent(
-      new CustomEvent(INJECT_EVENT_NAME, {
-        bubbles: true,
-        composed: true,
-        detail: {
-          name: request.name,
-          /**
-           * @param {Service} service
-           */
-          provide(service) {
-            request.provide.call(classInstance, service);
+      new InjectRequestEvent(request.name, (service) => {
+        request.provide.call(classInstance, service);
 
-            if (!service.constructor[Symbol.metadata].singleton) {
-              classInstance.$disposals?.add(() => {
-                service.dispose?.();
-              });
-            }
-          },
-        },
+        if (!service.constructor[Symbol.metadata].singleton) {
+          classInstance.$disposals?.add(() => {
+            service.dispose?.();
+          });
+        }
       }),
     );
 
@@ -100,7 +116,7 @@ function initialiseInjectRequest(classInstance, request) {
 /**
  * @typedef {Object} ServiceMetadata
  * @property {boolean} singleton
- * @property {Array<InjectRequest>} dependencies
+ * @property {Array<InjectRequestOptions>} dependencies
  */
 
 /**
@@ -178,7 +194,7 @@ export function container(...serviceClasses) {
        */
       #cache = new Map();
 
-      @listen [INJECT_EVENT_NAME] = this;
+      @listen [INJECT_REQUEST_EVENT_NAME] = this;
 
       constructor() {
         super();
@@ -187,16 +203,19 @@ export function container(...serviceClasses) {
       }
 
       /**
-       * @param {CustomEvent<InjectRequest>} event
+       * @param {InjectRequestEvent} event
        */
       async handleEvent(event) {
         event.stopImmediatePropagation();
 
-        await this.#fulfillInjectRequest(event.detail);
+        await this.#fulfillInjectRequest({
+          name: event.name,
+          provide: event.provide,
+        });
       }
 
       /**
-       * @param {InjectRequest} request
+       * @param {InjectRequestOptions} request
        */
       async #fulfillInjectRequest(request) {
         if (this.#cache.has(request.name)) {

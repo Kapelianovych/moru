@@ -49,6 +49,8 @@ export function createContext(key) {
  * @returns {void}
  */
 
+const CONTEXT_REQUEST_EVENT_NAME = "context-request";
+
 /**
  * @template {UnknownContext} T
  */
@@ -72,7 +74,7 @@ export class ContextRequestEvent extends Event {
    * @param {boolean} [subscribe]
    */
   constructor(context, callback, subscribe) {
-    super("context-request", { bubbles: true, composed: true });
+    super(CONTEXT_REQUEST_EVENT_NAME, { bubbles: true, composed: true });
 
     this.context = context;
     this.callback = callback;
@@ -141,7 +143,7 @@ export function consume(_, context) {
  * @param {Set<string | symbol>} providers
  */
 function initialiseContextListener(classInstance, providers) {
-  classInstance.addEventListener("context-request", (event) => {
+  classInstance.addEventListener(CONTEXT_REQUEST_EVENT_NAME, (event) => {
     const contextRequestEvent =
       /**
        * @type {ContextRequestEvent<Context<string | symbol, unknown>>}
