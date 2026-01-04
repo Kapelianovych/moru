@@ -386,4 +386,43 @@ suite("custom components", () => {
 
     equal(fn.mock.callCount(), 0);
   });
+
+  test(
+    "parent component props should not leak into child components " +
+      "and module properties should be available to all components",
+    async () => {
+      const output = await compile(
+        `
+          <import from="one.html" />
+
+          <one foo="1" />
+        `,
+        {
+          resolveUrl(_, url) {
+            return url;
+          },
+          async readFileContent(url) {
+            if (url.includes("one")) {
+              return `
+                <import from="two.html" />
+                <import from="four.html" />
+
+                <four w="9">
+                  <two bar="some" expand="{{ props }}" />
+                </four>
+              `;
+            } else if (url.includes("two")) {
+              return '<div expand="{{ props }}" />';
+            } else if (url.includes("four")) {
+              return "<slot />";
+            } else {
+              return "";
+            }
+          },
+        },
+      );
+
+      equal(output, '<div foo="1" bar="some"></div>');
+    },
+  );
 });

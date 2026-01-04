@@ -112,6 +112,7 @@ async function compileModule(options) {
       options.slotContentCompilersFromParent,
       options.file,
       options.compilerOptions,
+      options.compilerOptions.properties,
     );
 
   await compileComponents(

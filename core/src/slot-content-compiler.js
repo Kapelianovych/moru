@@ -41,6 +41,7 @@ import { evaluateExports } from "./evaluate-exports.js";
  * @param {Record<string, SlotContentCompiler>} slotContentCompilersFromParent
  * @param {VirtualFile} file
  * @param {Options} options
+ * @param {Options['properties']} moduleProperties
  * @returns {Map<Element, Record<string, SlotContentCompiler>>}
  */
 export function createSlotContentCompilersForComponents(
@@ -53,6 +54,7 @@ export function createSlotContentCompilersForComponents(
   slotContentCompilersFromParent,
   file,
   options,
+  moduleProperties,
 ) {
   /** @type {Map<Element, Record<string, SlotContentCompiler>>} */
   const slotContentCompilersGroupedByComponent = new Map();
@@ -70,6 +72,7 @@ export function createSlotContentCompilersForComponents(
       slotContentCompilersFromParent,
       file,
       options,
+      moduleProperties,
     );
 
     slotContentCompilersGroupedByComponent.set(node, slotContentCompilers);
@@ -90,6 +93,7 @@ export function createSlotContentCompilersForComponents(
  * @param {Record<string, SlotContentCompiler>} slotContentCompilersFromParent
  * @param {VirtualFile} file
  * @param {Options} options
+ * @param {Options['properties']} moduleProperties
  * @returns {Record<string, SlotContentCompiler>}
  */
 function createSlotContentCompilers(
@@ -104,6 +108,7 @@ function createSlotContentCompilers(
   slotContentCompilersFromParent,
   file,
   options,
+  moduleProperties,
 ) {
   /** @type {Record<string, SlotContentCompiler>} */
   const compilersGroupedBySlotName = {};
@@ -156,7 +161,12 @@ function createSlotContentCompilers(
         htmlNodesCollection: childrenHtmlNodesCollection,
       };
 
+      // Prevent parent component properties leaking into any child component.
+      // They have to have an access only to current module's properties.
+      const clonedComponentElementProperties = options.properties;
+      options.properties = moduleProperties;
       await preCompileScope(scopePreCompilerOptions);
+      options.properties = clonedComponentElementProperties;
 
       const slotContentCompilersForComponents =
         createSlotContentCompilersForComponents(
@@ -169,6 +179,7 @@ function createSlotContentCompilers(
           slotContentCompilersFromParent,
           file,
           options,
+          moduleProperties,
         );
 
       await compileComponents(
