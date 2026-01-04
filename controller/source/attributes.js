@@ -103,19 +103,21 @@ export function watch(field) {
    * @param {ClassMethodDecoratorContext<CustomElement>} context
    */
   return (_, context) => {
-    const attributes =
-      /**
-       * @type {Map<string, Set<string | symbol>> | undefined}
-       */
-      (context.metadata.attributes);
-    const properties =
-      /**
-       * @type {Map<string | symbol, Set<string | symbol>> | undefined}
-       */
-      (context.metadata.properties);
+    context.addInitializer(function () {
+      const attributes =
+        /**
+         * @type {Map<string, Set<string | symbol>> | undefined}
+         */
+        (context.metadata.attributes);
+      const properties =
+        /**
+         * @type {Map<string | symbol, Set<string | symbol>> | undefined}
+         */
+        (context.metadata.properties);
 
-    attributes?.get(attributeName)?.add(context.name);
-    properties?.get(field)?.add(context.name);
+      attributes?.get(attributeName)?.add(context.name);
+      properties?.get(field)?.add(context.name);
+    });
   };
 }
 
