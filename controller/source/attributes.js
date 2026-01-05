@@ -11,7 +11,7 @@ import { toKebabCase } from "./to-kebab-case.js";
  * @returns {ClassAccessorDecoratorResult<CustomElement, A>}
  */
 export function attribute(target, context) {
-  const attributeName = toKebabCase(String(context.name));
+  const attributeName = createAttributeName(context.name, context.private);
 
   const attributes =
     /**
@@ -91,4 +91,17 @@ function setAttributeValue(instance, attribute, value, defaultValue) {
   } else {
     instance.setAttribute(attribute, String(value));
   }
+}
+
+/**
+ * @param {string | symbol} name
+ * @param {boolean} [isPrivate]
+ * @returns {string}
+ */
+export function createAttributeName(name, isPrivate) {
+  const rawName = String(name);
+
+  isPrivate ??= rawName.startsWith("#");
+
+  return toKebabCase(isPrivate ? rawName.slice(1) : rawName);
 }

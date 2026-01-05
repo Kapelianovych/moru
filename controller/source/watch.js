@@ -2,13 +2,13 @@
  * @import { CustomElement } from "./controller.js";
  */
 
-import { toKebabCase } from "./to-kebab-case.js";
+import { createAttributeName } from "./attributes.js";
 
 /**
  * @param {string | symbol} field
  */
 export function watch(field) {
-  const attributeName = toKebabCase(String(field));
+  const attributeName = createAttributeName(field);
 
   /**
    * @param {unknown} _
