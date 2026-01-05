@@ -1,9 +1,7 @@
 import { bindActions } from "./actions.js";
 import { toKebabCase } from "./to-kebab-case.js";
-import {
-  callAttributeWatchers,
-  initialiseObservedAttributes,
-} from "./attributes.js";
+import { callWatchers } from "./watch.js";
+import { initialiseObservedAttributes } from "./attributes.js";
 
 /**
  * These properties are deliberately marked as optional to not enforce them onto
@@ -137,7 +135,14 @@ function initialiseAttributeChangedCallback(classConstructor, metadata) {
       // so we usually want to skip those calls.
       if (this.$connectedCallbackCalled?.()) {
         if (oldValue !== newValue) {
-          callAttributeWatchers(this, name, metadata);
+          callWatchers(
+            this,
+            name,
+            /**
+             * @type {Map<string, Set<ClassMethodDecoratorContext['access']['get']>> | undefined}
+             */
+            (metadata.attributes),
+          );
           attributeChangedCallback?.call(this, name, oldValue, newValue);
         }
       }

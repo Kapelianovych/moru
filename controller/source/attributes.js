@@ -3,78 +3,41 @@
  */
 
 import { toKebabCase } from "./to-kebab-case.js";
-import { hookIntoProperty } from "./hook-into-property.js";
 
 /**
- * @param {unknown} _
- * @param {ClassFieldDecoratorContext<CustomElement>} context
+ * @template {boolean | string | number} A
+ * @param {ClassAccessorDecoratorTarget<CustomElement, A>} target
+ * @param {ClassAccessorDecoratorContext<CustomElement, A>} context
+ * @returns {ClassAccessorDecoratorResult<CustomElement, A>}
  */
-export function attribute(_, context) {
-  const attributeName = createAttributeName(context.name);
+export function attribute(target, context) {
+  const attributeName = toKebabCase(String(context.name));
 
   const attributes =
     /**
-     * @type {Map<string, Set<string | symbol>>}
+     * @type {Map<string, Set<ClassMethodDecoratorContext['access']['get']>>}
      */
     (context.metadata.attributes ??= new Map());
 
   attributes.set(attributeName, new Set());
 
-  context.addInitializer(function () {
-    const attributeDefaultValue = context.access.get(this);
+  return {
+    get() {
+      return convertAttributeValue(this, attributeName, target.get.call(this));
+    },
+    set(value) {
+      setAttributeValue(this, attributeName, value, target.get.call(this));
+    },
+    init(defaultValue) {
+      if (this.hasAttribute(attributeName)) {
+        return convertAttributeValue(this, attributeName, defaultValue);
+      } else {
+        setAttributeValue(this, attributeName, defaultValue, defaultValue);
 
-    let get =
-      /**
-       * @this {CustomElement}
-       * @returns {unknown}
-       */
-      function () {
-        return (
-          this.getAttribute(attributeName) || String(attributeDefaultValue)
-        );
-      };
-    let set =
-      /**
-       * @this {CustomElement}
-       * @param {unknown} value
-       */
-      function (value) {
-        this.setAttribute(attributeName, String(value));
-      };
-
-    if (typeof attributeDefaultValue === "number") {
-      get =
-        /**
-         * @this {CustomElement}
-         */
-        function () {
-          return Number(
-            this.getAttribute(attributeName) || attributeDefaultValue,
-          );
-        };
-    } else if (typeof attributeDefaultValue === "boolean") {
-      get =
-        /**
-         * @this {CustomElement}
-         */
-        function () {
-          return this.hasAttribute(attributeName);
-        };
-      set =
-        /**
-         * @this {CustomElement}
-         */
-        function (value) {
-          this.toggleAttribute(attributeName, Boolean(value));
-        };
-    }
-
-    if (!this.hasAttribute(attributeName)) {
-      set.call(this, attributeDefaultValue);
-    }
-
-    hookIntoProperty(this, context.name, get, set);
-  });
+        return defaultValue;
+      }
+    },
+  };
 }
 
 /**
@@ -85,7 +48,7 @@ export function initialiseObservedAttributes(classConstructor, metadata) {
   const observedAttributes = (classConstructor.observedAttributes ??= []);
 
   /**
-   * @type {Map<string, Set<string | symbol>> | undefined}
+   * @type {Map<string, Set<ClassMethodDecoratorContext['access']['get']>> | undefined}
    */
   (metadata.attributes)?.forEach((_, name) => {
     observedAttributes.push(name);
@@ -93,56 +56,39 @@ export function initialiseObservedAttributes(classConstructor, metadata) {
 }
 
 /**
- * @param {string | symbol} field
- */
-export function watch(field) {
-  const attributeName = createAttributeName(field);
-
-  /**
-   * @param {unknown} _
-   * @param {ClassMethodDecoratorContext<CustomElement>} context
-   */
-  return (_, context) => {
-    context.addInitializer(function () {
-      const attributes =
-        /**
-         * @type {Map<string, Set<string | symbol>> | undefined}
-         */
-        (context.metadata.attributes);
-      const properties =
-        /**
-         * @type {Map<string | symbol, Set<string | symbol>> | undefined}
-         */
-        (context.metadata.properties);
-
-      attributes?.get(attributeName)?.add(context.name);
-      properties?.get(field)?.add(context.name);
-    });
-  };
-}
-
-/**
- * @param {CustomElement} classInstance
+ * @template {string | number | boolean} A
+ * @param {CustomElement} instance
  * @param {string} attribute
- * @param {DecoratorMetadataObject} metadata
+ * @param {A} defaultValue
+ * @returns {A}
  */
-export function callAttributeWatchers(classInstance, attribute, metadata) {
-  const attributes =
-    /**
-     * @type {Map<string, Set<string | symbol>>}
-     */
-    (metadata.attributes);
-
-  attributes.get(attribute)?.forEach((methodName) => {
-    // @ts-expect-error we expect method to exist
-    classInstance[methodName]();
-  });
+function convertAttributeValue(instance, attribute, defaultValue) {
+  switch (typeof defaultValue) {
+    case "number":
+      return /** @type {A} */ (
+        Number(instance.getAttribute(attribute) || defaultValue)
+      );
+    case "boolean":
+      return /** @type {A} */ (instance.hasAttribute(attribute));
+    default:
+      return (
+        /** @type {A} */ (instance.getAttribute(attribute)) || defaultValue
+      );
+  }
 }
 
 /**
- * @param {string | symbol} propertyName
- * @returns {string}
+ * @template {string | number | boolean} A
+ * @param {CustomElement} instance
+ * @param {string} attribute
+ * @param {A} value
+ * @param {A} defaultValue
+ * @returns {void}
  */
-function createAttributeName(propertyName) {
-  return toKebabCase(String(propertyName));
+function setAttributeValue(instance, attribute, value, defaultValue) {
+  if (typeof defaultValue === "boolean") {
+    instance.toggleAttribute(attribute, Boolean(value));
+  } else {
+    instance.setAttribute(attribute, String(value));
+  }
 }

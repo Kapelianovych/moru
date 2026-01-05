@@ -2,20 +2,20 @@
  * @import { CustomElement } from "./controller.js";
  */
 
-import { hookIntoProperty } from "./hook-into-property.js";
-
 /**
+ * @template {Element | undefined} E
  * @overload
  * @param {HTMLElement} controller
  * @param {string} name
  * @param {true} single
- * @returns {Element | undefined}
+ * @returns {E}
  *
+ * @template {Element} E
  * @overload
  * @param {HTMLElement} controller
  * @param {string} name
  * @param {false} single
- * @returns {Array<Element>}
+ * @returns {Array<E>}
  *
  * @param {HTMLElement} controller
  * @param {string} name
@@ -59,39 +59,33 @@ function findTarget(controller, name, single) {
 }
 
 /**
- * @param {unknown} _
- * @param {ClassFieldDecoratorContext<CustomElement>} context
+ * @template {Element | undefined} E
+ * @param {ClassAccessorDecoratorTarget<CustomElement, E>} _
+ * @param {ClassAccessorDecoratorContext<CustomElement, E>} context
+ * @returns {ClassAccessorDecoratorResult<CustomElement, E>}
  */
 export function target(_, context) {
   const stringifiedName = String(context.name);
 
-  context.addInitializer(function () {
-    hookIntoProperty(
-      this,
-      context.name,
-      () => {
-        return findTarget(this, stringifiedName, true);
-      },
-      () => {},
-    );
-  });
+  return {
+    get() {
+      return findTarget(this, stringifiedName, true);
+    },
+  };
 }
 
 /**
- * @param {unknown} _
- * @param {ClassFieldDecoratorContext<CustomElement>} context
+ * @template {Element} E
+ * @param {ClassAccessorDecoratorTarget<CustomElement, Array<E>>} _
+ * @param {ClassAccessorDecoratorContext<CustomElement, Array<E>>} context
+ * @returns {ClassAccessorDecoratorResult<CustomElement, Array<E>>}
  */
 export function targets(_, context) {
   const stringifiedName = String(context.name);
 
-  context.addInitializer(function () {
-    hookIntoProperty(
-      this,
-      context.name,
-      () => {
-        return findTarget(this, stringifiedName, false);
-      },
-      () => {},
-    );
-  });
+  return {
+    get() {
+      return findTarget(this, stringifiedName, false);
+    },
+  };
 }

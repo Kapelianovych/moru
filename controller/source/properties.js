@@ -2,35 +2,31 @@
  * @import { CustomElement } from "./controller.js";
  */
 
-import { hookIntoProperty } from "./hook-into-property.js";
+import { callWatchers } from "./watch.js";
 
 /**
- * @param {unknown} _
- * @param {ClassFieldDecoratorContext<CustomElement>} context
+ * @template A
+ * @param {ClassAccessorDecoratorTarget<CustomElement, A>} target
+ * @param {ClassAccessorDecoratorContext<CustomElement, A>} context
+ * @returns {ClassAccessorDecoratorResult<CustomElement, A>}
  */
-export function property(_, context) {
+export function property(target, context) {
   const properties =
     /**
-     * @type {Map<string | symbol, Set<string | symbol>>}
+     * @type {Map<string | symbol, Set<ClassMethodDecoratorContext['access']['get']>>}
      */
     (context.metadata.properties ??= new Map());
 
   properties.set(context.name, new Set());
 
-  context.addInitializer(function () {
-    hookIntoProperty(
-      this,
-      context.name,
-      (value) => value,
-      (value, set, currentValue) => {
-        if (!Object.is(value, currentValue)) {
-          set(value);
-          properties.get(context.name)?.forEach((watcher) => {
-            // @ts-expect-error method signature does not exist yet
-            this[watcher]();
-          });
-        }
-      },
-    );
-  });
+  return {
+    set(value) {
+      const currentValue = target.get.call(this);
+
+      if (!Object.is(value, currentValue)) {
+        target.set.call(this, value);
+        callWatchers(this, context.name, properties);
+      }
+    },
+  };
 }

@@ -73,12 +73,13 @@
  */
 
 export { bound } from "./bound.js";
+export { watch } from "./watch.js";
 export { observe } from "./observers.js";
 export { property } from "./properties.js";
+export { attribute } from "./attributes.js";
 export { controller } from "./controller.js";
 export { event, listen } from "./events.js";
 export { target, targets } from "./targets.js";
-export { watch, attribute } from "./attributes.js";
 export { inject, service, container, InjectRequestEvent } from "./di.js";
 export {
   provide,

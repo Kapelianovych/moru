@@ -2,8 +2,6 @@
  * @import { CustomElement } from './controller.js'
  */
 
-import { hookIntoProperty } from "./hook-into-property.js";
-
 /**
  * @private
  * @typedef {Object} ContextualisedCustomElement
@@ -83,17 +81,12 @@ export class ContextRequestEvent extends Event {
 }
 
 /**
- * @param {unknown} _
- * @param {|
- *   ClassFieldDecoratorContext<
- *     CustomElement & ContextualisedCustomElement
- *   >
- *   | ClassGetterDecoratorContext<
- *       CustomElement & ContextualisedCustomElement
- *     >
- * } context
+ * @template A
+ * @param {ClassAccessorDecoratorTarget<CustomElement & ContextualisedCustomElement, A>} target
+ * @param {ClassAccessorDecoratorContext<CustomElement & ContextualisedCustomElement, A>} context
+ * @returns {ClassAccessorDecoratorResult<CustomElement & ContextualisedCustomElement, A>}
  */
-export function provide(_, context) {
+export function provide(target, context) {
   const providers =
     /**
      * @type {Set<string | symbol>}
@@ -109,32 +102,35 @@ export function provide(_, context) {
     }
 
     this.$registeredConsumersPerContext.set(context.name, new Set());
-
-    hookIntoProperty(
-      this,
-      context.name,
-      (value) => value,
-      (value, set, currentValue) => {
-        if (!Object.is(value, currentValue)) {
-          set(value);
-          this.$registeredConsumersPerContext
-            ?.get(context.name)
-            ?.forEach((consume) => {
-              consume(value);
-            });
-        }
-      },
-    );
   });
+
+  return {
+    set(value) {
+      const currentValue = target.get.call(this);
+
+      if (!Object.is(value, currentValue)) {
+        target.set.call(this, value);
+        this.$registeredConsumersPerContext
+          ?.get(context.name)
+          ?.forEach((consume) => {
+            consume(value);
+          });
+      }
+    },
+  };
 }
 
 /**
  * @param {unknown} _
- * @param {ClassFieldDecoratorContext<CustomElement> | ClassSetterDecoratorContext<CustomElement>} context
+ * @param {|
+ *  ClassFieldDecoratorContext<CustomElement>
+ *  | ClassSetterDecoratorContext<CustomElement>
+ *  | ClassAccessorDecoratorContext<CustomElement>
+ * } context
  */
 export function consume(_, context) {
   context.addInitializer(function () {
-    initialiseConsumer(this, context.name);
+    initialiseConsumer(this, context);
   });
 }
 
@@ -191,17 +187,19 @@ function initialiseContextListener(classInstance, providers) {
 
 /**
  * @param {CustomElement} classInstance
- * @param {string | symbol} key
+ * @param {|
+ *  ClassFieldDecoratorContext<CustomElement>
+ *  | ClassSetterDecoratorContext<CustomElement>
+ *  | ClassAccessorDecoratorContext<CustomElement>
+ * } context
  */
-function initialiseConsumer(classInstance, key) {
+function initialiseConsumer(classInstance, context) {
   classInstance.$initialisers?.().add(() => {
     classInstance.dispatchEvent(
       new ContextRequestEvent(
-        createContext(key),
+        createContext(context.name),
         (value, unsubscribe) => {
-          // @ts-expect-error custom element can have any property,
-          // so this is valid even though TS does not know that
-          classInstance[key] = value;
+          context.access.set(classInstance, value);
 
           if (unsubscribe) {
             classInstance.$disposals?.().add(unsubscribe);
@@ -214,6 +212,6 @@ function initialiseConsumer(classInstance, key) {
 
   classInstance.$disposals?.().add(() => {
     // Initialise consumer again in case node will be reattached to DOM.
-    initialiseConsumer(classInstance, key);
+    initialiseConsumer(classInstance, context);
   });
 }
