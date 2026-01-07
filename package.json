@@ -7,11 +7,7 @@
     "./server",
     "./website",
     "./controller",
-    "./vite-plugin",
-    "./parcel/namer",
-    "./parcel/config",
-    "./parcel/resolver",
-    "./parcel/transformer"
+    "./vite-plugin"
   ],
   "scripts": {
     "format": "prettier . --write",

@@ -1,18 +1,11 @@
 {
   "type": "module",
-  "source": "./src/**/*.page.html",
-  "scripts": {
-    "start": "parcel",
-    "build": "parcel build"
-  },
+  "scripts": {},
   "dependencies": {
     "@moru/ui": "^0",
     "@moru/store": "^0"
   },
   "devDependencies": {
-    "parcel": "^2",
-    "@moru/core": "^0",
-    "@moru/parcel-config": "^0",
-    "@parcel/config-default": "^2"
+    "@moru/core": "^0"
   }
 }
