@@ -89,11 +89,11 @@ export class ContextRequestEvent extends Event {
 export function provide(target, context) {
   const providers =
     /**
-     * @type {Set<string | symbol>}
+     * @type {Map<string | symbol, ClassAccessorDecoratorTarget<CustomElement & ContextualisedCustomElement, A>['get']>}
      */
-    (context.metadata.providers ??= new Set());
+    (context.metadata.providers ??= new Map());
 
-  providers.add(context.name);
+  providers.set(context.name, target.get);
 
   context.addInitializer(function () {
     if (!this.$registeredConsumersPerContext) {
@@ -136,7 +136,7 @@ export function consume(_, context) {
 
 /**
  * @param {CustomElement & ContextualisedCustomElement} classInstance
- * @param {Set<string | symbol>} providers
+ * @param {Map<string | symbol, ClassAccessorDecoratorTarget<CustomElement & ContextualisedCustomElement, unknown>['get']>} providers
  */
 function initialiseContextListener(classInstance, providers) {
   classInstance.addEventListener(CONTEXT_REQUEST_EVENT_NAME, (event) => {
@@ -146,7 +146,9 @@ function initialiseContextListener(classInstance, providers) {
        */
       (event);
 
-    if (providers.has(contextRequestEvent.context)) {
+    const getValue = providers.get(contextRequestEvent.context);
+
+    if (getValue != null) {
       event.stopImmediatePropagation();
 
       const dispose = () => {
@@ -173,14 +175,7 @@ function initialiseContextListener(classInstance, providers) {
         ?.get(contextRequestEvent.context)
         ?.add(provide);
 
-      provide(
-        classInstance[
-          /**
-           * @type {keyof CustomElement}
-           */
-          (contextRequestEvent.context)
-        ],
-      );
+      provide(getValue.call(classInstance));
     }
   });
 }
