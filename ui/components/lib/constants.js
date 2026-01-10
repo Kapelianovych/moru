@@ -17,6 +17,7 @@ export const Class = Object.freeze({
   Video: "v",
   PositionedContainer: "pc",
   Dialog: "d",
+  Grid: "g",
 });
 
 /**

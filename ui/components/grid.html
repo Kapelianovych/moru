@@ -1,0 +1,60 @@
+<import from="@moru/core/only.html" />
+<import from="./element.html" />
+
+<only key="{{ url.current }}">
+  <style portal="{{ rootContext.headPortalName }}">
+    .{{ Class.Grid }} {
+      display: inline-grid;
+      grid-auto-rows: 1fr;
+      grid-auto-columns: 1fr;
+    }
+  </style>
+</only>
+
+<element
+  expand="{{ other }}"
+  assign:id
+  assign:classes="elementClasses"
+  assign:rest-props="restProps"
+>
+  <style portal="{{ rootContext.headPortalName }}">
+    .{{ id }} {
+      {{ css }}
+    }
+  </style>
+
+  <div
+    class="
+      {{ elementClasses }}
+      {{ Class.Grid }}
+      {{ classes }}
+    "
+    expand="{{ restProps }}"
+  >
+    <slot />
+  </div>
+</element>
+
+<script type="module" build>
+  import { Class } from "./lib/constants.js";
+  import { useRootContext } from "./lib/root-context.js";
+  import { createGridTemplateProperty } from "./lib/transformers/grid-layout.js";
+  import {
+    compileCss,
+    createSinglePropertyTransformer,
+  } from "./lib/compile-css.js";
+
+  const {
+    class: classes = "",
+    layout,
+    "auto-placement": autoPlacement,
+    ...other
+  } = props;
+
+  const rootContext = useRootContext(buildStore);
+
+  const css = `
+    ${compileCss(layout, createGridTemplateProperty)}
+    ${compileCss(autoPlacement, createSinglePropertyTransformer("grid-auto-flow"))}
+  `.trim();
+</script>
