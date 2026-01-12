@@ -26,10 +26,12 @@
 
   const textTag =
     kind != null
-      ? kind.startsWith("h")
+      ? /h(?:eading)?-?\d/.test(kind)
         ? `h${kind[kind.length - 1]}`
-        : kind.startsWith("p")
+        : /p(?:aragraph)?\s*$/.test(kind)
           ? "p"
-          : "span"
+          : /pre(?:formatted)?/.test(kind)
+            ? "pre"
+            : "span"
       : "span";
 </script>
