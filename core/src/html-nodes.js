@@ -217,6 +217,16 @@ import { append, removeElement } from "domutils";
  */
 
 /**
+ * @typedef {Element &
+ *   {
+ *     attribs: HtmlAttributes<
+ *       [HtmlRequiredAttribute<"tag">]
+ *     >
+ *   }
+ * } HTMLDynamicElement
+ */
+
+/**
  * @param {AnyNode} node
  * @returns {Location}
  */
@@ -384,4 +394,12 @@ export function isHtmlSlottableElement(node) {
  */
 export function isHtmlTransferrableElement(node) {
   return isTag(node) && "portal" in node.attribs;
+}
+
+/**
+ * @param {AnyNode} node
+ * @returns {node is HTMLDynamicElement}
+ */
+export function isHtmlDynamicElement(node) {
+  return isTag(node) && node.tagName === "dynamic";
 }

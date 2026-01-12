@@ -57,10 +57,10 @@ export function hasAnyInHtmlExpression(text) {
  */
 export async function evaluateInHtmlExpressions(
   {
-    imports: _,
-    exports: __,
-    buildScripts: ___,
-    getParentMarkupDefinitionFor: _____,
+    imports: _0,
+    exports: _1,
+    buildScripts: _2,
+    getParentMarkupDefinitionFor: _3,
     markupDefinitions,
     portals,
     components,

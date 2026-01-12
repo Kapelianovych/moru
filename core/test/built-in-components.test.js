@@ -521,4 +521,109 @@ suite("built-in components", () => {
       },
     );
   });
+
+  suite("dynamic", () => {
+    test("dynamic should resolve to a static tag", async () => {
+      const output = await compile('<dynamic tag="div" />');
+
+      equal(output, "<div></div>");
+    });
+
+    test("dynamic should resolve to a dynamic tag", async () => {
+      const output = await compile("<dynamic tag=\"{{ 'div' }}\" />");
+
+      equal(output, "<div></div>");
+    });
+
+    test("dynamic requires the tag attribute", async () => {
+      const publish = mock.fn();
+
+      await compile("<dynamic />", { diagnostics: { publish } });
+
+      equal(publish.mock.callCount(), 1);
+      equal(
+        publish.mock.calls[0].arguments[0].tag,
+        MessageTag.MissingDynamicTagExpression,
+      );
+    });
+
+    test("the tag attribute should have a value", async () => {
+      const publish = mock.fn();
+
+      await compile('<dynamic tag="" />', { diagnostics: { publish } });
+
+      equal(publish.mock.callCount(), 1);
+      equal(
+        publish.mock.calls[0].arguments[0].tag,
+        MessageTag.MissingDynamicTagExpression,
+      );
+    });
+
+    test("dynamic can't render built-in component", async () => {
+      const publish = mock.fn();
+
+      await compile('<dynamic tag="if" />', { diagnostics: { publish } });
+
+      equal(publish.mock.callCount(), 1);
+      equal(
+        publish.mock.calls[0].arguments[0].tag,
+        MessageTag.DynamicReservedComponentTag,
+      );
+    });
+
+    test("dynamic renders custom component", async () => {
+      const output = await compile(
+        `
+          <import from="foo.html" />
+
+          <dynamic tag="foo" />
+        `,
+        {
+          async readFileContent() {
+            return "1";
+          },
+        },
+      );
+
+      equal(output, "1");
+    });
+
+    test("dynamic renders children of custom component", async () => {
+      const output = await compile(
+        `
+          <import from="foo.html" />
+
+          <dynamic tag="foo">
+            1
+          </dynamic>
+        `,
+        {
+          async readFileContent() {
+            return "<div><slot /></div>";
+          },
+        },
+      );
+
+      match(output, /<div>\s+1\s+<\/div>/);
+    });
+
+    test("dynamic forwards all attributes to resolved element", async () => {
+      const output = await compile(
+        `
+          <import from="foo.html" />
+
+          <dynamic tag="foo" data-bar="2">
+            1
+          </dynamic>
+        `,
+        {
+          async readFileContent() {
+            return '<div expand="{{ props }}"><slot /></div>';
+          },
+        },
+      );
+
+      match(output, /<div\s+data-bar="2">\s+1\s+<\/div>/);
+    });
+  });
 });

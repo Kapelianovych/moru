@@ -6,7 +6,8 @@
   assign:classes="elementClasses"
   assign:rest-props="elementRestProps"
 >
-  <span
+  <dynamic
+    tag="{{ textTag }}"
     class="
       {{ elementClasses }}
       {{ Class.Text }}
@@ -15,11 +16,20 @@
     expand="{{ elementRestProps }}"
   >
     <slot />
-  </span>
+  </dynamic>
 </typography>
 
 <script type="module" build>
   import { Class } from "./lib/constants.js";
 
-  const { class: classes = "", ...restProps } = props;
+  const { class: classes = "", kind, ...restProps } = props;
+
+  const textTag =
+    kind != null
+      ? kind.startsWith("h")
+        ? `h${kind[kind.length - 1]}`
+        : kind.startsWith("p")
+          ? "p"
+          : "span"
+      : "span";
 </script>

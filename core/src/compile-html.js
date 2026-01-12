@@ -29,6 +29,7 @@ import {
 } from "./collect-html-nodes.js";
 import { evaluateLeafSlots } from "./evaluate-leaf-slots.js";
 import { createSlotContentCompilersForComponents } from "./slot-content-compiler.js";
+import { evaluateDynamics } from "./evaluate-dynamics.js";
 
 /**
  * @param {Document} ast
@@ -199,6 +200,12 @@ async function preCompileScope(options) {
     options.htmlNodesCollection,
     options.localThis,
     options.onAfterRender,
+    options.file,
+    options.compilerOptions,
+  );
+
+  await evaluateDynamics(
+    options.htmlNodesCollection,
     options.file,
     options.compilerOptions,
   );

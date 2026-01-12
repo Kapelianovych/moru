@@ -17,6 +17,7 @@
  *   HtmlRawElement,
  *   HtmlSlotElement,
  *   HtmlTransferrableElement,
+ *   HTMLDynamicElement,
  * } from "./html-nodes.js";
  */
 
@@ -54,9 +55,10 @@ import {
   isHtmlSlotElement,
   isHtmlStyleElement,
   isHtmlTransferrableElement,
+  isHtmlDynamicElement,
 } from "./html-nodes.js";
 
-const RESERVED_HTML_ELEMENT_TAGS = [
+export const RESERVED_HTML_ELEMENT_TAGS = [
   "if",
   "else",
   "else-if",
@@ -69,6 +71,7 @@ const RESERVED_HTML_ELEMENT_TAGS = [
   "fragment",
   "style",
   "slot",
+  "dynamic",
 ];
 const ASSIGN_ATTRIBUTE_PREFIX = "assign:";
 const SUPPORTED_IMPORT_EXTENSIONS = ["svg", "html"];
@@ -103,6 +106,7 @@ const SUPPORTED_IMPORT_EXTENSIONS = ["svg", "html"];
  * @property {Array<Element>} rebaseableElements Elements with attributes which may contain URLs.
  * @property {Array<HtmlTransferrableElement>} transferrableElements
  * @property {Array<Element>} reusableMarkupReferences
+ * @property {Array<HTMLDynamicElement>} dynamicElements
  */
 
 /**
@@ -126,6 +130,7 @@ export function createEmptyHtmlNodesCollection() {
     conditionals: [],
     buildScripts: [],
     clientScripts: [],
+    dynamicElements: [],
     rebaseableElements: [],
     transferrableElements: [],
     reusableMarkupReferences: [],
@@ -479,6 +484,21 @@ export function collectHtmlNodes(parent, nodes, file, options) {
           if (!node.data.trim()) {
             removeElement(node);
           }
+        },
+      }),
+      /**
+       * @satisfies {HtmlVisitor<HTMLDynamicElement>}
+       */
+      ({
+        matches: isHtmlDynamicElement,
+        enter(node) {
+          lastForElementGroup = null;
+          lastConditionalElementGroup = null;
+          firstNonImportElementEncountered = true;
+
+          nodes.dynamicElements.push(node);
+
+          return false;
         },
       }),
       /** @satisfies {HtmlVisitor<Element>} */ ({

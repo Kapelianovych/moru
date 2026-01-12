@@ -255,6 +255,35 @@ export class DiagnosticsReporter {
             this.#highlightedRegion(message),
         );
         break;
+      case MessageTag.MissingDynamicTagExpression:
+        this.#error(
+          "The " +
+            colors.bold("dynamic") +
+            " component must a non empty " +
+            colors.magenta("tag") +
+            " attribute.\n" +
+            "Found in: " +
+            colors.magenta(message.sourceFile.url) +
+            ".\n" +
+            this.#highlightedRegion(message),
+        );
+        break;
+      case MessageTag.DynamicReservedComponentTag:
+        this.#error(
+          "The " +
+            colors.bold("tag") +
+            " attribute of the " +
+            colors.bold("dynamic") +
+            " component cannot be resolved to a built-in component." +
+            "\nThe current value is " +
+            colors.magenta(message.tagName) +
+            ".\n" +
+            "Found in: " +
+            colors.magenta(message.sourceFile.url) +
+            ".\n" +
+            this.#highlightedRegion(message),
+        );
+        break;
     }
   }
 

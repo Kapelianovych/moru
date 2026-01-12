@@ -25,6 +25,8 @@ export const MessageTag = Object.freeze({
     "MissingExportedFromHtmlValueDefinition",
   InvalidExportElementPosition: "InvalidExportElementPosition",
   ComponentMissingExport: "ComponentMissingExport",
+  MissingDynamicTagExpression: "MissingDynamicTagExpression",
+  DynamicReservedComponentTag: "DynamicReservedComponentTag",
 });
 
 /**
@@ -66,6 +68,8 @@ export const MessageTag = Object.freeze({
  *   | InvalidExportElementPositionMessage
  *   | ComponentMissingExportMessage
  *   | ProhibitedReservedComponentRemappingMessage
+ *   | MissingDynamicTagExpressionMessage
+ *   | DynamicReservedComponentTagMessage
  * } AnyMessage
  */
 
@@ -173,6 +177,16 @@ export const MessageTag = Object.freeze({
  */
 
 /**
+ * @typedef {Message<typeof MessageTag.MissingDynamicTagExpression>} MissingDynamicTagExpressionMessage
+ */
+
+/**
+ * @typedef {Message<typeof MessageTag.DynamicReservedComponentTag> & {
+ *   tagName: string;
+ * }} DynamicReservedComponentTagMessage
+ */
+
+/**
  * @template {MessageTag} T
  * @param {T} tag
  * @returns {(values: Omit<Extract<AnyMessage, Message<T>>, "tag">) => Extract<AnyMessage, Message<T>>}
@@ -252,4 +266,12 @@ export const createInvalidExportElementPositionMessage = createMessageCreator(
 
 export const createComponentMissingExportMessage = createMessageCreator(
   MessageTag.ComponentMissingExport,
+);
+
+export const createMissingDynamicTagExpressionMessage = createMessageCreator(
+  MessageTag.MissingDynamicTagExpression,
+);
+
+export const createDynamicReservedComponentTagMessage = createMessageCreator(
+  MessageTag.DynamicReservedComponentTag,
 );
