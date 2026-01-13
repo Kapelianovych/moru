@@ -9,6 +9,7 @@
   assign:rest-props="restProps"
 >
   <dynamic
+    tag="{{ tag }}"
     class="
       {{ classes }}
       {{ customClasses }}
@@ -24,7 +25,13 @@
 </element>
 
 <script build>
-  const { class: customClasses = "", ...other } = props;
+  const { tag, class: customClasses = "", ...other } = props;
+
+  if (!tag.includes("-")) {
+    throw new Error(
+      `Custom tag must contain the dash character, but received "${tag}".`,
+    );
+  }
 
   let elementId;
 </script>
