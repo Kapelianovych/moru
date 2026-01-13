@@ -1,0 +1,30 @@
+<import from="./element.html" />
+
+<export name="elementId" as="id" />
+
+<element
+  expand="{{ other }}"
+  assign:id
+  assign:classes
+  assign:rest-props="restProps"
+>
+  <dynamic
+    class="
+      {{ classes }}
+      {{ customClasses }}
+    "
+    expand="{{ restProps }}"
+  >
+    <slot />
+  </dynamic>
+
+  <script build>
+    elementId = id;
+  </script>
+</element>
+
+<script build>
+  const { class: customClasses = "", ...other } = props;
+
+  let elementId;
+</script>
