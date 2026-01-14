@@ -31,7 +31,7 @@
     <input
       type="file"
       accept="{{ accept }}"
-      multiple="{{ multiple != null && multiple !== false ? '' : undefined }}"
+      multiple="{{ parseBooleanProperty(multiple) }}"
       capture="{{ capture }}"
     />
     <slot />
@@ -41,6 +41,7 @@
 <script type="module" build>
   import { Class } from "./lib/constants.js";
   import { useRootContext } from "./lib/root-context.js";
+  import { parseBooleanProperty } from "./lib/property.js";
 
   const { class: classes = "", accept, multiple, capture, ...other } = props;
 

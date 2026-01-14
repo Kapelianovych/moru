@@ -34,7 +34,7 @@
     </style>
   </if>
 
-  <if condition="{{ multiline != null && multiline !== false }}">
+  <if condition="{{ parseBooleanProperty(multiline, 'true') }}">
     <textarea
       class="
         {{ elementClasses }}
@@ -59,6 +59,7 @@
 
 <script type="module" build>
   import { useRootContext } from "./lib/root-context.js";
+  import { parseBooleanProperty } from "./lib/property.js";
   import { Class, CustomProperty } from "./lib/constants.js";
   import {
     compileCss,

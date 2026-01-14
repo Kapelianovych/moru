@@ -3,7 +3,7 @@
 
 <import from="./element.html" />
 
-<if condition="{{ includeGlobalStylesheet === '' || includeGlobalStylesheet }}">
+<if condition="{{ parseBooleanProperty(includeGlobalStylesheet, 'true') }}">
   <only key="{{ url.current }}">
     <style portal="{{ context.headPortalName }}">
       html,
@@ -69,6 +69,7 @@
 </context-provider>
 
 <script type="module" build>
+  import { parseBooleanProperty } from "./lib/property.js";
   import { Class, CustomProperty } from "./lib/constants.js";
   import { ROOT_CONTEXT, createRootContext } from "./lib/root-context.js";
   import {

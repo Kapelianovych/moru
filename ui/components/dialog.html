@@ -14,12 +14,11 @@
 
 <dialog
   id="{{ id }}"
-  open="{{ open }}"
   class="
     {{ Class.Dialog }}
     {{ classes }}
   "
-  popover="{{ popover }}"
+  popover="{{ parseBooleanProperty(popover) }}"
   closedby="{{ closedby }}"
 >
   <box expand="{{ other }}">
@@ -30,8 +29,9 @@
 <script type="module" build>
   import { Class } from "./lib/constants.js";
   import { useRootContext } from "./lib/root-context.js";
+  import { parseBooleanProperty } from "./lib/property.js";
 
-  const { id, class: classes = "", closedby, open, popover, ...other } = props;
+  const { id, class: classes = "", closedby, popover, ...other } = props;
 
   const rootContext = useRootContext(buildStore);
 </script>

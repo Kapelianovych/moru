@@ -28,7 +28,10 @@
     "
     expand="{{ restProps }}"
   >
-    <input type="{{ group ? 'radio' : 'checkbox' }}" name="{{ group }}" />
+    <input
+      type="{{ group != null ? 'radio' : 'checkbox' }}"
+      name="{{ group }}"
+    />
     <slot />
   </label>
 </element>

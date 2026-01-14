@@ -22,10 +22,10 @@
       {{ Class.Video }}
       {{ classes }}
     "
-    autoplay="{{ normaliseBooleanProperty(autoplay) }}"
-    controls="{{ normaliseBooleanProperty(controls) }}"
-    loop="{{ normaliseBooleanProperty(loop) }}"
-    muted="{{ normaliseBooleanProperty(muted) }}"
+    autoplay="{{ parseBooleanProperty(autoplay) }}"
+    controls="{{ parseBooleanProperty(controls) }}"
+    loop="{{ parseBooleanProperty(loop) }}"
+    muted="{{ parseBooleanProperty(muted) }}"
     expand="{{ restProps }}"
   >
     <for each="{{ sources }}">
@@ -39,7 +39,7 @@
           kind="{{ item.kind }}"
           label="{{ item.label }}"
           srclang="{{ item.language }}"
-          default="{{ normaliseBooleanProperty(item.default) }}"
+          default="{{ parseBooleanProperty(item.default) }}"
         />
       </for>
     </if>
@@ -49,6 +49,7 @@
 <script type="module" build>
   import { Class } from "./lib/constants.js";
   import { useRootContext } from "./lib/root-context.js";
+  import { parseBooleanProperty } from "./lib/property.js";
 
   /**
    * @typedef {Object} VideoSource
@@ -97,11 +98,4 @@
   }
 
   const rootContext = useRootContext(buildStore);
-
-  /**
-   * @param {string | boolean | null | undefined}
-   */
-  function normaliseBooleanProperty(value) {
-    return value != null && value !== false ? "" : undefined;
-  }
 </script>
