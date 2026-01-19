@@ -13,6 +13,7 @@ import { session } from "./session.js";
 
 /**
  * @typedef {Object} Service
+ * @property {function(): void} [dispose]
  */
 
 /**
@@ -76,6 +77,10 @@ export class Container {
    * @type {Map<string, Service>}
    */
   #singletons = new Map();
+  /**
+   * @type {Array<Service>}
+   */
+  #sessionLivedServices = [];
 
   /**
    * @param {Array<ServiceConstructor>} services
@@ -120,10 +125,29 @@ export class Container {
 
         if (isSingleton) {
           this.#singletons.set(key, service);
+        } else {
+          this.#sessionLivedServices.push(service);
         }
       }
 
       return service;
+    }
+  }
+
+  /**
+   * @param {'session' | 'all'} what
+   */
+  dispose(what) {
+    this.#sessionLivedServices.forEach((service) => {
+      service.dispose?.();
+    });
+    this.#sessionLivedServices.length = 0;
+
+    if (what === "all") {
+      this.#singletons.forEach((service) => {
+        service.dispose?.();
+      });
+      this.#singletons.clear();
     }
   }
 }

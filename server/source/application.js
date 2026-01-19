@@ -186,6 +186,8 @@ export class Application {
             }
           }
 
+          this.#container.dispose("session");
+
           if (!handled) {
             response.statusCode = HttpStatus.NotFound;
             response.end();
@@ -193,5 +195,9 @@ export class Application {
         },
       );
     };
+  }
+
+  dispose() {
+    this.#container.dispose("all");
   }
 }
