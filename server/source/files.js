@@ -1,54 +1,68 @@
-/**
- * @import { RequestHandler } from "./handle.js";
- */
-
-import { join, resolve } from "node:path";
-import { createReadStream, existsSync } from "node:fs";
+import { sep, resolve, extname } from "node:path";
+import { existsSync, createReadStream } from "node:fs";
 
 import mime from "mime";
 
-import { extractUrl } from "./request.js";
-import { HttpMethod, route } from "./route.js";
+import { parameter } from "./session.js";
+import {
+  handler,
+  HandlerResponse,
+  HttpMethod,
+  HttpStatus,
+  SkipHandler,
+} from "./handler.js";
 
-/**
- * @param {string} directory
- * @return {RequestHandler}
- */
-export function files(directory) {
-  return route({
-    path: "/",
-    method: HttpMethod.Get,
-    matchWholeUrl: false,
-    handler(request, response, next) {
-      const url = extractUrl(request);
-      let filePath = resolve(
-        ...directory.split("/"),
-        ...url.pathname.split("/"),
+@handler({
+  path: "...slug",
+  method: HttpMethod.Get,
+})
+export class StaticFilesHandler {
+  /**
+   * @type {string}
+   */
+  @parameter() #slug = "";
+  /**
+   * @type {string}
+   */
+  #prefix;
+
+  /**
+   * @param {string} [prefix]
+   */
+  constructor(prefix) {
+    this.#prefix = prefix ?? "";
+  }
+
+  handle() {
+    let filePath = resolve(this.#prefix, this.#slug.slice(1));
+    const extension = extname(filePath);
+    let mimeType = mime.getType(extension);
+
+    if (extension.length === 0) {
+      filePath = `${filePath}${filePath.endsWith(sep) ? "" : sep}index.html`;
+      mimeType =
+        /**
+         * @type {string}
+         */
+        (mime.getType(".html"));
+    }
+
+    mimeType ??=
+      /**
+       * @type {string}
+       */
+      (mime.getType(".txt"));
+
+    if (existsSync(filePath)) {
+      return new HandlerResponse(
+        HttpStatus.Ok,
+        {
+          "content-type": mimeType,
+        },
+        createReadStream(filePath),
       );
-
-      if (existsSync(filePath)) {
-        const mimeType = mime.getType(filePath);
-        const indexFilePath = join(filePath, "index.html");
-
-        if (mimeType != null) {
-          response.statusCode = 200;
-          response.setHeader("content-type", mimeType);
-        } else if (existsSync(indexFilePath)) {
-          response.statusCode = 200;
-          response.setHeader("content-type", "text/html");
-          filePath = indexFilePath;
-        } else {
-          filePath = "";
-        }
-
-        if (filePath.length > 0) {
-          createReadStream(filePath).pipe(response);
-        } else {
-          next();
-        }
-      } else {
-        next();
-      }
-    },
-  });
+    } else {
+      return SkipHandler;
+    }
+  }
 }

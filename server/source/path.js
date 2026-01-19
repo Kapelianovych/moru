@@ -1,12 +1,16 @@
-const pathnameParameterRe = /:([^/:\\]+):?/g;
+const pathnameParameterRe = /:(.+?)(?::|\\\/|$)/g;
+const pathnameTakeAllParameterRe = /\\\.\\\.\\\.(.+)/g;
+const specialReSymbolsToEscape = /[.[\]()*{}/]/g;
 
 /**
  * @param {string} pathname
- * @param {boolean} exact
  * @returns {RegExp}
  */
-export function pathToRegExp(pathname, exact) {
-  let preparedPathname = pathname.replaceAll("/", "\\/");
+export function pathToRegExp(pathname) {
+  let preparedPathname = pathname
+    .replaceAll(specialReSymbolsToEscape, "\\$&")
+    .replaceAll(pathnameParameterRe, "(?<$1>.+)")
+    .replaceAll(pathnameTakeAllParameterRe, "(?<$1>.+)");
 
   if (preparedPathname.endsWith("/")) {
     preparedPathname += "?";
@@ -14,12 +18,7 @@ export function pathToRegExp(pathname, exact) {
     preparedPathname += "\\/?";
   }
 
-  preparedPathname = preparedPathname.replaceAll(
-    pathnameParameterRe,
-    "(?<$1>[^/]+)",
-  );
-
-  return new RegExp(`^${preparedPathname}${exact ? "(?:$|\\?)" : ""}`);
+  return new RegExp(`^${preparedPathname}(?:$|\\?)`);
 }
 
 /**

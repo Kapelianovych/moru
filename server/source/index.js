@@ -1,24 +1,41 @@
 /**
- * @import { RouteOptions as _RouteOptions } from "./route.js";
- * @import { RequestHandler as _RequestHandler } from "./handle.js";
+ * @import { Service as _Service } from "./service.js";
+ * @import { Interceptor as _Interceptor } from "./interceptor.js";
+ * @import {
+ *   Handler as _Handler,
+ *   PossibleResponseValue as _PossibleResponseValue
+ * } from "./handler.js";
  */
 
 /**
- * @typedef {_RouteOptions} RouteOptions
+ * @template {PossibleResponseValue} A
+ * @typedef {_Handler<A>} Handler
  */
 
 /**
- * @typedef {_RequestHandler} RequestHandler
+ * @typedef {_PossibleResponseValue} PossibleResponseValue
  */
 
-export { files } from "./files.js";
-export { handle } from "./handle.js";
-export { sendJson } from "./response.js";
-export { route, HttpMethod } from "./route.js";
+/**
+ * @typedef {_Service} Service
+ */
+
+/**
+ * @template {PossibleResponseValue} A
+ * @template {PossibleResponseValue} B
+ * @typedef {_Interceptor<A, B>} Interceptor
+ */
+
+export { factory } from "./factory.js";
+export { interceptor } from "./interceptor.js";
+export { Application } from "./application.js";
+export { service, inject } from "./service.js";
+export { StaticFilesHandler } from "./files.js";
+export { parameter, query, header } from "./session.js";
 export {
-  extractUrl,
-  extractMethod,
-  assignCustomData,
-  extractParameters,
-  PredefinedCustomDataKey,
-} from "./request.js";
+  handler,
+  HttpMethod,
+  HttpStatus,
+  SkipHandler,
+  HandlerResponse,
+} from "./handler.js";
