@@ -72,7 +72,7 @@ export class Container {
   /**
    * @type {Map<string, ServiceConstructor>}
    */
-  #services;
+  #services = new Map();
   /**
    * @type {Map<string, Service>}
    */
@@ -86,22 +86,20 @@ export class Container {
    * @param {Array<ServiceConstructor>} services
    */
   constructor(services) {
-    this.#services = new Map(
-      services.map((constructor) => {
-        return [
+    for (const serviceConstructor of services) {
+      this.#services.set(
+        /**
+         * @type {string}
+         */
+        (
           /**
-           * @type {string}
+           * @type {DecoratorMetadataObject}
            */
-          (
-            /**
-             * @type {NonNullable<DecoratorMetadataObject>}
-             */
-            (constructor[Symbol.metadata]).key
-          ),
-          constructor,
-        ];
-      }),
-    );
+          (serviceConstructor[Symbol.metadata]).key
+        ),
+        serviceConstructor,
+      );
+    }
   }
 
   /**
@@ -114,7 +112,7 @@ export class Container {
     if (serviceConstructor != null) {
       const isSingleton =
         /**
-         * @type {NonNullable<DecoratorMetadataObject>}
+         * @type {DecoratorMetadataObject}
          */
         (serviceConstructor[Symbol.metadata]).singleton;
 

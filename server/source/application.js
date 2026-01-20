@@ -13,6 +13,7 @@ import { Container } from "./service.js";
 import {
   HandlerResponse,
   handlerSession,
+  HttpMethod,
   HttpStatus,
   SkipHandler,
 } from "./handler.js";
@@ -92,8 +93,14 @@ export class Application {
        */
       (handlerConstructor[Symbol.metadata]);
 
+    const incomingMethod =
+      /**
+       * @type {string}
+       */
+      (request.method).toLowerCase();
+
     if (
-      handlerMetadata.method === request.method?.toLowerCase() &&
+      handlerMetadata.method === incomingMethod &&
       /**
        * @type {RegExp}
        */
@@ -135,7 +142,10 @@ export class Application {
 
         this.#sendUserResponse(response, userResponse.payload);
       } else {
-        response.statusCode = HttpStatus.Ok;
+        response.statusCode =
+          incomingMethod === HttpMethod.Post
+            ? HttpStatus.Created
+            : HttpStatus.Ok;
         this.#sendUserResponse(response, userResponse);
       }
 
