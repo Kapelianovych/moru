@@ -1,5 +1,5 @@
-import { page } from "vitest/browser";
 import { controller } from "@moru/controller";
+import { page, userEvent } from "vitest/browser";
 import { describe, expect, test, vi } from "vitest";
 
 describe("actions", () => {
@@ -109,5 +109,30 @@ describe("actions", () => {
 
     expect(first.hello).not.toHaveBeenCalledOnce();
     expect(second.hello).toHaveBeenCalledOnce();
+  });
+
+  test("actions can be defined dynamically", async () => {
+    const fn = vi.fn();
+
+    @controller
+    class ForTest4Element extends HTMLElement {
+      hello() {
+        fn();
+      }
+    }
+
+    document.body.innerHTML = `
+      <for-test4>
+        <button></button>
+      </for-test4>
+    `;
+
+    const button = page.getByRole("button").element();
+    await userEvent.click(button);
+    expect(fn).not.toHaveBeenCalledOnce();
+
+    button.setAttribute("data-actions", "click:for-test4.hello");
+    await userEvent.click(button);
+    expect(fn).toHaveBeenCalledOnce();
   });
 });
