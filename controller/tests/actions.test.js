@@ -135,4 +135,34 @@ describe("actions", () => {
     await userEvent.click(button);
     expect(fn).toHaveBeenCalledOnce();
   });
+
+  test("actions can be defined on dynamically added elements", async () => {
+    const fn = vi.fn();
+
+    @controller
+    class ForTest5Element extends HTMLElement {
+      hello() {
+        fn();
+      }
+    }
+
+    document.body.innerHTML = `
+      <for-test5 />
+    `;
+
+    const forTestElement =
+      /**
+       * @type {HTMLElement | null}
+       */
+      (document.body.querySelector("for-test5"));
+
+    await expect.element(forTestElement).toBeInTheDocument();
+
+    const button = document.createElement("button");
+    button.setAttribute("data-actions", "click:for-test5.hello");
+    forTestElement?.append(button);
+
+    await userEvent.click(button);
+    expect(fn).toHaveBeenCalledOnce();
+  });
 });
