@@ -2,8 +2,6 @@
  * @import { CustomElement, CustomElementClass } from "./controller.js";
  */
 
-import { listen } from "./events.js";
-
 // @ts-expect-error This symbol is not standardized yet,
 // so it might be missing.
 Symbol.metadata ??= Symbol("symbol.metadata");
@@ -194,11 +192,10 @@ export function container(...serviceClasses) {
        */
       #cache = new Map();
 
-      @listen [INJECT_REQUEST_EVENT_NAME] = this;
-
       constructor() {
         super();
 
+        this.addEventListener(INJECT_REQUEST_EVENT_NAME, this);
         this.#setupCacheDisposal();
       }
 
