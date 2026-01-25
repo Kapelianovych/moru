@@ -1,6 +1,8 @@
 import { attribute, controller } from "@moru/controller";
 import { describe, expect, test } from "vitest";
 
+import { render } from "./render.js";
+
 describe("attributes", () => {
   test("explicitly defined attribute value should be set to a bound property", () => {
     @controller
@@ -8,15 +10,15 @@ describe("attributes", () => {
       @attribute accessor foo = "1";
     }
 
-    document.body.innerHTML = `
+    const container = render(`
       <attribute-test foo="2" />
-    `;
+    `);
 
     const element =
       /**
        * @type {AttributeTestElement}
        */
-      (document.body.querySelector("attribute-test"));
+      (container.querySelector("attribute-test"));
 
     expect(element.foo).toBe("2");
   });
@@ -27,15 +29,15 @@ describe("attributes", () => {
       @attribute accessor foo = "1";
     }
 
-    document.body.innerHTML = `
+    const container = render(`
       <attribute-test2 />
-    `;
+    `);
 
     const element =
       /**
        * @type {AttributeTest2Element}
        */
-      (document.body.querySelector("attribute-test2"));
+      (container.querySelector("attribute-test2"));
 
     expect(element.getAttribute("foo")).toBe("1");
   });
@@ -46,15 +48,15 @@ describe("attributes", () => {
       @attribute accessor foo = true;
     }
 
-    document.body.innerHTML = `
+    const container = render(`
       <attribute-test3 />
-    `;
+    `);
 
     const element =
       /**
        * @type {AttributeTest3Element}
        */
-      (document.body.querySelector("attribute-test3"));
+      (container.querySelector("attribute-test3"));
 
     expect(element.hasAttribute("foo")).toBe(true);
     expect(element.getAttribute("foo")).toBe("");
@@ -70,15 +72,15 @@ describe("attributes", () => {
       @attribute accessor foo = 1;
     }
 
-    document.body.innerHTML = `
+    const container = render(`
       <attribute-test4 foo="2" />
-    `;
+    `);
 
     const element =
       /**
        * @type {AttributeTest4Element}
        */
-      (document.body.querySelector("attribute-test4"));
+      (container.querySelector("attribute-test4"));
 
     expect(element.foo).toBe(2);
   });
@@ -89,15 +91,15 @@ describe("attributes", () => {
       @attribute accessor foo = 1;
     }
 
-    document.body.innerHTML = `
+    const container = render(`
       <attribute-test5 foo="1" />
-    `;
+    `);
 
     const element =
       /**
        * @type {AttributeTest5Element}
        */
-      (document.body.querySelector("attribute-test5"));
+      (container.querySelector("attribute-test5"));
 
     element.foo = 5;
 
@@ -110,15 +112,15 @@ describe("attributes", () => {
       @attribute accessor foo = 1;
     }
 
-    document.body.innerHTML = `
+    const container = render(`
       <attribute-test6 foo="1" />
-    `;
+    `);
 
     const element =
       /**
        * @type {AttributeTest6Element}
        */
-      (document.body.querySelector("attribute-test6"));
+      (container.querySelector("attribute-test6"));
 
     element.setAttribute("foo", "3");
 

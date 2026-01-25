@@ -1,6 +1,8 @@
+import { userEvent } from "vitest/browser";
 import { controller } from "@moru/controller";
-import { page, userEvent } from "vitest/browser";
 import { describe, expect, test, vi } from "vitest";
+
+import { render } from "./render.js";
 
 describe("actions", () => {
   test("action should be bound by the matching controller", async () => {
@@ -13,13 +15,19 @@ describe("actions", () => {
       }
     }
 
-    document.body.innerHTML = `
+    const container = render(`
       <for-test>
         <button data-actions="click:for-test.hello"></button>
       </for-test>
-    `;
+    `);
 
-    await page.getByRole("button").click();
+    const button =
+      /**
+       * @type {HTMLButtonElement}
+       */
+      (container.querySelector("button"));
+
+    await userEvent.click(button);
 
     expect(fn).toHaveBeenCalledOnce();
   });
@@ -36,13 +44,19 @@ describe("actions", () => {
       }
     }
 
-    document.body.innerHTML = `
+    const container = render(`
       <for-test1>
         <button data-actions="click:for-test1.hello"></button>
       </for-test1>
-    `;
+    `);
 
-    await page.getByRole("button").click();
+    const button =
+      /**
+       * @type {HTMLButtonElement}
+       */
+      (container.querySelector("button"));
+
+    await userEvent.click(button);
 
     expect(fn).toHaveBeenCalledWith("field");
   });
@@ -62,7 +76,7 @@ describe("actions", () => {
       }
     }
 
-    document.body.innerHTML = `
+    const container = render(`
       <for-test2>
         <button
           data-actions="
@@ -71,10 +85,16 @@ describe("actions", () => {
           "
         ></button>
       </for-test2>
-    `;
+    `);
 
-    await page.getByRole("button").click();
-    await page.getByRole("button").dblClick();
+    const button =
+      /**
+       * @type {HTMLButtonElement}
+       */
+      (container.querySelector("button"));
+
+    await userEvent.click(button);
+    await userEvent.dblClick(button);
 
     expect(fn).toHaveBeenCalled();
     expect(fn2).toHaveBeenCalledOnce();
@@ -86,7 +106,7 @@ describe("actions", () => {
       hello = vi.fn();
     }
 
-    document.body.innerHTML = `
+    const container = render(`
       <for-test3>
         <for-test3>
           <button
@@ -96,9 +116,15 @@ describe("actions", () => {
           ></button>
         </for-test3>
       </for-test3>
-    `;
+    `);
 
-    await page.getByRole("button").click();
+    const button =
+      /**
+       * @type {HTMLButtonElement}
+       */
+      (container.querySelector("button"));
+
+    await userEvent.click(button);
 
     const [first, second] = Array.from(
       /**
@@ -121,13 +147,17 @@ describe("actions", () => {
       }
     }
 
-    document.body.innerHTML = `
+    const container = render(`
       <for-test4>
         <button></button>
       </for-test4>
-    `;
+    `);
 
-    const button = page.getByRole("button").element();
+    const button =
+      /**
+       * @type {HTMLButtonElement}
+       */
+      (container.querySelector("button"));
     await userEvent.click(button);
     expect(fn).not.toHaveBeenCalledOnce();
 
@@ -146,9 +176,9 @@ describe("actions", () => {
       }
     }
 
-    document.body.innerHTML = `
+    render(`
       <for-test5 />
-    `;
+    `);
 
     const forTestElement =
       /**
