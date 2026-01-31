@@ -131,8 +131,8 @@ function initialiseInjectRequest(classInstance, request) {
 /**
  * @typedef {Object} Service
  * @property {ServiceConstructor} constructor
- * @property {function(): void | Promise<void>} [initialise]
- * @property {function(): void | Promise<void>} [dispose]
+ * @property {function(): void} [initialise]
+ * @property {function(): void} [dispose]
  */
 
 /**
@@ -202,10 +202,10 @@ export function container(...serviceClasses) {
       /**
        * @param {InjectRequestEvent} event
        */
-      async handleEvent(event) {
+      handleEvent(event) {
         event.stopImmediatePropagation();
 
-        await this.#fulfillInjectRequest({
+        this.#fulfillInjectRequest({
           name: event.name,
           provide: event.provide,
         });
@@ -214,7 +214,7 @@ export function container(...serviceClasses) {
       /**
        * @param {InjectRequestOptions} request
        */
-      async #fulfillInjectRequest(request) {
+      #fulfillInjectRequest(request) {
         if (this.#cache.has(request.name)) {
           request.provide(
             // @ts-expect-error The service presence is checked with the has method above.
@@ -229,15 +229,13 @@ export function container(...serviceClasses) {
             const serviceMetadata = serviceFactory[Symbol.metadata];
 
             for (const dependency of serviceMetadata.dependencies) {
-              await this.#fulfillInjectRequest({
+              this.#fulfillInjectRequest({
                 name: dependency.name,
                 provide: dependency.provide.bind(service),
               });
             }
 
-            if (service.initialise != null) {
-              await service.initialise();
-            }
+            service.initialise?.();
 
             if (serviceMetadata.singleton) {
               this.#cache.set(request.name, service);
