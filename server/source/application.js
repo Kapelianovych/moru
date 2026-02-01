@@ -7,6 +7,7 @@
  */
 
 import { Stream } from "node:stream";
+import { randomUUID } from "node:crypto";
 
 import { session } from "./session.js";
 import { Container } from "./service.js";
@@ -50,6 +51,15 @@ export class Application {
   }
 
   /**
+   * @param {InstanceType<Request>} request
+   */
+  #createFullUrl(request) {
+    return new URL(
+      `${request.headers.origin ?? "http://localhost"}${request.url}`,
+    );
+  }
+
+  /**
    * @param {HandlerConstructor<PossibleResponseValue, []>} handlerConstructor
    * @param {DecoratorMetadataObject} handlerMetadata
    */
@@ -60,21 +70,17 @@ export class Application {
        */
       (handlerMetadata.interceptors) ?? [];
 
-    const handler = new handlerConstructor();
-
     const run = interceptors.reduceRight(
       (accumulator, interceptorConstructor) => {
-        const interceptor = new interceptorConstructor();
-
         return () => {
-          return interceptor.intercept(
+          return new interceptorConstructor().intercept(
             // @ts-expect-error parameter is generic.
             accumulator,
           );
         };
       },
       () => {
-        return handler.handle();
+        return new handlerConstructor().handle();
       },
     );
 
@@ -83,44 +89,30 @@ export class Application {
 
   /**
    * @param {HandlerConstructor<PossibleResponseValue, []>} handlerConstructor
+   * @param {URL} url
    * @param {InstanceType<Request>} request
    * @param {InstanceType<Response>} response
    */
-  async #runHandlerIfMatched(handlerConstructor, request, response) {
+  async #runHandlerIfMatched(handlerConstructor, url, request, response) {
     const handlerMetadata =
       /**
        * @type {DecoratorMetadataObject}
        */
       (handlerConstructor[Symbol.metadata]);
 
-    const incomingMethod =
+    const handlerPattern =
       /**
-       * @type {string}
+       * @type {URLPattern}
        */
-      (request.method).toLowerCase();
+      (handlerMetadata.pattern);
 
-    if (
-      handlerMetadata.method === incomingMethod &&
-      /**
-       * @type {RegExp}
-       */
-      (handlerMetadata.path).test(
-        /**
-         * @type {string}
-         */
-        (request.url),
-      )
-    ) {
+    if (handlerMetadata.method === request.method && handlerPattern.test(url)) {
       /**
        * @type {PossibleResponseValue}
        */
       const userResponse = await handlerSession.run(
         {
-          path:
-            /**
-             * @type {RegExp}
-             */
-            (handlerMetadata.path),
+          pattern: handlerPattern,
         },
         () => {
           return this.#runHandler(handlerConstructor, handlerMetadata);
@@ -143,7 +135,7 @@ export class Application {
         this.#sendUserResponse(response, userResponse.payload);
       } else {
         response.statusCode =
-          incomingMethod === HttpMethod.Post
+          request.method === HttpMethod.Post
             ? HttpStatus.Created
             : HttpStatus.Ok;
         this.#sendUserResponse(response, userResponse);
@@ -176,17 +168,24 @@ export class Application {
    * @returns {RequestListener<Request, Response>}
    */
   build() {
-    return async (request, response) => {
-      const sessionId = crypto.randomUUID();
+    return (request, response) => {
+      const url = this.#createFullUrl(request);
 
-      await session.run(
-        { sessionId, request, response, container: this.#container },
+      return session.run(
+        {
+          url,
+          sessionId: randomUUID(),
+          request,
+          response,
+          container: this.#container,
+        },
         async () => {
           let handled = false;
 
           for (const handlerConstructor of this.#handlers) {
             handled = await this.#runHandlerIfMatched(
               handlerConstructor,
+              url,
               request,
               response,
             );

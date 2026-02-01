@@ -9,14 +9,14 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
 import { handlerSession } from "./handler.js";
-import { extractPathParameters } from "./path.js";
 
 /**
  * @typedef {Object} SessionContext
+ * @property {URL} url
  * @property {string} sessionId
  * @property {Container} container
- * @property {IncomingMessage} request
  * @property {ServerResponse} response
+ * @property {IncomingMessage} request
  */
 
 /**
@@ -39,108 +39,80 @@ function inferName(context) {
 }
 
 /**
- * @param {string} [name]
+ * @template {string | undefined} A
+ * @param {undefined} _
+ * @param {ClassFieldDecoratorContext<TargetContainingInstance, A>} context
  */
-export function parameter(name) {
+export function group(_, context) {
   /**
-   * @param {undefined} target
-   * @param {ClassFieldDecoratorContext<TargetContainingInstance, string>} context
+   * @param {A} initial
+   * @returns {A}
    */
-  return (target, context) => {
-    /**
-     * @param {string} initial
-     * @returns {string}
-     */
-    return (initial) => {
-      const store = session.getStore();
-      const handlerStore = handlerSession.getStore();
+  return (initial) => {
+    const store = session.getStore();
+    const handlerStore = handlerSession.getStore();
 
-      if (store != null && handlerStore != null) {
-        const parameterName = name ?? inferName(context);
+    if (store != null && handlerStore != null) {
+      const parameterName = inferName(context);
 
-        const params = extractPathParameters(
-          handlerStore.path,
-          /**
-           * @type {string}
-           */
-          (store.request.url),
-        );
+      const result =
+        /**
+         * @type {URLPatternResult}
+         */
+        (handlerStore.pattern.exec(store.url));
 
-        return params[parameterName];
-      } else {
-        return initial;
-      }
-    };
-  };
-}
-/**
- * @param {string} [name]
- */
-export function query(name) {
-  /**
-   * @param {undefined} target
-   * @param {ClassFieldDecoratorContext<TargetContainingInstance, string | Array<string> | undefined>} context
-   */
-  return (target, context) => {
-    /**
-     * @param {string | Array<string> | undefined} initial
-     * @returns {string | Array<string> | undefined}
-     */
-    return (initial) => {
-      const store = session.getStore();
-
-      if (store != null) {
-        const queryParameterName = name ?? inferName(context);
-
-        const url = new URL(
-          /**
-           * @type {string}
-           */
-          (store.request.url),
-          "http://localhost",
-        );
-
-        const values = url.searchParams.getAll(queryParameterName);
-
-        if (values.length > 1) {
-          return values;
-        } else {
-          return values[0];
+      for (const name in result) {
+        if (name === "inputs") {
+          continue;
         }
-      } else {
-        return initial;
+
+        const groups =
+          result[
+            /**
+             * @type {Exclude<keyof URLPatternResult, 'inputs'>}
+             */
+            (name)
+          ].groups;
+
+        if (parameterName in groups) {
+          return (
+            /**
+             * @type {A}
+             */
+            (groups[parameterName])
+          );
+        }
       }
-    };
+
+      return initial;
+    } else {
+      return initial;
+    }
   };
 }
 
 /**
- * @param {string} [name]
+ * @param {undefined} _
+ * @param {ClassFieldDecoratorContext<TargetContainingInstance, string | Array<string> | undefined>} context
  */
-export function header(name) {
+export function header(_, context) {
   /**
-   * @param {undefined} target
-   * @param {ClassFieldDecoratorContext<TargetContainingInstance, string | Array<string> | undefined>} context
+   * @param {string | Array<string> | undefined} initial
+   * @return {string | Array<string> | undefined}
    */
-  return (target, context) => {
-    /**
-     * @param {string | Array<string> | undefined} initial
-     * @return {string | Array<string> | undefined}
-     */
-    return (initial) => {
-      const store = session.getStore();
+  return (initial) => {
+    const store = session.getStore();
 
-      if (store != null) {
-        let headerName = name ?? inferName(context);
+    if (store != null) {
+      let headerName = inferName(context);
 
-        headerName = headerName.replaceAll(/[A-Z]/g, (letter) => {
-          return `-${letter.toLowerCase()}`;
-        });
+      headerName = headerName.replaceAll(/[A-Z]/g, (letter) => {
+        return `-${letter.toLowerCase()}`;
+      });
 
-        return store.request.headers[headerName];
-      } else {
-        return initial;
-      }
-    };
+      return store.request.headers[headerName];
+    } else {
+      return initial;
+    }
   };
 }

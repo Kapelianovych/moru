@@ -29,9 +29,9 @@
 export { factory } from "./factory.js";
 export { interceptor } from "./interceptor.js";
 export { Application } from "./application.js";
+export { group, header } from "./session.js";
 export { service, inject } from "./service.js";
 export { StaticFilesHandler } from "./files.js";
-export { parameter, query, header } from "./session.js";
 export {
   handler,
   HttpMethod,

@@ -7,7 +7,15 @@
 
 import { AsyncLocalStorage } from "node:async_hooks";
 
-import { pathToRegExp } from "./path.js";
+/**
+ * @typedef {Object} HandlerSession
+ * @property {URLPattern} pattern
+ */
+
+/**
+ * @type {AsyncLocalStorage<HandlerSession>}
+ */
+export const handlerSession = new AsyncLocalStorage();
 
 /**
  * @enum {typeof HttpStatus[keyof typeof HttpStatus]}
@@ -66,18 +74,18 @@ export const HttpStatus = Object.freeze({
  * @enum {typeof HttpMethod[keyof typeof HttpMethod]}
  */
 export const HttpMethod = Object.freeze({
-  Get: "get",
-  Put: "put",
-  Post: "post",
-  Patch: "patch",
-  Delete: "delete",
-  Options: "options",
+  Get: "GET",
+  Put: "PUT",
+  Post: "POST",
+  Patch: "PATCH",
+  Delete: "DELETE",
+  Options: "OPTIONS",
 });
 
 /**
  * @typedef {Object} HandlerOptions
- * @property {string} path
  * @property {HttpMethod} method
+ * @property {string | URLPattern | URLPatternInit} pattern
  * @property {Array<InterceptorConstructor<PossibleResponseValue, PossibleResponseValue>>} [interceptors]
  */
 
@@ -143,22 +151,17 @@ export class HandlerResponse {
  */
 export function handler(options) {
   /**
-   * @param {HandlerConstructor<T>} target
+   * @param {HandlerConstructor<T>} _
    * @param {ClassDecoratorContext<HandlerConstructor<T>>} context
    */
-  return (target, context) => {
-    context.metadata.path = pathToRegExp(options.path);
+  return (_, context) => {
+    context.metadata.pattern =
+      typeof options.pattern === "string"
+        ? new URLPattern({ pathname: options.pattern })
+        : options.pattern instanceof URLPattern
+          ? options.pattern
+          : new URLPattern(options.pattern);
     context.metadata.method = options.method;
     context.metadata.interceptors = options.interceptors;
   };
 }
-
-/**
- * @typedef {Object} HandlerSession
- * @property {RegExp} path
- */
-
-/**
- * @type {AsyncLocalStorage<HandlerSession>}
- */
-export const handlerSession = new AsyncLocalStorage();

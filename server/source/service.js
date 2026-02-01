@@ -7,7 +7,6 @@ import { session } from "./session.js";
 
 /**
  * @typedef {Object} ServiceOptions
- * @property {string} [key]
  * @property {boolean} [singleton]
  */
 
@@ -30,12 +29,8 @@ export function service(options) {
    * @param {ClassDecoratorContext<ServiceConstructor>} context
    */
   return (target, context) => {
-    let key = options?.key;
-
-    if (key == null) {
-      const name = target.name.replace(/service$/i, "");
-      key = name[0].toLowerCase() + name.slice(1);
-    }
+    const name = target.name.replace(/service$/i, "");
+    const key = name[0].toLowerCase() + name.slice(1);
 
     context.metadata.key = key;
     context.metadata.singleton = options?.singleton ?? false;
@@ -43,28 +38,19 @@ export function service(options) {
 }
 
 /**
- * @param {string} [key]
+ * @param {undefined} _
+ * @param {ClassFieldDecoratorContext<Service | Handler | Interceptor, Service>} context
  */
-export function inject(key) {
-  /**
-   * @param {undefined} target
-   * @param {ClassFieldDecoratorContext<Service | Handler | Interceptor, Service>} context
-   */
-  return (target, context) => {
-    let injectionKey = key;
+export function inject(_, context) {
+  const fieldName = String(context.name);
+  const injectionKey = context.private ? fieldName.slice(1) : fieldName;
 
-    if (injectionKey == null) {
-      const fieldName = String(context.name);
-      injectionKey = context.private ? fieldName.slice(1) : fieldName;
+  return () => {
+    const store = session.getStore();
+
+    if (store != null) {
+      return store.container.resolve(injectionKey);
     }
-
-    return () => {
-      const store = session.getStore();
-
-      if (store != null) {
-        return store.container.resolve(injectionKey);
-      }
-    };
   };
 }
 

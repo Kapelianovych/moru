@@ -3,7 +3,7 @@ import { existsSync, createReadStream } from "node:fs";
 
 import mime from "mime";
 
-import { parameter } from "./session.js";
+import { group } from "./session.js";
 import {
   handler,
   HandlerResponse,
@@ -13,14 +13,11 @@ import {
 } from "./handler.js";
 
 @handler({
-  path: "...slug",
+  pattern: "/:slug(.*)",
   method: HttpMethod.Get,
 })
 export class StaticFilesHandler {
-  /**
-   * @type {string}
-   */
-  @parameter() #slug = "";
+  @group #slug = "";
   /**
    * @type {string}
    */
