@@ -5,6 +5,12 @@
 import { createAttributeName } from "./attributes.js";
 
 /**
+ * @callback GetAccessor
+ * @param {CustomElement} object
+ * @returns {VoidFunction}
+ */
+
+/**
  * @param {string | symbol} field
  */
 export function watch(field) {
@@ -12,18 +18,21 @@ export function watch(field) {
 
   /**
    * @param {unknown} _
-   * @param {ClassMethodDecoratorContext<CustomElement>} context
+   * @param {|
+   *   ClassMethodDecoratorContext<CustomElement, VoidFunction>
+   *   | ClassFieldDecoratorContext<CustomElement, VoidFunction>
+   * } context
    */
   return (_, context) => {
     context.addInitializer(function () {
       const attributes =
         /**
-         * @type {Map<string, Set<ClassMethodDecoratorContext['access']['get']>> | undefined}
+         * @type {Map<string, Set<GetAccessor>> | undefined}
          */
         (context.metadata.attributes);
       const properties =
         /**
-         * @type {Map<string | symbol, Set<ClassMethodDecoratorContext['access']['get']>> | undefined}
+         * @type {Map<string | symbol, Set<GetAccessor>> | undefined}
          */
         (context.metadata.properties);
 
@@ -36,7 +45,7 @@ export function watch(field) {
 /**
  * @param {CustomElement} classInstance
  * @param {string | symbol} dependency
- * @param {Map<string | symbol, Set<ClassMethodDecoratorContext['access']['get']>> | undefined} watchers
+ * @param {Map<string | symbol, Set<GetAccessor>> | undefined} watchers
  */
 export function callWatchers(classInstance, dependency, watchers) {
   watchers?.get(dependency)?.forEach((getWatcher) => {
