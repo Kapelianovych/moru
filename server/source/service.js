@@ -64,9 +64,9 @@ export class Container {
    */
   #singletons = new Map();
   /**
-   * @type {Array<Service>}
+   * @type {Map<string, Array<Service>>}
    */
-  #sessionLivedServices = [];
+  #sessionLivedServices = new Map();
 
   /**
    * @param {Array<ServiceConstructor>} services
@@ -94,6 +94,7 @@ export class Container {
    */
   resolve(key) {
     const serviceConstructor = this.#services.get(key);
+    const store = session.getStore();
 
     if (serviceConstructor != null) {
       const isSingleton =
@@ -102,15 +103,18 @@ export class Container {
          */
         (serviceConstructor[Symbol.metadata]).singleton;
 
-      let service = isSingleton ? this.#singletons.get(key) : null;
+      let service = isSingleton ? this.#singletons.get(key) : undefined;
 
-      if (service == null) {
+      if (service == null && store != null) {
         service = new serviceConstructor();
 
         if (isSingleton) {
           this.#singletons.set(key, service);
         } else {
-          this.#sessionLivedServices.push(service);
+          const services =
+            this.#sessionLivedServices.get(store.sessionId) ?? [];
+          services.push(service);
+          this.#sessionLivedServices.set(store.sessionId, services);
         }
       }
 
@@ -119,19 +123,32 @@ export class Container {
   }
 
   /**
-   * @param {'session' | 'all'} what
+   * @param {string} id
+   */
+  #disposeServicesForSession(id) {
+    const sessionServices = this.#sessionLivedServices.get(id);
+    if (sessionServices != null) {
+      sessionServices.forEach((service) => {
+        service.dispose?.();
+      });
+      sessionServices.length = 0;
+    }
+  }
+
+  /**
+   * @param {(string & {}) | 'all'} what
    */
   dispose(what) {
-    this.#sessionLivedServices.forEach((service) => {
-      service.dispose?.();
-    });
-    this.#sessionLivedServices.length = 0;
-
     if (what === "all") {
+      this.#sessionLivedServices.keys().forEach((id) => {
+        this.#disposeServicesForSession(id);
+      });
       this.#singletons.forEach((service) => {
         service.dispose?.();
       });
       this.#singletons.clear();
+    } else {
+      this.#disposeServicesForSession(what);
     }
   }
 }

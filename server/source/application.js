@@ -170,13 +170,14 @@ export class Application {
   build() {
     return (request, response) => {
       const url = this.#createFullUrl(request);
+      const sessionId = randomUUID();
 
       return session.run(
         {
           url,
-          sessionId: randomUUID(),
           request,
           response,
+          sessionId,
           container: this.#container,
         },
         async () => {
@@ -195,7 +196,7 @@ export class Application {
             }
           }
 
-          this.#container.dispose("session");
+          this.#container.dispose(sessionId);
 
           if (!handled) {
             response.statusCode = HttpStatus.NotFound;
