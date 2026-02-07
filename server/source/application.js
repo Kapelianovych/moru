@@ -175,6 +175,7 @@ export class Application {
       return session.run(
         {
           url,
+          cache: {},
           request,
           response,
           sessionId,

@@ -17,6 +17,7 @@ import { handlerSession } from "./handler.js";
  * @property {Container} container
  * @property {ServerResponse} response
  * @property {IncomingMessage} request
+ * @property {Record<string, any>} cache
  */
 
 /**
@@ -126,44 +127,53 @@ export function body(_, context) {
   /**
    * @param {Promise<A>} initial
    */
-  return async (initial) => {
+  return (initial) => {
     const store = session.getStore();
 
     if (store != null) {
-      const type = store.request.headers["content-type"] ?? "text/plain";
-
-      const text = await store.request.reduce((accumulator, data) => {
-        return accumulator + data;
-      }, "");
-
-      if (type === "application/json") {
-        return JSON.parse(text);
-      } else if (type === "application/x-www-form-urlencoded") {
-        return new URLSearchParams(text).entries().reduce(
-          /**
-           * @param {Record<string, string | Array<string>>} accumulator
-           */
-          (accumulator, [key, value]) => {
-            if (accumulator[key] != null) {
-              // Handle multiple values
-              if (!Array.isArray(accumulator[key])) {
-                accumulator[key] = [accumulator[key]];
-              }
-              accumulator[key].push(value);
-            } else {
-              accumulator[key] = value;
-            }
-            return accumulator;
-          },
-          {},
-        );
-      } else if (type.includes("text/")) {
-        return text;
-      } else {
-        return new TextEncoder().encode(text).buffer;
-      }
+      store.cache.requestBody ??= parseBody(store.request);
+      return store.cache.requestBody;
     } else {
       return initial;
     }
   };
+}
+
+/**
+ * @template {typeof IncomingMessage} Request
+ * @param {InstanceType<Request>} request
+ */
+async function parseBody(request) {
+  const type = request.headers["content-type"] ?? "text/plain";
+
+  const text = await request.reduce((accumulator, data) => {
+    return accumulator + data;
+  }, "");
+
+  if (type === "application/json") {
+    return JSON.parse(text);
+  } else if (type === "application/x-www-form-urlencoded") {
+    return new URLSearchParams(text).entries().reduce(
+      /**
+       * @param {Record<string, string | Array<string>>} accumulator
+       */
+      (accumulator, [key, value]) => {
+        if (accumulator[key] != null) {
+          // Handle multiple values
+          if (!Array.isArray(accumulator[key])) {
+            accumulator[key] = [accumulator[key]];
+          }
+          accumulator[key].push(value);
+        } else {
+          accumulator[key] = value;
+        }
+        return accumulator;
+      },
+      {},
+    );
+  } else if (type.includes("text/")) {
+    return text;
+  } else {
+    return new TextEncoder().encode(text).buffer;
+  }
 }
