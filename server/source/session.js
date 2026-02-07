@@ -116,3 +116,54 @@ export function header(_, context) {
     }
   };
 }
+
+/**
+ * @template {ArrayBuffer | string | Record<string, unknown>} A
+ * @param {undefined} _
+ * @param {ClassFieldDecoratorContext<TargetContainingInstance, Promise<A>>} context
+ */
+export function body(_, context) {
+  /**
+   * @param {Promise<A>} initial
+   */
+  return async (initial) => {
+    const store = session.getStore();
+
+    if (store != null) {
+      const type = store.request.headers["content-type"] ?? "text/plain";
+
+      const text = await store.request.reduce((accumulator, data) => {
+        return accumulator + data;
+      }, "");
+
+      if (type === "application/json") {
+        return JSON.parse(text);
+      } else if (type === "application/x-www-form-urlencoded") {
+        return new URLSearchParams(text).entries().reduce(
+          /**
+           * @param {Record<string, string | Array<string>>} accumulator
+           */
+          (accumulator, [key, value]) => {
+            if (accumulator[key] != null) {
+              // Handle multiple values
+              if (!Array.isArray(accumulator[key])) {
+                accumulator[key] = [accumulator[key]];
+              }
+              accumulator[key].push(value);
+            } else {
+              accumulator[key] = value;
+            }
+            return accumulator;
+          },
+          {},
+        );
+      } else if (type.includes("text/")) {
+        return text;
+      } else {
+        return new TextEncoder().encode(text).buffer;
+      }
+    } else {
+      return initial;
+    }
+  };
+}

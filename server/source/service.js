@@ -123,14 +123,25 @@ export class Container {
   }
 
   /**
+   * @param {Service} service
+   */
+  async #gracefullyDisposeService(service) {
+    try {
+      // Wait for the Promise in case user decides to mark method as asynchronous.
+      await service.dispose?.();
+    } catch {
+      // If disposal of the service fails, then we can do nothing about it.
+      // But we definitely do not want to fail the entire server.
+    }
+  }
+
+  /**
    * @param {string} id
    */
   #disposeServicesForSession(id) {
     const sessionServices = this.#sessionLivedServices.get(id);
     if (sessionServices != null) {
-      sessionServices.forEach((service) => {
-        service.dispose?.();
-      });
+      sessionServices.forEach(this.#gracefullyDisposeService);
       sessionServices.length = 0;
     }
   }
@@ -143,9 +154,7 @@ export class Container {
       this.#sessionLivedServices.keys().forEach((id) => {
         this.#disposeServicesForSession(id);
       });
-      this.#singletons.forEach((service) => {
-        service.dispose?.();
-      });
+      this.#singletons.forEach(this.#gracefullyDisposeService);
       this.#singletons.clear();
     } else {
       this.#disposeServicesForSession(what);

@@ -37,7 +37,7 @@ export const HttpStatus = Object.freeze({
   BadRequest: 400,
   Unauthorized: 401,
   PaymentRequired: 402,
-  Forbidded: 403,
+  Forbidden: 403,
   NotFound: 404,
   MethodNotAllowed: 405,
   NotAcceptable: 406,
@@ -76,9 +76,12 @@ export const HttpStatus = Object.freeze({
 export const HttpMethod = Object.freeze({
   Get: "GET",
   Put: "PUT",
+  Head: "HEAD",
   Post: "POST",
   Patch: "PATCH",
+  Trace: "TRACE",
   Delete: "DELETE",
+  Connect: "CONNECT",
   Options: "OPTIONS",
 });
 

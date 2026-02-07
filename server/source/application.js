@@ -184,12 +184,19 @@ export class Application {
           let handled = false;
 
           for (const handlerConstructor of this.#handlers) {
-            handled = await this.#runHandlerIfMatched(
-              handlerConstructor,
-              url,
-              request,
-              response,
-            );
+            try {
+              handled = await this.#runHandlerIfMatched(
+                handlerConstructor,
+                url,
+                request,
+                response,
+              );
+            } catch {
+              // Stop handling a request when first unhandled error has been caught.
+              handled = true;
+              response.statusCode = HttpStatus.InternalServerError;
+              response.end();
+            }
 
             if (handled) {
               break;
