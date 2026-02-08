@@ -6,7 +6,7 @@ import { Readable } from "node:stream";
 import { join, resolve } from "node:path";
 import { promises, constants, createReadStream } from "node:fs";
 
-import mime from "mime";
+import mime from "mime-types";
 
 import { group } from "./session.js";
 import { handler, HttpMethod, HttpStatus, SkipHandler } from "./handler.js";
@@ -66,7 +66,8 @@ export class StaticFilesHandler {
           {
             status: HttpStatus.Ok,
             headers: {
-              "content-type": mime.getType(path) ?? "application/octet-stream",
+              "content-type":
+                mime.contentType(path) || "application/octet-stream",
             },
           },
         );

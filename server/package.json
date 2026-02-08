@@ -6,6 +6,6 @@
     ".": "./source/index.js"
   },
   "dependencies": {
-    "mime": "^4"
+    "mime-types": "^3"
   }
 }
