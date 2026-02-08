@@ -1,7 +1,4 @@
 /**
- * @import { Stream } from "node:stream";
- * @import { OutgoingHttpHeaders } from "node:http";
- *
  * @import { InterceptorConstructor } from "./interceptor.js";
  */
 
@@ -93,48 +90,10 @@ export const HttpMethod = Object.freeze({
  */
 
 /**
- * @typedef {|
- *   string
- *   | number
- *   | boolean
- *   | undefined
- *   | void
- *   | null
- *   | Array<unknown>
- *   | Record<string | number, unknown>
- *   | Stream
- *   | typeof SkipHandler
- *   | HandlerResponse
- * } PossibleResponseValue
+ * @typedef {typeof SkipHandler | Response} PossibleResponseValue
  */
 
 export const SkipHandler = Symbol("handler.skip");
-
-export class HandlerResponse {
-  /**
-   * @type {HttpStatus}
-   */
-  statusCode;
-  /**
-   * @type {Exclude<PossibleResponseValue, typeof SkipHandler | HandlerResponse>}
-   */
-  payload;
-  /**
-   * @type {OutgoingHttpHeaders}
-   */
-  headers;
-
-  /**
-   * @param {HttpStatus} statusCode
-   * @param {OutgoingHttpHeaders} headers
-   * @param {Exclude<PossibleResponseValue, typeof SkipHandler | HandlerResponse>} payload
-   */
-  constructor(statusCode, headers, payload) {
-    this.statusCode = statusCode;
-    this.headers = headers;
-    this.payload = payload;
-  }
-}
 
 /**
  * @template {PossibleResponseValue} [T=PossibleResponseValue]

@@ -1,6 +1,4 @@
 /**
- * @import { IncomingMessage, ServerResponse } from "node:http";
- *
  * @import { Interceptor } from "./interceptor.js";
  * @import { Service, Container } from "./service.js";
  * @import { Handler, PossibleResponseValue } from "./handler.js";
@@ -12,11 +10,9 @@ import { handlerSession } from "./handler.js";
 
 /**
  * @typedef {Object} SessionContext
- * @property {URL} url
  * @property {string} sessionId
+ * @property {Request} request
  * @property {Container} container
- * @property {ServerResponse} response
- * @property {IncomingMessage} request
  * @property {Record<string, any>} cache
  */
 
@@ -60,7 +56,7 @@ export function group(_, context) {
         /**
          * @type {URLPatternResult}
          */
-        (handlerStore.pattern.exec(store.url));
+        (handlerStore.pattern.exec(store.request.url));
 
       for (const name in result) {
         if (name === "inputs") {
@@ -93,13 +89,14 @@ export function group(_, context) {
 }
 
 /**
+ * @template {string | null} A
  * @param {undefined} _
- * @param {ClassFieldDecoratorContext<TargetContainingInstance, string | Array<string> | undefined>} context
+ * @param {ClassFieldDecoratorContext<TargetContainingInstance, A>} context
  */
 export function header(_, context) {
   /**
-   * @param {string | Array<string> | undefined} initial
-   * @return {string | Array<string> | undefined}
+   * @param {A} initial
+   * @return {A}
    */
   return (initial) => {
     const store = session.getStore();
@@ -111,7 +108,12 @@ export function header(_, context) {
         return `-${letter.toLowerCase()}`;
       });
 
-      return store.request.headers[headerName];
+      return (
+        /**
+         * @type {A}
+         */
+        (store.request.headers.get(headerName))
+      );
     } else {
       return initial;
     }
@@ -119,7 +121,7 @@ export function header(_, context) {
 }
 
 /**
- * @template {ArrayBuffer | string | Record<string, unknown>} A
+ * @template A
  * @param {undefined} _
  * @param {ClassFieldDecoratorContext<TargetContainingInstance, Promise<A>>} context
  */
@@ -140,40 +142,21 @@ export function body(_, context) {
 }
 
 /**
- * @template {typeof IncomingMessage} Request
- * @param {InstanceType<Request>} request
+ * @param {Request} request
  */
-async function parseBody(request) {
-  const type = request.headers["content-type"] ?? "text/plain";
-
-  const text = await request.reduce((accumulator, data) => {
-    return accumulator + data;
-  }, "");
+function parseBody(request) {
+  const type = request.headers.get("content-type") ?? "text/plain";
 
   if (type === "application/json") {
-    return JSON.parse(text);
-  } else if (type === "application/x-www-form-urlencoded") {
-    return new URLSearchParams(text).entries().reduce(
-      /**
-       * @param {Record<string, string | Array<string>>} accumulator
-       */
-      (accumulator, [key, value]) => {
-        if (accumulator[key] != null) {
-          // Handle multiple values
-          if (!Array.isArray(accumulator[key])) {
-            accumulator[key] = [accumulator[key]];
-          }
-          accumulator[key].push(value);
-        } else {
-          accumulator[key] = value;
-        }
-        return accumulator;
-      },
-      {},
-    );
+    return request.json();
+  } else if (
+    type === "application/x-www-form-urlencoded" ||
+    type === "multipart/form-data"
+  ) {
+    return request.formData();
   } else if (type.includes("text/")) {
-    return text;
+    return request.text();
   } else {
-    return new TextEncoder().encode(text).buffer;
+    return request.arrayBuffer();
   }
 }

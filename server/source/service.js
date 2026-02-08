@@ -111,10 +111,11 @@ export class Container {
         if (isSingleton) {
           this.#singletons.set(key, service);
         } else {
-          const services =
-            this.#sessionLivedServices.get(store.sessionId) ?? [];
+          let services = this.#sessionLivedServices.get(store.sessionId);
+          if (services == null) {
+            this.#sessionLivedServices.set(store.sessionId, (services = []));
+          }
           services.push(service);
-          this.#sessionLivedServices.set(store.sessionId, services);
         }
       }
 

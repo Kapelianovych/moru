@@ -1,22 +1,11 @@
+import { Readable } from "node:stream";
 import { sep, resolve, extname } from "node:path";
 import { promises, constants, createReadStream } from "node:fs";
 
 import mime from "mime";
 
 import { group } from "./session.js";
-import {
-  handler,
-  HandlerResponse,
-  HttpMethod,
-  HttpStatus,
-  SkipHandler,
-} from "./handler.js";
-
-/**
- * @typedef {Object} StaticFilesHandlerOptions
- * @property {string} [prefix]
- * @property {boolean} [followSymlinks]
- */
+import { handler, HttpMethod, HttpStatus, SkipHandler } from "./handler.js";
 
 @handler({
   pattern: "/:slug(.*)",
@@ -34,11 +23,12 @@ export class StaticFilesHandler {
   #followSymlinks;
 
   /**
-   * @param {StaticFilesHandlerOptions} [options]
+   * @param {string} [prefix]
+   * @param {boolean} [followSymlinks]
    */
-  constructor(options) {
-    this.#prefix = resolve(options?.prefix ?? "");
-    this.#followSymlinks = options?.followSymlinks ?? false;
+  constructor(prefix, followSymlinks) {
+    this.#prefix = resolve(prefix ?? "");
+    this.#followSymlinks = followSymlinks ?? false;
   }
 
   async handle() {
@@ -75,21 +65,24 @@ export class StaticFilesHandler {
         const stats = await promises.stat(filePath);
 
         if (stats.isSymbolicLink() && !this.#followSymlinks) {
-          return new HandlerResponse(HttpStatus.Forbidden, {}, undefined);
+          return new Response(undefined, { status: HttpStatus.Forbidden });
         } else {
-          return new HandlerResponse(
-            HttpStatus.Ok,
+          return new Response(
+            /**
+             * @type {ReadableStream}
+             */
+            (Readable.toWeb(createReadStream(filePath))),
             {
-              "content-type": mimeType,
+              status: HttpStatus.Ok,
+              headers: { "content-type": mimeType },
             },
-            createReadStream(filePath),
           );
         }
       } else {
         return SkipHandler;
       }
     } else {
-      return new HandlerResponse(HttpStatus.Forbidden, {}, undefined);
+      return new Response(undefined, { status: HttpStatus.Forbidden });
     }
   }
 }
