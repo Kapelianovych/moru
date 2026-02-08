@@ -1,5 +1,9 @@
+/**
+ * @import { PossibleResponseValue } from "./handler.js";
+ */
+
 import { Readable } from "node:stream";
-import { sep, resolve, extname } from "node:path";
+import { join, resolve } from "node:path";
 import { promises, constants, createReadStream } from "node:fs";
 
 import mime from "mime";
@@ -31,56 +35,55 @@ export class StaticFilesHandler {
     this.#followSymlinks = followSymlinks ?? false;
   }
 
+  /**
+   * @param {string} path
+   */
+  #exists(path) {
+    return promises.access(path, constants.F_OK).then(
+      () => true,
+      () => false,
+    );
+  }
+
+  /**
+   * @param {string} path
+   * @returns {Promise<PossibleResponseValue>}
+   */
+  async #createResponse(path) {
+    if (await this.#exists(path)) {
+      const stats = await promises.stat(path);
+
+      if (stats.isSymbolicLink() && !this.#followSymlinks) {
+        return new Response(undefined, { status: HttpStatus.Forbidden });
+      } else if (stats.isDirectory()) {
+        return this.#createResponse(join(path, "index.html"));
+      } else {
+        return new Response(
+          /**
+           * @type {ReadableStream}
+           */
+          (Readable.toWeb(createReadStream(path))),
+          {
+            status: HttpStatus.Ok,
+            headers: {
+              "content-type": mime.getType(path) ?? "application/octet-stream",
+            },
+          },
+        );
+      }
+    } else {
+      return SkipHandler;
+    }
+  }
+
   async handle() {
-    let filePath = resolve(this.#prefix, this.#slug);
+    const path = resolve(this.#prefix, this.#slug);
 
     if (
       // Check if path is inside the defined prefix.
-      filePath.startsWith(this.#prefix)
+      path.startsWith(this.#prefix)
     ) {
-      const extension = extname(filePath);
-      let mimeType = mime.getType(extension);
-
-      if (extension.length === 0) {
-        filePath = `${filePath}${filePath.endsWith(sep) ? "" : sep}index.html`;
-        mimeType =
-          /**
-           * @type {string}
-           */
-          (mime.getType(".html"));
-      }
-
-      mimeType ??=
-        /**
-         * @type {string}
-         */
-        (mime.getType(".txt"));
-
-      const fileExists = await promises.access(filePath, constants.F_OK).then(
-        () => true,
-        () => false,
-      );
-
-      if (fileExists) {
-        const stats = await promises.stat(filePath);
-
-        if (stats.isSymbolicLink() && !this.#followSymlinks) {
-          return new Response(undefined, { status: HttpStatus.Forbidden });
-        } else {
-          return new Response(
-            /**
-             * @type {ReadableStream}
-             */
-            (Readable.toWeb(createReadStream(filePath))),
-            {
-              status: HttpStatus.Ok,
-              headers: { "content-type": mimeType },
-            },
-          );
-        }
-      } else {
-        return SkipHandler;
-      }
+      return this.#createResponse(path);
     } else {
       return new Response(undefined, { status: HttpStatus.Forbidden });
     }
