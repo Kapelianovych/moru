@@ -20,8 +20,9 @@ Symbol.metadata ??= Symbol("symbol.metadata");
 
 /**
  * @typedef {Object} ApplicationOptions
- * @property {Array<ServiceConstructor>} [services]
+ * @property {Array<ServiceConstructor<[]>>} [services]
  * @property {Array<HandlerConstructor<PossibleResponseValue, []>>} handlers
+ * @property {Array<InterceptorConstructor<PossibleResponseValue, PossibleResponseValue, []>>} [interceptors]
  */
 
 export class Application {
@@ -29,6 +30,10 @@ export class Application {
    * @type {Array<HandlerConstructor<PossibleResponseValue, []>>}
    */
   #handlers;
+  /**
+   * @type {Array<InterceptorConstructor<PossibleResponseValue, PossibleResponseValue, []>>}
+   */
+  #interceptors;
   /**
    * @type {Container}
    */
@@ -40,6 +45,7 @@ export class Application {
   constructor(options) {
     this.#handlers = options.handlers;
     this.#container = new Container(options.services ?? []);
+    this.#interceptors = options.interceptors ?? [];
   }
 
   /**
@@ -88,17 +94,16 @@ export class Application {
       {
         pattern: handlerMetadata.pattern,
       },
-      handlerMetadata.interceptors?.reduceRight(
-        (accumulator, interceptorConstructor) => {
+      this.#interceptors
+        .concat(handlerMetadata.interceptors ?? [])
+        .reduceRight((accumulator, interceptorConstructor) => {
           return () => {
             return new interceptorConstructor().intercept(
               // @ts-expect-error parameter is generic.
               accumulator,
             );
           };
-        },
-        handle,
-      ) ?? handle,
+        }, handle),
     );
   }
 
