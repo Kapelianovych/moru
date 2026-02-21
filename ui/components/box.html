@@ -5,7 +5,8 @@
   assign:classes="elementClasses"
   assign:rest-props="restProps"
 >
-  <div
+  <dynamic
+    tag="{{ tag }}"
     class="
       {{ elementClasses }}
       {{ Class.Box }}
@@ -14,11 +15,30 @@
     expand="{{ restProps }}"
   >
     <slot />
-  </div>
+  </dynamic>
 </element>
 
 <script type="module" build>
   import { Class } from "./lib/constants.js";
 
-  const { class: classes = "", ...other } = props;
+  const { class: classes = "", kind, ...other } = props;
+
+  const tag =
+    kind != null
+      ? /h(?:eader)?/.test(kind)
+        ? "header"
+        : /f(?:ooter)?/.test(kind)
+          ? "footer"
+          : /m(?:ain)?/.test(kind)
+            ? "main"
+            : /s(?:ection)?/.test(kind)
+              ? "section"
+              : /b(?:lock)?/.test(kind) || /ar(?:ticle)?/.test(kind)
+                ? "article"
+                : /r(?:edundant)?/.test(kind) ||
+                    /fo(?:reign)?/.test(kind) ||
+                    /as(?:ide)?/.test(kind)
+                  ? "aside"
+                  : "div"
+      : "div";
 </script>

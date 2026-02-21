@@ -14,7 +14,7 @@ import { compileHtml, generateHtml, parseHtml } from "@moru/core";
 
 import { DiagnosticsReporter } from "./diagnostics-reporter.js";
 
-const NON_RESOLVEABLE_URL_PREFIX = /^(?:https?:|#|\/|data:)/;
+const NON_RESOLVEABLE_URL_PREFIX = /^(?:tel:|mailto:|https?:|#|\/|data:)/;
 
 /**
  * @implements {Plugin}

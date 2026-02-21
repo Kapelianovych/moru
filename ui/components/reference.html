@@ -21,7 +21,7 @@
 <script type="module" build>
   import { Class } from "./lib/constants.js";
 
-  const { class: classes = "", href, ...other } = props;
+  const { class: classes = "", to, ...other } = props;
 
-  const url = typeof href === "string" ? href : href.toString();
+  const url = typeof to === "string" ? to : to.toString();
 </script>
