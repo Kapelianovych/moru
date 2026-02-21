@@ -33,7 +33,11 @@ export async function evaluateConditionals(options, preCompileScope) {
           // Prevent preemptive loops evaluation.
           const loops = options.htmlNodesCollection.loops;
           options.htmlNodesCollection.loops = [];
-          await preCompileScope({ ...options, ast: node });
+          await preCompileScope({
+            ...options,
+            ast: node,
+            collectedMarkupDefinitions: {},
+          });
           options.htmlNodesCollection.loops = loops;
 
           replaceElementWithMultiple(node, node.children);

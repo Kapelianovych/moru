@@ -76,6 +76,7 @@ export async function evaluateMarkupDefinitions(
     await preCompileScope({
       ...scopePreCompilerOptions,
       ast: clonedMarkupFragment,
+      collectedMarkupDefinitions: {},
     });
 
     // Rollback to the initial state in an opposite order.

@@ -56,7 +56,7 @@ export function inject(_, context) {
 
 export class Container {
   /**
-   * @type {Map<string, ServiceConstructor>}
+   * @type {Map<string, ServiceConstructor<[]>>}
    */
   #services = new Map();
   /**
@@ -69,7 +69,7 @@ export class Container {
   #sessionLivedServices = new Map();
 
   /**
-   * @param {Array<ServiceConstructor>} services
+   * @param {Array<ServiceConstructor<[]>>} services
    */
   constructor(services) {
     for (const serviceConstructor of services) {

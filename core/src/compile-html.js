@@ -98,6 +98,7 @@ async function compileModule(options) {
     htmlNodesCollection: nodes,
     publicNames,
     onAfterRender: options.lifecycle.onAfterRender,
+    collectedMarkupDefinitions: nodes.markupDefinitions,
   };
 
   await preCompileScope(scopePreCompilerOptions);
@@ -147,6 +148,7 @@ async function compileModule(options) {
  * @property {Options} compilerOptions
  * @property {HtmlNodesCollection} htmlNodesCollection
  * @property {LifecyclePhaseSubscriber} onAfterRender
+ * @property {HtmlNodesCollection['markupDefinitions']} collectedMarkupDefinitions
  */
 
 /**
@@ -168,6 +170,7 @@ async function preCompileScope(options) {
   // Even though export can be defined at the top level and there is no point in
   // to pass it inside every scope, it has to be passed into the first one.
   scopedNodes.exports = options.htmlNodesCollection.exports;
+  scopedNodes.markupDefinitions = options.collectedMarkupDefinitions;
   // Fragments with a name should be available in nested scopes.
   scopedNodes.getParentMarkupDefinitionFor = (name) => {
     return (

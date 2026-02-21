@@ -98,7 +98,11 @@ async function loopAndEvaluate(
 
     const clonedLoopElement = loopElement.cloneNode(true);
 
-    await preCompileScope({ ...options, ast: clonedLoopElement });
+    await preCompileScope({
+      ...options,
+      ast: clonedLoopElement,
+      collectedMarkupDefinitions: {},
+    });
 
     prepend(loopElement, clonedLoopElement);
     replaceElementWithMultiple(clonedLoopElement, clonedLoopElement.children);
@@ -124,7 +128,11 @@ async function renderPossibleFallback(
   fallbackElement,
 ) {
   if (fallbackElement) {
-    await preCompileScope({ ...options, ast: fallbackElement });
+    await preCompileScope({
+      ...options,
+      ast: fallbackElement,
+      collectedMarkupDefinitions: {},
+    });
     replaceElementWithMultiple(fallbackElement, fallbackElement.children);
   }
 }

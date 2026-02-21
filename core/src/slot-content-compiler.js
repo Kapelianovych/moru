@@ -131,11 +131,13 @@ function createSlotContentCompilers(
         htmlNodesCollection.clientScripts;
       childrenHtmlNodesCollection.exports = htmlNodesCollection.exports;
       childrenHtmlNodesCollection.fragments = htmlNodesCollection.fragments;
-      childrenHtmlNodesCollection.getParentMarkupDefinitionFor =
-        htmlNodesCollection.getParentMarkupDefinitionFor;
+      childrenHtmlNodesCollection.getParentMarkupDefinitionFor = (name) => {
+        return (
+          htmlNodesCollection.markupDefinitions[name] ??
+          htmlNodesCollection.getParentMarkupDefinitionFor?.(name)
+        );
+      };
       childrenHtmlNodesCollection.imports = htmlNodesCollection.imports;
-      childrenHtmlNodesCollection.markupDefinitions =
-        htmlNodesCollection.markupDefinitions;
       childrenHtmlNodesCollection.portals = htmlNodesCollection.portals;
       childrenHtmlNodesCollection.raws = htmlNodesCollection.raws;
       childrenHtmlNodesCollection.transferrableElements =
@@ -159,6 +161,8 @@ function createSlotContentCompilers(
         onAfterRender: lifecycle.onAfterRender,
         publicNames,
         htmlNodesCollection: childrenHtmlNodesCollection,
+        collectedMarkupDefinitions:
+          childrenHtmlNodesCollection.markupDefinitions,
       };
 
       // Prevent parent component properties leaking into any child component.

@@ -188,4 +188,30 @@ suite("fragment", () => {
       match(output, /count is 3/);
     },
   );
+
+  test("markup fragments should be able to render as children of custom components", async () => {
+    const output = await compile(
+      `
+        <import from="bar.html" />
+
+        <fragment name="foo">
+          <p />
+        </fragment>
+
+        <bar>
+          <foo />
+          <bar>
+            <foo />
+          </bar>
+        </bar>
+      `,
+      {
+        async readFileContent() {
+          return "<slot />";
+        },
+      },
+    );
+
+    equal(output, "<p></p><p></p>");
+  });
 });
