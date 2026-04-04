@@ -214,4 +214,61 @@ suite("fragment", () => {
 
     equal(output, "<p></p><p></p>");
   });
+
+  test("markup fragments can accept children", async () => {
+    const output = await compile(
+      `
+        <fragment name="foo">
+          <slot />
+        </fragment>
+
+        <foo>
+          child
+        </foo>
+      `,
+    );
+
+    match(output, /\schild\s/);
+  });
+
+  test("children can be passed to specific slot in markup fragments", async () => {
+    const output = await compile(
+      `
+        <fragment name="foo">
+          <slot name="what" />
+        </fragment>
+
+        <foo>
+          <div slot="what" />
+        </foo>
+      `,
+    );
+
+    equal(output, "<div></div>");
+  });
+
+  test("slot inside a custom component from the markup fragment should be replaced by children", async () => {
+    const output = await compile(
+      `
+        <import from="./what.html" />
+
+        <fragment name="foo">
+          <what>
+            <slot />
+          </what>
+        </fragment>
+
+        <foo>
+          <p />
+        </foo>
+      `,
+      {
+        async readFileContent() {
+          return "<div><slot /></div>";
+        },
+      },
+    );
+
+    equal(output, "<div><p></p></div>");
+  });
 });

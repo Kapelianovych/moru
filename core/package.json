@@ -8,12 +8,12 @@
     "./*": "./components/*.js"
   },
   "dependencies": {
-    "acorn": "^8",
-    "acorn-walk": "^8",
-    "astring": "^1",
-    "dom-serializer": "^2",
-    "domhandler": "^5",
-    "domutils": "^3",
-    "htmlparser2": "^10"
+    "acorn": "8.16.0",
+    "acorn-walk": "8.3.5",
+    "astring": "1.9.0",
+    "dom-serializer": "3.0.0",
+    "domhandler": "6.0.1",
+    "domutils": "4.0.2",
+    "htmlparser2": "12.0.0"
   }
 }

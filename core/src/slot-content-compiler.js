@@ -213,7 +213,7 @@ function createSlotContentCompilers(
  * @param {Element} componentElement
  * @returns {Record<string, Array<ChildNode>>}
  */
-function getComponentChildrenGroupedBySlots(componentElement) {
+export function getComponentChildrenGroupedBySlots(componentElement) {
   /** @type {Record<string, Array<ChildNode>>} */
   const groups = {
     default: [],

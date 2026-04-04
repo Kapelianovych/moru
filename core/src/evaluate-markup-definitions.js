@@ -2,9 +2,11 @@
  * @import { ScopePreCompiler, ScopePreCompilerOptions } from "./compile-html.js";
  */
 
-import { replaceElement } from "domutils";
+import { findAll, replaceElement } from "domutils";
 
 import { augmentLocalThis } from "./local-this.js";
+import { getComponentChildrenGroupedBySlots } from "./slot-content-compiler.js";
+import { isHtmlSlotElement, replaceElementWithMultiple } from "./html-nodes.js";
 
 const DEFAULT_ATTRIBUTE_PREFIX = "default:";
 
@@ -73,11 +75,27 @@ export async function evaluateMarkupDefinitions(
       }
     }
 
+    const currentScopeSlots = scopePreCompilerOptions.htmlNodesCollection.slots;
+    scopePreCompilerOptions.htmlNodesCollection.slots = [];
+
     await preCompileScope({
       ...scopePreCompilerOptions,
       ast: clonedMarkupFragment,
       collectedMarkupDefinitions: {},
     });
+
+    scopePreCompilerOptions.htmlNodesCollection.slots = currentScopeSlots;
+
+    const groups = getComponentChildrenGroupedBySlots(markupElementReference);
+    for (const slotElement of findAll(
+      isHtmlSlotElement,
+      clonedMarkupFragment,
+    )) {
+      const elements = groups[slotElement.attribs.name ?? "default"];
+      if (elements != null) {
+        replaceElementWithMultiple(slotElement, elements);
+      }
+    }
 
     // Rollback to the initial state in an opposite order.
     rollbacks.reduceRight(

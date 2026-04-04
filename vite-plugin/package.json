@@ -4,11 +4,11 @@
   "version": "0.0.1",
   "exports": "./src/index.js",
   "dependencies": {
-    "glob": "^11",
-    "picocolors": "^1"
+    "glob": "13.0.6",
+    "picocolors": "1.1.1"
   },
   "peerDependencies": {
-    "vite": "^7",
+    "vite": "^8",
     "@moru/core": "^0"
   }
 }

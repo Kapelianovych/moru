@@ -18,10 +18,10 @@
     "build:website": "npm run build -w website"
   },
   "devDependencies": {
-    "@types/node": "^24",
-    "@vitest/browser-playwright": "^4",
-    "prettier": "^3",
-    "typescript": "^5",
-    "vitest": "^4"
+    "@types/node": "25.5.2",
+    "@vitest/browser-playwright": "4.1.2",
+    "prettier": "3.8.1",
+    "typescript": "6.0.2",
+    "vitest": "4.1.2"
   }
 }
