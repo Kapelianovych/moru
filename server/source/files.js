@@ -66,8 +66,7 @@ export class StaticFilesHandler {
           {
             status: HttpStatus.Ok,
             headers: {
-              "content-type":
-                mime.contentType(path) || "application/octet-stream",
+              "content-type": mime.lookup(path) || "application/octet-stream",
             },
           },
         );

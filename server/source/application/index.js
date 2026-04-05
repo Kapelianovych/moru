@@ -15,8 +15,9 @@ import { handlerSession } from "../handler.js";
 import { createWebRequest } from "./web-request.js";
 import { HttpStatus, SkipHandler } from "../handler.js";
 
-// @ts-expect-error the runtime does not support decorators yet.
-Symbol.metadata ??= Symbol("symbol.metadata");
+// @ts-expect-error Not all runtimes support decorators yet.
+// https://babeljs.io/docs/babel-plugin-proposal-decorators#symbolmetadata-notes
+Symbol.metadata ??= Symbol.for("Symbol.metadata");
 
 /**
  * @typedef {Object} ApplicationOptions

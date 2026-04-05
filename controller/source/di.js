@@ -2,9 +2,9 @@
  * @import { CustomElement, CustomElementClass } from "./controller.js";
  */
 
-// @ts-expect-error This symbol is not standardized yet,
-// so it might be missing.
-Symbol.metadata ??= Symbol("symbol.metadata");
+// @ts-expect-error Not all runtimes support this symbol yet.
+// https://babeljs.io/docs/babel-plugin-proposal-decorators#symbolmetadata-notes
+Symbol.metadata ??= Symbol.for("Symbol.metadata");
 
 const INJECT_REQUEST_EVENT_NAME = "inject-request";
 
