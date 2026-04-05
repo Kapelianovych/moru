@@ -5,7 +5,7 @@ import { equal, deepEqual, match } from "node:assert/strict";
 
 import { compile } from "./compiler.js";
 import { CONTEXTS } from "../components/lib/symbols.js";
-import { MessageTag } from "../src/diagnostics.js";
+import { MessageTag } from "../source/diagnostics.js";
 import { getContext } from "../components/context.js";
 import { getFromNamespace } from "../components/lib/namespace.js";
 

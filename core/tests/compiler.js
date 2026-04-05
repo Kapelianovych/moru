@@ -1,9 +1,9 @@
 /**
- * @import { Options } from '../src/options.js';
- * @import { VirtualFile } from '../src/virtual-file.js';
+ * @import { Options } from '../source/options.js';
+ * @import { VirtualFile } from '../source/virtual-file.js';
  */
 
-import { parseHtml, compileHtml, generateHtml } from "../src/index.js";
+import { parseHtml, compileHtml, generateHtml } from "../source/index.js";
 
 /** @type {Options} */
 const DEFAULT_OPTIONS = {
@@ -29,7 +29,6 @@ const DEFAULT_OPTIONS = {
  */
 
 /**
- *
  * @param {string} text
  * @param {CompileOptions} options
  * @returns {Promise<string>}

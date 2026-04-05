@@ -1,7 +1,7 @@
 import { equal } from "node:assert/strict";
 import { suite, test, mock } from "node:test";
 
-import { store } from "../src/index.js";
+import { store } from "../source/index.js";
 
 suite("store", () => {
   test("get method should return a stored value", () => {

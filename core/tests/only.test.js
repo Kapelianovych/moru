@@ -4,7 +4,7 @@ import { mock, suite, test } from "node:test";
 import { equal, deepEqual, match } from "node:assert/strict";
 
 import { compile } from "./compiler.js";
-import { MessageTag } from "../src/diagnostics.js";
+import { MessageTag } from "../source/diagnostics.js";
 import { ONLY_CACHE } from "../components/lib/symbols.js";
 import { getFromNamespace } from "../components/lib/namespace.js";
 

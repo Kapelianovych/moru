@@ -2,7 +2,7 @@ import { equal, match } from "node:assert/strict";
 import { suite, test, mock } from "node:test";
 
 import { compile } from "./compiler.js";
-import { MessageTag } from "../src/diagnostics.js";
+import { MessageTag } from "../source/diagnostics.js";
 
 suite("expressions", () => {
   test("evaluates an expression and inserts the result into HTML", async () => {

@@ -9,7 +9,7 @@ import {
   forEach,
   map,
   store,
-} from "../src/index.js";
+} from "../source/index.js";
 
 suite("operators", () => {
   test("map should change value", () => {

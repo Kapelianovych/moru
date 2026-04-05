@@ -11,8 +11,8 @@
   ],
   "scripts": {
     "format": "prettier . --write",
-    "test:core": "node --test \"./core/test/**/*.test.js\"",
-    "test:store": "node --test \"./store/test/**/*.test.js\"",
+    "test:core": "node --test \"./core/tests/**/*.test.js\"",
+    "test:store": "node --test \"./store/tests/**/*.test.js\"",
     "test:controller": "vitest run --config ./vitest.config.controller.js",
     "start:website": "npm start -w website",
     "build:website": "npm run build -w website"

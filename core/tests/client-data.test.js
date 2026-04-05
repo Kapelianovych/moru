@@ -1,12 +1,12 @@
 /**
- * @import { VirtualFile } from "../src/virtual-file.js";
+ * @import { VirtualFile } from "../source/virtual-file.js";
  */
 
 import { match, equal } from "node:assert/strict";
 import { mock, suite, test } from "node:test";
 
 import { compile } from "./compiler.js";
-import { MessageTag } from "../src/diagnostics.js";
+import { MessageTag } from "../source/diagnostics.js";
 
 /**
  * @param {VirtualFile} file

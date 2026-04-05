@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "exports": {
-    ".": "./src/index.js",
+    ".": "./source/index.js",
     "./*.html": "./components/*.html",
     "./*": "./components/*.js"
   },

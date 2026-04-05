@@ -1,8 +1,8 @@
 /** @import { Mock } from "node:test"; */
 
 /**
- * @import { Options } from '../src/options.js';
- * @import { VirtualFile } from '../src/virtual-file.js';
+ * @import { Options } from '../source/options.js';
+ * @import { VirtualFile } from '../source/virtual-file.js';
  */
 
 import { ok, match, equal } from "node:assert/strict";

@@ -2,7 +2,7 @@ import { test, suite, mock } from "node:test";
 import { equal, match, deepEqual } from "node:assert/strict";
 
 import { compile } from "./compiler.js";
-import { MessageTag } from "../src/diagnostics.js";
+import { MessageTag } from "../source/diagnostics.js";
 
 suite("fragment", () => {
   test('"fragment" should be removed from resulting HTML', async () => {

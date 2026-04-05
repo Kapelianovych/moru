@@ -1,5 +1,5 @@
 /**
- * @import { BuildStore } from "../src/index.js";
+ * @import { BuildStore } from "../source/index.js";
  */
 
 import { CONTEXTS } from "./lib/symbols.js";

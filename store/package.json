@@ -13,5 +13,5 @@
     "type": "git",
     "url": "git+https://github.com/Kapelianovych/moru.git"
   },
-  "exports": "./src/index.js"
+  "exports": "./source/index.js"
 }

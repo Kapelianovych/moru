@@ -10,7 +10,7 @@ import { test, suite, mock } from "node:test";
 import { isTag } from "domhandler";
 import { ElementType } from "htmlparser2";
 
-import { parseHtml, traverseHtml } from "../src/index.js";
+import { parseHtml, traverseHtml } from "../source/index.js";
 import { removeElement } from "domutils";
 
 suite("traverseHtml", () => {
