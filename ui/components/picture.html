@@ -5,7 +5,8 @@
   <style portal="{{ rootContext.headPortalName }}">
     .{{ Class.Picture }} {
       img {
-        max-width: 100%;
+        width: 100%;
+        height: 100%;
       }
     }
   </style>
@@ -17,11 +18,12 @@
   assign:classes="elementClasses"
   assign:rest-props="restProps"
 >
-  <if condition="{{ css }}">
+  <if condition="{{ imageCss || pictureCss }}">
     <style portal="{{ rootContext.headPortalName }}">
       .{{ id }} {
+        {{ pictureCss }}
         img {
-          {{ css }}
+          {{ imageCss }}
         }
       }
     </style>
@@ -57,7 +59,14 @@
     createAttributesForFallbackElement,
   } from "./lib/picture.js";
 
-  const { class: classes = "", fit, sources, description, ...other } = props;
+  const {
+    class: classes = "",
+    fit,
+    sources,
+    description,
+    "aspect-ratio": aspectRatio,
+    ...other
+  } = props;
 
   if (!sources) {
     throw new Error(
@@ -82,7 +91,10 @@
   const rootContext = useRootContext(buildStore);
   const fallbackImageDescriptor = sources.at(-1);
 
-  const css = `
+  const imageCss = `
     ${compileCss(fit, createSinglePropertyTransformer("object-fit"))}
+  `.trim();
+  const pictureCss = `
+    ${compileCss(aspectRatio, createSinglePropertyTransformer("aspect-ratio"))}
   `.trim();
 </script>
