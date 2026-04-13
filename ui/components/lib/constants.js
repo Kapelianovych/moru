@@ -7,7 +7,7 @@ export const Class = Object.freeze({
   Box: "b",
   Typography: "ty",
   Text: "t",
-  Image: "i",
+  Picture: "p",
   Svg: "s",
   Button: "bt",
   Link: "l",

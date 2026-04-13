@@ -1,10 +1,9 @@
 <import from="@moru/core/only.html" />
-
 <import from="./element.html" />
 
 <only key="{{ url.current }}">
   <style portal="{{ rootContext.headPortalName }}">
-    .{{ Class.Image }} {
+    .{{ Class.Picture }} {
       img {
         max-width: 100%;
       }
@@ -31,7 +30,7 @@
   <picture
     class="
       {{ elementClasses }}
-      {{ Class.Image }}
+      {{ Class.Picture }}
       {{ classes }}
     "
     expand="{{ restProps }}"
@@ -56,13 +55,13 @@
   import {
     createAttributesForSourceElement,
     createAttributesForFallbackElement,
-  } from "./lib/image.js";
+  } from "./lib/picture.js";
 
   const { class: classes = "", fit, sources, description, ...other } = props;
 
   if (!sources) {
     throw new Error(
-      'A "sources" attribute is missing on the <image> component.',
+      'A "sources" attribute is missing on the <picture> component.',
     );
   }
 
