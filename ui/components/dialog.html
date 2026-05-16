@@ -1,37 +1,45 @@
 <import from="@moru/core/only.html" />
-
-<import from="./box.html" />
+<import from="./element.html" />
 
 <only key="{{ url.current }}">
   <style portal="{{ rootContext.headPortalName }}">
     .{{ Class.Dialog }} {
+      display: none;
       border: none;
       padding: 0;
       background-color: transparent;
+
+      &:where(:open, [open], :popover-open) {
+        display: inline-flex;
+      }
     }
   </style>
 </only>
 
-<dialog
-  id="{{ id }}"
-  class="
-    {{ Class.Dialog }}
-    {{ classes }}
-  "
-  popover="{{ parseBooleanProperty(popover) }}"
-  closedby="{{ closedby }}"
+<element
+  expand="{{ other }}"
+  assign:classes="elementClasses"
+  assign:rest-props="restProps"
 >
-  <box expand="{{ other }}">
+  <dialog
+    class="
+      {{ elementClasses }}
+      {{ Class.Dialog }}
+      {{ classes }}
+    "
+    popover="{{ parseBooleanProperty(popover) }}"
+    expand="{{ restProps }}"
+  >
     <slot />
-  </box>
-</dialog>
+  </dialog>
+</element>
 
 <script type="module" build>
   import { Class } from "./lib/constants.js";
   import { useRootContext } from "./lib/root-context.js";
   import { parseBooleanProperty } from "./lib/property.js";
 
-  const { id, class: classes = "", closedby, popover, ...other } = props;
+  const { class: classes = "", popover, ...other } = props;
 
   const rootContext = useRootContext(buildStore);
 </script>
