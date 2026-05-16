@@ -5,7 +5,7 @@
 import { toKebabCase } from "./to-kebab-case.js";
 
 /**
- * @template {boolean | string | number} A
+ * @template {boolean | string | number | null | undefined} A
  * @param {ClassAccessorDecoratorTarget<CustomElement, A>} target
  * @param {ClassAccessorDecoratorContext<CustomElement, A>} context
  * @returns {ClassAccessorDecoratorResult<CustomElement, A>}
@@ -56,7 +56,7 @@ export function initialiseObservedAttributes(classConstructor, metadata) {
 }
 
 /**
- * @template {string | number | boolean} A
+ * @template {string | number | boolean | null | undefined} A
  * @param {CustomElement} instance
  * @param {string} attribute
  * @param {A} defaultValue
@@ -78,7 +78,7 @@ function convertAttributeValue(instance, attribute, defaultValue) {
 }
 
 /**
- * @template {string | number | boolean} A
+ * @template {string | number | boolean | null | undefined} A
  * @param {CustomElement} instance
  * @param {string} attribute
  * @param {A} value
@@ -88,6 +88,8 @@ function convertAttributeValue(instance, attribute, defaultValue) {
 function setAttributeValue(instance, attribute, value, defaultValue) {
   if (typeof defaultValue === "boolean") {
     instance.toggleAttribute(attribute, Boolean(value));
+  } else if (value == null) {
+    instance.removeAttribute(attribute);
   } else {
     instance.setAttribute(attribute, String(value));
   }

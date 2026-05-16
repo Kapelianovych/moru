@@ -126,4 +126,30 @@ describe("attributes", () => {
 
     expect(element.foo).toBe(3);
   });
+
+  test("if attribute set to null or undefined, it is removed from a DOM node", () => {
+    @controller
+    class AttributeTest7Element extends HTMLElement {
+      @attribute accessor foo = null;
+      @attribute accessor bar = undefined;
+      /**
+       * @type {undefined}
+       */
+      @attribute accessor so;
+    }
+
+    const container = render(`
+      <attribute-test7 />
+    `);
+
+    const element =
+      /**
+       * @type {AttributeTest7Element}
+       */
+      (container.querySelector("attribute-test7"));
+
+    expect(element.hasAttribute("foo")).toBe(false);
+    expect(element.hasAttribute("bar")).toBe(false);
+    expect(element.hasAttribute("so")).toBe(false);
+  });
 });
