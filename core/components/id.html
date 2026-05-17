@@ -8,17 +8,30 @@
 
   const ALPHABET =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  const ids = getFromNamespace(buildStore, IDS, () => ({ index: 0 }));
-  let num = ids.index;
-  ids.index += 1;
-  let uniqueIdPart = "";
-  if (num === 0) {
-    uniqueIdPart = ALPHABET[0];
-  } else {
-    while (num > 0) {
-      uniqueIdPart = ALPHABET[num % ALPHABET.length] + uniqueIdPart;
-      num = Math.floor(num / ALPHABET.length);
-    }
+  const ids = getFromNamespace(buildStore, IDS, () => ({
+    index: 0,
+    overflows: 0,
+  }));
+  /**
+   * @param {number} index
+   */
+  function generateUniqueIdPartFrom(index) {
+    let uniqueIdPart = "";
+    do {
+      uniqueIdPart = ALPHABET[index % ALPHABET.length] + uniqueIdPart;
+      index = Math.floor(index / ALPHABET.length);
+    } while (index > 0);
+    return uniqueIdPart;
   }
-  const id = `_${uniqueIdPart}`;
+  const prefix =
+    ids.overflows > 0 ? generateUniqueIdPartFrom(ids.overflows) + "_" : "";
+  const base = generateUniqueIdPartFrom(ids.index);
+
+  ids.index += 1;
+  if (!Number.isSafeInteger(ids.index)) {
+    ids.overflows += 1;
+    ids.index = 0;
+  }
+
+  const id = `_${prefix}${base}`;
 </script>
