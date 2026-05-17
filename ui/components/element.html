@@ -1,7 +1,8 @@
+<import from="@moru/core/id.html" />
 <import from="@moru/core/only.html" />
 
-<export name="id" />
 <export name="classes" />
+<export name="elementId" as="id" />
 <export name="restProps" as="rest-props" />
 
 <only key="{{ url.current }}">
@@ -34,26 +35,35 @@
   </style>
 </only>
 
-<style portal="{{ rootContext.headPortalName }}">
-  .{{ id }} {
-    {{ css }}
-  }
-</style>
+<id assign:id>
+  <if condition="{{ css.length > 0 }}">
+    <style portal="{{ rootContext.headPortalName }}">
+      .{{ id }} {
+        {{ css }}
+      }
+    </style>
+  </if>
 
-<if condition="{{ position }}">
-  <style portal="{{ rootContext.headPortalName }}">
-    .{{ Class.PositionedContainer }}:has(> .{{ id }}) {
-      {{ positionedContainerCss }}
-    }
-  </style>
+  <if condition="{{ position }}">
+    <style portal="{{ rootContext.headPortalName }}">
+      .{{ Class.PositionedContainer }}:has(> .{{ id }}) {
+        {{ positionedContainerCss }}
+      }
+    </style>
 
-  <div class="{{ Class.PositionedContainer }}">
+    <div class="{{ Class.PositionedContainer }}">
+      <slot />
+    </div>
+  </if>
+  <else>
     <slot />
-  </div>
-</if>
-<else>
-  <slot />
-</else>
+  </else>
+
+  <script build>
+    elementId = id;
+    classes = `${Class.Element} ${id}`;
+  </script>
+</id>
 
 <script type="module" build>
   import { useRootContext } from "./lib/root-context.js";
@@ -97,9 +107,9 @@
     ...restProps
   } = props;
 
-  const id = `m${crypto.randomUUID()}`;
+  let classes;
+  let elementId;
   const rootContext = useRootContext(buildStore);
-  const classes = `${id} ${Class.Element}`;
 
   const css = `
     ${compileCss(hidden, createSinglePropertyTransformer("display", createDisplayValue))}

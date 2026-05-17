@@ -1,0 +1,24 @@
+<export name="id" />
+
+<slot />
+
+<script type="module" build>
+  import { IDS } from "./lib/symbols.js";
+  import { getFromNamespace } from "./lib/namespace.js";
+
+  const ALPHABET =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const ids = getFromNamespace(buildStore, IDS, () => ({ index: 0 }));
+  let num = ids.index;
+  ids.index += 1;
+  let uniqueIdPart = "";
+  if (num === 0) {
+    uniqueIdPart = ALPHABET[0];
+  } else {
+    while (num > 0) {
+      uniqueIdPart = ALPHABET[num % ALPHABET.length] + uniqueIdPart;
+      num = Math.floor(num / ALPHABET.length);
+    }
+  }
+  const id = `_${uniqueIdPart}`;
+</script>
