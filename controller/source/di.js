@@ -2,6 +2,8 @@
  * @import { CustomElement, CustomElementClass } from "./controller.js";
  */
 
+import { InternalController } from "./controller.js";
+
 // @ts-expect-error Not all runtimes support this symbol yet.
 // https://babeljs.io/docs/babel-plugin-proposal-decorators#symbolmetadata-notes
 Symbol.metadata ??= Symbol.for("Symbol.metadata");
@@ -92,20 +94,20 @@ export function inject(_, context) {
  * @param {InjectRequestOptions} request
  */
 function initialiseInjectRequest(classInstance, request) {
-  classInstance.$initialisers?.().add(() => {
+  const internalController = InternalController.resolve(classInstance);
+  internalController.initialisers.add(() => {
     classInstance.dispatchEvent(
       new InjectRequestEvent(request.name, (service) => {
         request.provide.call(classInstance, service);
 
         if (!service.constructor[Symbol.metadata].singleton) {
-          classInstance.$disposals?.().add(() => {
+          internalController.disposals.add(() => {
             service.dispose?.();
           });
         }
       }),
     );
-
-    classInstance.$disposals?.().add(() => {
+    internalController.disposals.add(() => {
       initialiseInjectRequest(classInstance, request);
     });
   });
@@ -247,13 +249,14 @@ export function container(...serviceClasses) {
       }
 
       #setupCacheDisposal() {
-        this.$disposals?.().add(() => {
+        const internalController = InternalController.resolve(this);
+        internalController.disposals.add(() => {
           for (const [, service] of this.#cache) {
             service.dispose?.();
           }
           this.#cache.clear();
 
-          this.$initialisers?.().add(() => {
+          internalController.initialisers.add(() => {
             this.#setupCacheDisposal();
           });
         });

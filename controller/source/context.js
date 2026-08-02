@@ -2,6 +2,8 @@
  * @import { CustomElement } from './controller.js'
  */
 
+import { InternalController } from "./controller.js";
+
 /**
  * @private
  * @typedef {Object} ContextualisedCustomElement
@@ -189,7 +191,8 @@ function initialiseContextListener(classInstance, providers) {
  * } context
  */
 function initialiseConsumer(classInstance, context) {
-  classInstance.$initialisers?.().add(() => {
+  const internalController = InternalController.resolve(classInstance);
+  internalController.initialisers.add(() => {
     classInstance.dispatchEvent(
       new ContextRequestEvent(
         createContext(context.name),
@@ -197,15 +200,14 @@ function initialiseConsumer(classInstance, context) {
           context.access.set(classInstance, value);
 
           if (unsubscribe) {
-            classInstance.$disposals?.().add(unsubscribe);
+            internalController.disposals.add(unsubscribe);
           }
         },
         true,
       ),
     );
   });
-
-  classInstance.$disposals?.().add(() => {
+  internalController.disposals.add(() => {
     // Initialise consumer again in case node will be reattached to DOM.
     initialiseConsumer(classInstance, context);
   });

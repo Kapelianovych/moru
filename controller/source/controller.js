@@ -4,18 +4,6 @@ import { callWatchers } from "./watch.js";
 import { initialiseObservedAttributes } from "./attributes.js";
 
 /**
- * These properties are deliberately marked as optional to not enforce them onto
- * user's controllers even though they are always initialised.
- *
- * @package
- * @typedef {Object} InternalElementProperties
- * @property {function(): boolean} [$connectedCallbackCalled]
- * @property {function(boolean): void} [$setConnectedCallbackCalled]
- * @property {function(): Set<function(CustomElement, DecoratorMetadataObject): void>} [$initialisers]
- * @property {function(): Set<function(CustomElement, DecoratorMetadataObject): void>} [$disposals]
- */
-
-/**
  * @typedef {Object} ElementLifecycleCallbacks
  * @property {function(): void} [connectedCallback]
  * @property {function(string, string | null, string | null): void} [attributeChangedCallback]
@@ -28,7 +16,7 @@ import { initialiseObservedAttributes } from "./attributes.js";
  */
 
 /**
- * @typedef {HTMLElement & InternalElementProperties & ElementLifecycleCallbacks} CustomElement
+ * @typedef {HTMLElement & ElementLifecycleCallbacks} CustomElement
  */
 
 /**
@@ -46,7 +34,6 @@ import { initialiseObservedAttributes } from "./attributes.js";
  */
 export function controller(classConstructor, context) {
   context.addInitializer(function () {
-    initialiseProperties(classConstructor);
     initialiseObservedAttributes(classConstructor, context.metadata);
     initialiseConnectedCallback(classConstructor, context.metadata);
     initialiseAttributeChangedCallback(classConstructor, context.metadata);
@@ -57,61 +44,20 @@ export function controller(classConstructor, context) {
 }
 
 /**
- * @typedef {Object} InternalElementRuntimeProperties
- * @property {boolean} [$connectedCallbackCalledProperty]
- * @property {Set<function(CustomElement, DecoratorMetadataObject): void>} [$initialisersProperty]
- * @property {Set<function(CustomElement, DecoratorMetadataObject): void>} [$disposalsProperty]
- */
-
-/**
- * @param {CustomElementClass} classConstructor
- */
-function initialiseProperties(classConstructor) {
-  classConstructor.prototype.$connectedCallbackCalled =
-    /**
-     * @this {CustomElement & InternalElementRuntimeProperties}
-     */
-    function () {
-      return this.$connectedCallbackCalledProperty ?? false;
-    };
-  classConstructor.prototype.$setConnectedCallbackCalled =
-    /**
-     * @this {CustomElement & InternalElementRuntimeProperties}
-     * @param {boolean} value
-     */
-    function (value) {
-      this.$connectedCallbackCalledProperty = value;
-    };
-  classConstructor.prototype.$initialisers =
-    /**
-     * @this {CustomElement & InternalElementRuntimeProperties}
-     */
-    function () {
-      return (this.$initialisersProperty ??= new Set());
-    };
-  classConstructor.prototype.$disposals =
-    /**
-     * @this {CustomElement & InternalElementRuntimeProperties}
-     */
-    function () {
-      return (this.$disposalsProperty ??= new Set());
-    };
-}
-
-/**
  * @param {CustomElementClass} classConstructor
  * @param {DecoratorMetadataObject} metadata
  */
 function initialiseConnectedCallback(classConstructor, metadata) {
   const connectedCallback = classConstructor.prototype.connectedCallback;
   classConstructor.prototype.connectedCallback = function () {
+    const internalController = InternalController.resolve(this);
     bindActions(this);
-    this.$initialisers?.().forEach((initialise) => {
+    internalController.initialisers.forEach((initialise) => {
       initialise(this, metadata);
     });
-    this.$initialisers?.().clear();
+    internalController.initialisers.clear();
     connectedCallback?.call(this);
-    this.$setConnectedCallbackCalled?.(true);
+    internalController.connectedCallbackCalled = true;
   };
 }
 
@@ -129,12 +75,13 @@ function initialiseAttributeChangedCallback(classConstructor, metadata) {
      * @param {string | null} newValue
      */
     function (name, oldValue, newValue) {
+      const internalController = InternalController.resolve(this);
       // If Element has attributes in HTML, then for each of them attributeChangedCallback method
       // will be called during parsing phase (before connectedCallback method). At this time
       // children and the rest of the document after this element are not yet initialised,
       // so we usually want to skip those calls.
-      if (this.$connectedCallbackCalled?.()) {
-        if (oldValue !== newValue) {
+      if (internalController.connectedCallbackCalled) {
+        if (!Object.is(oldValue, newValue)) {
           callWatchers(
             this,
             name,
@@ -157,11 +104,12 @@ function initialiseDisconnectedCallback(classConstructor, metadata) {
   const disconnectedCallback = classConstructor.prototype.disconnectedCallback;
   classConstructor.prototype.disconnectedCallback = function () {
     disconnectedCallback?.call(this);
-    this.$disposals?.().forEach((dispose) => {
+    const internalController = InternalController.resolve(this);
+    internalController.disposals.forEach((dispose) => {
       dispose(this, metadata);
     });
-    this.$disposals?.().clear();
-    this.$setConnectedCallbackCalled?.(false);
+    internalController.disposals.clear();
+    internalController.connectedCallbackCalled = false;
   };
 }
 
@@ -176,4 +124,36 @@ function register(classConstructor) {
     // @ts-expect-error
     window[classConstructor.name] = window.customElements.get(name);
   }
+}
+
+/**
+ * Encapsulates custom properties and logic of every controller.
+ */
+export class InternalController {
+  /**
+   * Key for instance of internal controller on `Element` instance.
+   * @readonly
+   */
+  static key = Symbol.for("moru-internal-controller");
+  /**
+   * Resolves (and assigns if absent) an instance of {@link InternalController} to {@link CustomElement}.
+   * @param {CustomElement} on
+   * @returns {InternalController}
+   */
+  static resolve(on) {
+    /**
+     * @type {any}
+     */
+    const instance = on;
+    return (instance[this.key] ??= new this());
+  }
+  connectedCallbackCalled = false;
+  /**
+   * @type {Set<function(CustomElement, DecoratorMetadataObject): void>}
+   */
+  initialisers = new Set();
+  /**
+   * @type {Set<function(CustomElement, DecoratorMetadataObject): void>}
+   */
+  disposals = new Set();
 }

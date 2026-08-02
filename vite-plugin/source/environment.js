@@ -56,7 +56,7 @@ export class Environment {
     return {
       optimizeDeps: { exclude: ["build"] },
       build: {
-        rollupOptions: {
+        rolldownOptions: {
           input: htmlFiles,
         },
       },
