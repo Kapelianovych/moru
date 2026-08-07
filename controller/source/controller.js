@@ -156,4 +156,8 @@ export class InternalController {
    * @type {Set<function(CustomElement, DecoratorMetadataObject): void>}
    */
   disposals = new Set();
+  /**
+   * @type {Map<string | symbol, Set<function(unknown): void>> | undefined}
+   */
+  registeredConsumersPerContext;
 }

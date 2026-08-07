@@ -5,13 +5,6 @@
 import { InternalController } from "./controller.js";
 
 /**
- * @private
- * @typedef {Object} ContextualisedCustomElement
- * @property {boolean} [$areConsumersInitialised]
- * @property {Map<string | symbol, Set<function(unknown): void>>} [$registeredConsumersPerContext]
- */
-
-/**
  * @template KeyType
  * @template ValueType
  * @typedef {KeyType & { __context__: ValueType }} Context
@@ -84,26 +77,29 @@ export class ContextRequestEvent extends Event {
 
 /**
  * @template A
- * @param {ClassAccessorDecoratorTarget<CustomElement & ContextualisedCustomElement, A>} target
- * @param {ClassAccessorDecoratorContext<CustomElement & ContextualisedCustomElement, A>} context
- * @returns {ClassAccessorDecoratorResult<CustomElement & ContextualisedCustomElement, A>}
+ * @param {ClassAccessorDecoratorTarget<CustomElement, A>} target
+ * @param {ClassAccessorDecoratorContext<CustomElement, A>} context
+ * @returns {ClassAccessorDecoratorResult<CustomElement, A>}
  */
 export function provide(target, context) {
   const providers =
     /**
-     * @type {Map<string | symbol, ClassAccessorDecoratorTarget<CustomElement & ContextualisedCustomElement, A>['get']>}
+     * @type {Map<string | symbol, ClassAccessorDecoratorTarget<CustomElement, A>['get']>}
      */
     (context.metadata.providers ??= new Map());
 
   providers.set(context.name, target.get);
 
   context.addInitializer(function () {
-    if (!this.$registeredConsumersPerContext) {
+    const internalController = InternalController.resolve(this);
+    if (internalController.registeredConsumersPerContext == null) {
       initialiseContextListener(this, providers);
-      this.$registeredConsumersPerContext = new Map();
+      internalController.registeredConsumersPerContext = new Map();
     }
-
-    this.$registeredConsumersPerContext.set(context.name, new Set());
+    internalController.registeredConsumersPerContext.set(
+      context.name,
+      new Set(),
+    );
   });
 
   return {
@@ -112,7 +108,8 @@ export function provide(target, context) {
 
       if (!Object.is(value, currentValue)) {
         target.set.call(this, value);
-        this.$registeredConsumersPerContext
+        const internalController = InternalController.resolve(this);
+        internalController.registeredConsumersPerContext
           ?.get(context.name)
           ?.forEach((consume) => {
             consume(value);
@@ -137,8 +134,8 @@ export function consume(_, context) {
 }
 
 /**
- * @param {CustomElement & ContextualisedCustomElement} classInstance
- * @param {Map<string | symbol, ClassAccessorDecoratorTarget<CustomElement & ContextualisedCustomElement, unknown>['get']>} providers
+ * @param {CustomElement} classInstance
+ * @param {Map<string | symbol, ClassAccessorDecoratorTarget<CustomElement, unknown>['get']>} providers
  */
 function initialiseContextListener(classInstance, providers) {
   classInstance.addEventListener(CONTEXT_REQUEST_EVENT_NAME, (event) => {
@@ -153,12 +150,12 @@ function initialiseContextListener(classInstance, providers) {
     if (getValue != null) {
       event.stopImmediatePropagation();
 
+      const internalController = InternalController.resolve(classInstance);
       const dispose = () => {
-        classInstance.$registeredConsumersPerContext
+        internalController.registeredConsumersPerContext
           ?.get(contextRequestEvent.context)
           ?.delete(provide);
       };
-
       /**
        * @param {unknown} value
        */
@@ -173,7 +170,7 @@ function initialiseContextListener(classInstance, providers) {
         }
       };
 
-      classInstance.$registeredConsumersPerContext
+      internalController.registeredConsumersPerContext
         ?.get(contextRequestEvent.context)
         ?.add(provide);
 
