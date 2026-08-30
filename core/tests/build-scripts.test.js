@@ -50,14 +50,14 @@ suite("build scripts", () => {
     equal(fn.mock.callCount(), 1);
   });
 
-  test('"build" scripts should have the global "url" function with the current component URL', async () => {
+  test('"build" scripts should have the global "uri" function with the current component URI', async () => {
     const output = await compile(
       `
-        {{ url('./foo.webp') }}
-        <div>{{ url.current }}</div>
+        {{ uri('./foo.webp') }}
+        <div>{{ uri.current }}</div>
       `,
       {
-        resolveUrl(currentFile, relativeUrl) {
+        resolveUri(currentFile, relativeUrl) {
           return relativeUrl.slice(1);
         },
         fileUrl: "/folder/index.html",
@@ -223,7 +223,7 @@ suite("build scripts", () => {
       `,
       {
         properties: { call },
-        resolveUrl(_, url) {
+        resolveUri(_, url) {
           return url;
         },
         async readFileContent() {

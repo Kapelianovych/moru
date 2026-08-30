@@ -13,7 +13,7 @@ import { MessageTag } from "../source/diagnostics.js";
  * @param {string} url
  * @returns {string}
  */
-function resolveUrl(file, url) {
+function resolveUri(file, url) {
   return url;
 }
 
@@ -29,7 +29,7 @@ suite("client data", () => {
           export const foo = 1;
         </script>
       `,
-      { resolveUrl },
+      { resolveUri },
     );
 
     match(output, /const { foo: foo } = JSON\.parse\("{[\\]+"foo[\\]+":1}"\);/);
@@ -48,7 +48,7 @@ suite("client data", () => {
           export { foo };
         </script>
       `,
-      { resolveUrl },
+      { resolveUri },
     );
 
     match(output, /const { foo: foo } = JSON\.parse\("{[\\]+"foo[\\]+":1}"\);/);
@@ -67,7 +67,7 @@ suite("client data", () => {
           export default foo;
         </script>
       `,
-      { resolveUrl },
+      { resolveUri },
     );
 
     match(output, /const foo = JSON\.parse\("1"\);/);
@@ -85,7 +85,7 @@ suite("client data", () => {
           export default bar = 2;
         </script>
       `,
-      { resolveUrl },
+      { resolveUri },
     );
 
     match(output, /const foo = JSON\.parse\("{[\\]+"foo[\\]+":1}"\);/);
@@ -106,7 +106,7 @@ suite("client data", () => {
           export default 2;
         </script>
       `,
-      { resolveUrl },
+      { resolveUri },
     );
 
     match(output, /const def = JSON\.parse\("2"\);/);
@@ -131,7 +131,7 @@ suite("client data", () => {
             export default 2;
           </script>
         `,
-        { resolveUrl },
+        { resolveUri },
       );
 
       match(output, /const def = JSON\.parse\("2"\);/);
@@ -153,7 +153,7 @@ suite("client data", () => {
           export { foo };
         </script>
       `,
-      { resolveUrl, diagnostics: { publish } },
+      { resolveUri, diagnostics: { publish } },
     );
 
     equal(publish.mock.callCount(), 1);
@@ -176,7 +176,7 @@ suite("client data", () => {
         </script>
       `,
       {
-        resolveUrl,
+        resolveUri,
         async readFileContent() {
           return 'import { foo } from "build";';
         },
@@ -204,7 +204,7 @@ suite("client data", () => {
         </script>
       `,
       {
-        resolveUrl,
+        resolveUri,
         async readFileContent() {
           return 'import { foo } from "other-module";';
         },

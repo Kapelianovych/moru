@@ -1,5 +1,5 @@
 /**
- * @import { UrlCreator } from './location.js';
+ * @import { UriCreator } from './location.js';
  * @import { Options, BuildStore } from './options.js';
  * @import { LocalThis } from './local-this.js';
  * @import { LifecyclePhaseSubscriber } from './lifecycle.js';
@@ -11,7 +11,7 @@
  * @param {Record<string, unknown>} props
  * @param {LocalThis} localThis
  * @param {BuildStore} buildStore
- * @param {UrlCreator} url
+ * @param {UriCreator} uri
  * @param {LifecyclePhaseSubscriber} onAfterRender
  * @param {Options["dynamicallyImportJsFile"]} dynamicallyImportJsFile
  * @returns {Promise<R>}
@@ -33,7 +33,7 @@ export function createAsyncStatementsJsRunner(code, globalVariables) {
       "props",
       "localThis",
       "buildStore",
-      "url",
+      "uri",
       "onAfterRender",
       "dynamicallyImportJsFile",
       `return (async () => {
@@ -59,7 +59,7 @@ export function createAsyncExpressionJsRunner(code, globalVariables) {
       "props",
       "localThis",
       "buildStore",
-      "url",
+      "uri",
       "onAfterRender",
       "dynamicallyImportJsFile",
       `return (async () => {

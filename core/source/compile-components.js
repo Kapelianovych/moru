@@ -35,7 +35,7 @@ export async function compileComponents(
     const componentContent = await options.readFileContent(url);
     /** @type {VirtualFile} */
     const componentFile = {
-      url,
+      uri: url,
       content: componentContent,
     };
     const ast = parseHtml(componentFile);

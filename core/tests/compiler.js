@@ -11,7 +11,7 @@ const DEFAULT_OPTIONS = {
   properties: {},
   diagnostics: { publish() {} },
   buildStore: new Map(),
-  resolveUrl() {
+  resolveUri() {
     return "";
   },
   async readFileContent() {
@@ -36,7 +36,7 @@ const DEFAULT_OPTIONS = {
 export async function compile(text, options = {}) {
   /** @type {VirtualFile} */
   const file = {
-    url: options.fileUrl ?? "/index.html",
+    uri: options.fileUrl ?? "/index.html",
     content: text,
   };
   delete options.fileUrl;

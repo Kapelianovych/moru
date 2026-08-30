@@ -180,7 +180,7 @@ export class DiagnosticsReporter {
       case MessageTag.JsSyntaxError:
         this.#error(
           "A script in the " +
-            colors.blue(message.sourceFile.url) +
+            colors.blue(message.sourceFile.uri) +
             " file contains a syntax error.\n" +
             this.#highlightedRegion(message),
         );
@@ -188,7 +188,7 @@ export class DiagnosticsReporter {
       case MessageTag.NotDefinedPortalName:
         this.#error(
           "A portal name in the" +
-            colors.blue(message.sourceFile.url) +
+            colors.blue(message.sourceFile.uri) +
             " file is " +
             colors.red("undefined") +
             ".\n" +
@@ -200,7 +200,7 @@ export class DiagnosticsReporter {
           "An element references a non-existent portal " +
             colors.magenta(String(message.name)) +
             " from the " +
-            colors.blue(message.sourceFile.url) +
+            colors.blue(message.sourceFile.uri) +
             " file.\n" +
             this.#highlightedRegion(message),
         );
@@ -213,7 +213,7 @@ export class DiagnosticsReporter {
             colors.bold("name") +
             " attribute.\n" +
             "Found in: " +
-            colors.magenta(message.sourceFile.url) +
+            colors.magenta(message.sourceFile.uri) +
             ".\n" +
             this.#highlightedRegion(message),
         );
@@ -221,7 +221,7 @@ export class DiagnosticsReporter {
       case MessageTag.MissingExportedFromHtmlValueDefinition:
         this.#error(
           "The " +
-            colors.bold(message.sourceFile.url) +
+            colors.bold(message.sourceFile.uri) +
             " file misses the " +
             colors.magenta(message.name) +
             " definition " +
@@ -237,7 +237,7 @@ export class DiagnosticsReporter {
             colors.magenta("<export>") +
             " element can be defined only at the top level of the HTML file.\n" +
             "Found in: " +
-            colors.magenta(message.sourceFile.url) +
+            colors.magenta(message.sourceFile.uri) +
             ".\n" +
             this.#highlightedRegion(message),
         );
@@ -250,7 +250,7 @@ export class DiagnosticsReporter {
             colors.magenta(message.importedVariableName) +
             " variable.\n" +
             "Found in: " +
-            colors.magenta(message.sourceFile.url) +
+            colors.magenta(message.sourceFile.uri) +
             ".\n" +
             this.#highlightedRegion(message),
         );
@@ -263,7 +263,7 @@ export class DiagnosticsReporter {
             colors.magenta("tag") +
             " attribute.\n" +
             "Found in: " +
-            colors.magenta(message.sourceFile.url) +
+            colors.magenta(message.sourceFile.uri) +
             ".\n" +
             this.#highlightedRegion(message),
         );
@@ -279,7 +279,7 @@ export class DiagnosticsReporter {
             colors.magenta(message.tagName) +
             ".\n" +
             "Found in: " +
-            colors.magenta(message.sourceFile.url) +
+            colors.magenta(message.sourceFile.uri) +
             ".\n" +
             this.#highlightedRegion(message),
         );
@@ -293,7 +293,7 @@ export class DiagnosticsReporter {
    */
   #highlightedRegion(message) {
     return (
-      colors.underline(message.sourceFile.url) +
+      colors.underline(message.sourceFile.uri) +
       ":\n" +
       colors.bold(
         message.sourceFile.content.slice(

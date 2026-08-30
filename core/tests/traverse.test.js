@@ -18,7 +18,7 @@ suite("traverseHtml", () => {
     const enter = mock.fn();
 
     const ast = parseHtml({
-      url: "something",
+      uri: "something",
       content: "<p>foo</p>",
     });
 
@@ -39,7 +39,7 @@ suite("traverseHtml", () => {
     const exit = mock.fn();
 
     const ast = parseHtml({
-      url: "",
+      uri: "",
       content: "<div><p /></div>",
     });
 
@@ -65,7 +65,7 @@ suite("traverseHtml", () => {
   test('if "enter" returns "false", then children should not be traversed', () => {
     const enter = mock.fn();
 
-    const ast = parseHtml({ url: "", content: "<div><p /></div>" });
+    const ast = parseHtml({ uri: "", content: "<div><p /></div>" });
 
     traverseHtml(ast, [
       {
@@ -99,7 +99,7 @@ suite("traverseHtml", () => {
     const enter = mock.fn();
 
     const ast = parseHtml({
-      url: "something",
+      uri: "something",
       content: "<p>foo</p>",
     });
 
@@ -125,7 +125,7 @@ suite("traverseHtml", () => {
      */
     const matches = mock.fn();
     const ast = parseHtml({
-      url: "something",
+      uri: "something",
       content: "<p />foo",
     });
 

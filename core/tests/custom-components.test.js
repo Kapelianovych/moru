@@ -11,7 +11,7 @@ import { MessageTag } from "../source/diagnostics.js";
  * @param {string} relativeUrl
  * @returns {string}
  */
-function resolveUrl(currentFile, relativeUrl) {
+function resolveUri(currentFile, relativeUrl) {
   return relativeUrl.slice(1);
 }
 
@@ -24,7 +24,7 @@ suite("custom components", () => {
         <foo />
       `,
       {
-        resolveUrl,
+        resolveUri,
         async readFileContent(url) {
           return "foo component";
         },
@@ -42,7 +42,7 @@ suite("custom components", () => {
         <bar />
       `,
       {
-        resolveUrl,
+        resolveUri,
         async readFileContent() {
           return "component";
         },
@@ -60,7 +60,7 @@ suite("custom components", () => {
         <non-matched-element />
       `,
       {
-        resolveUrl,
+        resolveUri,
         async readFileContent() {
           return "component";
         },
@@ -78,7 +78,7 @@ suite("custom components", () => {
         <p />
       `,
       {
-        resolveUrl,
+        resolveUri,
         async readFileContent() {
           return "p component";
         },
@@ -106,7 +106,7 @@ suite("custom components", () => {
         <import from="./slot.html" />
       `,
       {
-        resolveUrl,
+        resolveUri,
         diagnostics: { publish },
       },
     );
@@ -132,7 +132,7 @@ suite("custom components", () => {
         </script>
       `,
       {
-        resolveUrl,
+        resolveUri,
         async readFileContent() {
           return "{{ typeof props.foo.a }} {{ props.foo.a }}";
         },
@@ -152,7 +152,7 @@ suite("custom components", () => {
         </nested>
       `,
       {
-        resolveUrl,
+        resolveUri,
         async readFileContent() {
           return "<div><slot /></div>";
         },
@@ -172,7 +172,7 @@ suite("custom components", () => {
         </nested>
       `,
       {
-        resolveUrl,
+        resolveUri,
         async readFileContent() {
           return "<div></div>";
         },
@@ -192,7 +192,7 @@ suite("custom components", () => {
         </nested>
       `,
       {
-        resolveUrl,
+        resolveUri,
         async readFileContent() {
           return '<div><slot name="text" /></div>';
         },
@@ -212,7 +212,7 @@ suite("custom components", () => {
         </nested>
       `,
       {
-        resolveUrl,
+        resolveUri,
         async readFileContent() {
           return '<div><slot name="text" /></div>';
         },
@@ -232,7 +232,7 @@ suite("custom components", () => {
         </nested>
       `,
       {
-        resolveUrl,
+        resolveUri,
         async readFileContent() {
           return '<div><slot name="text" /></div>';
         },
@@ -256,7 +256,7 @@ suite("custom components", () => {
         </script>
       `,
       {
-        resolveUrl,
+        resolveUri,
         async readFileContent() {
           return `
             <slot />
@@ -284,7 +284,7 @@ suite("custom components", () => {
         <some />
       `,
       {
-        resolveUrl,
+        resolveUri,
         async readFileContent() {
           return "<p />";
         },
@@ -306,7 +306,7 @@ suite("custom components", () => {
         </some>
       `,
       {
-        resolveUrl,
+        resolveUri,
         async readFileContent() {
           return "<slot />";
         },
@@ -398,7 +398,7 @@ suite("custom components", () => {
           <one foo="1" />
         `,
         {
-          resolveUrl(_, url) {
+          resolveUri(_, url) {
             return url;
           },
           async readFileContent(url) {

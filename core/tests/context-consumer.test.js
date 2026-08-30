@@ -100,7 +100,7 @@ suite("context-consumer", () => {
       `,
       {
         buildStore: new Map(),
-        resolveUrl(_, url) {
+        resolveUri(_, url) {
           return url;
         },
         async readFileContent(url) {
@@ -141,7 +141,7 @@ suite("context-consumer", () => {
       `,
       {
         buildStore: new Map(),
-        resolveUrl(_, url) {
+        resolveUri(_, url) {
           return url;
         },
         async readFileContent(url) {

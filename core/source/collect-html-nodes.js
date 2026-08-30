@@ -217,9 +217,10 @@ export function collectHtmlNodes(parent, nodes, file, options) {
                   }),
                 );
               } else {
-                nodes.imports[importedComponentAlias] = options.resolveUrl(
+                nodes.imports[importedComponentAlias] = options.resolveUri(
                   file,
                   node.attribs.from,
+                  { consumer: "node" },
                 );
               }
             } else {

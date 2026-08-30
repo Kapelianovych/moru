@@ -8,6 +8,19 @@
  */
 
 /**
+ * @typedef {'browser' | 'node'} URIConsumer
+ */
+
+/**
+ * @typedef {Object} ResolverContext
+ * @property {URIConsumer} consumer
+ */
+
+/**
+ * @typedef {string} URI
+ */
+
+/**
  * @typedef {Object} Options
  * @property {Record<string, unknown>} exports Exported values from a compiled files.
  *   It will be filled by the compiler.
@@ -15,11 +28,11 @@
  * @property {BuildStore} buildStore Store object for a single compilation unit.
  *   It must not be shared between multiple units, though it can be prepopulated with some values which are shared.
  * @property {Diagnostics} diagnostics
- * @property {(currentFile: VirtualFile, relativeUrl: string) => string} resolveUrl Resolves URLs when the current location is the same as URL of
- *   the {@link currentFile}. When {@link relativeUrl} is `build`, it **must not** resolve it, but return as is.
- * @property {(url: string) => Promise<string>} readFileContent
- * @property {(url: string, content: string) => Promise<void>} writeFileContent
- * @property {(url: string) => Promise<Record<string, unknown>>} dynamicallyImportJsFile
+ * @property {function(VirtualFile, URI, ResolverContext): URI} resolveUri Resolves URIs relatively to the provided
+ *   file. When relative URI is `build`, it **must not** resolve it, but return as is.
+ * @property {function(URI): Promise<string>} readFileContent
+ * @property {function(URI, string): Promise<void>} writeFileContent
+ * @property {function(URI): Promise<Record<string, unknown>>} dynamicallyImportJsFile
  */
 
 export {};

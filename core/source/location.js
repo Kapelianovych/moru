@@ -1,38 +1,42 @@
 /**
- * @import { Options } from './options.js';
  * @import { VirtualFile } from './virtual-file.js';
+ * @import { Options, ResolverContext, URI } from './options.js';
  */
 
 /**
- * @param {string} url
+ * @param {URI} uri
  * @param {Array<string>} extensions
  * @returns {string | void}
  */
-export function getFileNameFrom(url, extensions) {
-  return new RegExp(`\\/?([^/]+)\.(?:${extensions.join("|")})$`).exec(url)?.[1];
+export function getFileNameFrom(uri, extensions) {
+  return new RegExp(`\\/?([^/]+)\.(?:${extensions.join("|")})$`).exec(uri)?.[1];
 }
 
 /**
  * @private
- * @typedef {(relativeUrl: string) => string} UrlResolver
+ * @typedef {function(URI, ResolverContext): URI} UrlResolver
  *
  * @private
  * @typedef {Object} UrlStartingPoint
- * @property {string} current URL of the file relative to which any URL is resolved
- *   by this {@link UrlCreator}.
+ * @property {URI} current URL of the file relative to which any URL is resolved
+ *   by this {@link UriCreator}.
  *
  * A URL resolver function with a predefined relative point.
- * @typedef {UrlResolver & UrlStartingPoint} UrlCreator
+ * @typedef {UrlResolver & UrlStartingPoint} UriCreator
  */
 
 /**
  * @param {VirtualFile} file
  * @param {Options} options
- * @returns {UrlCreator}
+ * @returns {UriCreator}
  */
-export function createUrlCreator(file, options) {
-  const urlCreator = (/** @type {string} */ relativeUrl) =>
-    options.resolveUrl(file, relativeUrl);
-  urlCreator.current = file.url;
+export function createUriCreator(file, options) {
+  const urlCreator =
+    /**
+     * @param {URI} relativeUrl
+     * @param {ResolverContext} context
+     */
+    (relativeUrl, context) => options.resolveUri(file, relativeUrl, context);
+  urlCreator.current = file.uri;
   return urlCreator;
 }

@@ -209,9 +209,10 @@ export function rebaseUrls(collection, file, options) {
               break;
             }
             default:
-              element.attribs[attributeName] = options.resolveUrl(
+              element.attribs[attributeName] = options.resolveUri(
                 file,
                 currentAttributeValue,
+                { consumer: "browser" },
               );
           }
         } else {
@@ -225,9 +226,10 @@ export function rebaseUrls(collection, file, options) {
     const child = /** @type {Text | null} */ (clientScriptElement.firstChild);
 
     if (clientScriptElement.attribs.src) {
-      clientScriptElement.attribs.src = options.resolveUrl(
+      clientScriptElement.attribs.src = options.resolveUri(
         file,
         clientScriptElement.attribs.src,
+        { consumer: "browser" },
       );
     }
 
@@ -240,11 +242,11 @@ export function rebaseUrls(collection, file, options) {
         const newImport = declarationUrl
           ? fullMatch.replace(
               declarationUrl,
-              options.resolveUrl(file, declarationUrl),
+              options.resolveUri(file, declarationUrl, { consumer: "browser" }),
             )
           : fullMatch.replace(
               expressionUrl,
-              options.resolveUrl(file, expressionUrl),
+              options.resolveUri(file, expressionUrl, { consumer: "browser" }),
             );
 
         child.data = child.data.replace(fullMatch, newImport);
@@ -263,7 +265,10 @@ export function rebaseUrls(collection, file, options) {
       for (const [fullMatch, _quote, url] of matches) {
         child.data = child.data.replace(
           fullMatch,
-          fullMatch.replace(url, options.resolveUrl(file, url)),
+          fullMatch.replace(
+            url,
+            options.resolveUri(file, url, { consumer: "browser" }),
+          ),
         );
       }
     } else {
@@ -284,7 +289,7 @@ export function rebaseUrls(collection, file, options) {
 function rebasePingAttribute(value, file, options) {
   return value
     .split(ONE_OR_MORE_WHITESPACES)
-    .map((url) => options.resolveUrl(file, url))
+    .map((url) => options.resolveUri(file, url, { consumer: "browser" }))
     .join(" ");
 }
 
@@ -300,7 +305,7 @@ function rebaseContentAttribute(value, file, options) {
   if (values) {
     const [_, timeout, url = values[3]] = values;
 
-    return `${timeout}; url=${options.resolveUrl(file, url)}`;
+    return `${timeout}; url=${options.resolveUri(file, url, { consumer: "browser" })}`;
   } else {
     return value;
   }
@@ -316,7 +321,8 @@ function rebaseSrcsetAttribute(value, file, options) {
   return Array.from(value.matchAll(SRCSET_SEGMENT))
     .map(([_, url, quantity, units]) => {
       return (
-        options.resolveUrl(file, url) + (units ? " " + quantity + units : "")
+        options.resolveUri(file, url, { consumer: "browser" }) +
+        (units ? " " + quantity + units : "")
       );
     })
     .join(", ");

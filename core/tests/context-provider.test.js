@@ -118,7 +118,7 @@ suite("context-provider", () => {
       `,
       {
         buildStore: new Map(),
-        resolveUrl(_file, url) {
+        resolveUri(_file, url) {
           return url;
         },
         async readFileContent(url) {
@@ -187,7 +187,7 @@ suite("context-provider", () => {
       `,
       {
         buildStore: new Map(),
-        resolveUrl(_file, url) {
+        resolveUri(_file, url) {
           return url;
         },
         async readFileContent(url) {
@@ -244,7 +244,7 @@ suite("context-provider", () => {
         `,
         {
           buildStore: new Map(),
-          resolveUrl(_file, url) {
+          resolveUri(_file, url) {
             return url;
           },
           async readFileContent(url) {
@@ -280,7 +280,7 @@ suite("context-provider", () => {
         `,
         {
           buildStore: new Map(),
-          resolveUrl(_file, url) {
+          resolveUri(_file, url) {
             return url;
           },
           async readFileContent(url) {
@@ -316,7 +316,7 @@ suite("context-provider", () => {
         `,
         {
           buildStore: new Map(),
-          resolveUrl(_file, url) {
+          resolveUri(_file, url) {
             return url;
           },
           async readFileContent(url) {
@@ -363,7 +363,7 @@ suite("context-provider", () => {
         `,
         {
           buildStore: new Map(),
-          resolveUrl(_file, url) {
+          resolveUri(_file, url) {
             return url;
           },
           async readFileContent(url) {

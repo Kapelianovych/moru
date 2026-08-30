@@ -2,11 +2,17 @@
  * @import { AnyNode } from 'domhandler';
  *
  * @import { LocalThis as _LocalThis } from "./local-this.js";
- * @import { UrlCreator as _UrlCreator } from "./location.js";
+ * @import { UriCreator as _UriCreator } from "./location.js";
  * @import { VirtualFile as _VirtualFile } from "./virtual-file.js";
  * @import { HtmlVisitor as _HtmlVisitor } from './traverse-html.js';
  * @import { LifecycleCallback as _LifecycleCallback } from "./lifecycle.js";
- * @import { Options as _Options, BuildStore as _BuildStore } from "./options.js";
+ * @import {
+ *   Options as _Options,
+ *   BuildStore as _BuildStore,
+ *   URI as _URI,
+ *   URIConsumer as _URIConsumer,
+ *   ResolverContext as _ResolverContext
+ * } from "./options.js";
  * @import {
  *   AnyMessage as _AnyMessage,
  *   Diagnostics as _Diagnostics,
@@ -36,6 +42,18 @@
  */
 
 /**
+ * @typedef {_URI} URI
+ */
+
+/**
+ * @typedef {_URIConsumer} URIConsumer
+ */
+
+/**
+ * @typedef {_ResolverContext} ResolverContext
+ */
+
+/**
  * @template {AnyNode} A
  * @typedef {_HtmlVisitor<A>} HtmlVisitor
  */
@@ -47,7 +65,7 @@
 
 /**
  * @typedef {_VirtualFile} VirtualFile
- * @typedef {_UrlCreator} UrlCreator
+ * @typedef {_UriCreator} UriCreator
  * @typedef {_Options} Options
  * @typedef {_BuildStore} BuildStore
  * @typedef {_LocalThis} LocalThis

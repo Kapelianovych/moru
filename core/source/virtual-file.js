@@ -1,6 +1,10 @@
 /**
+ * @import { URI } from './options.js';
+ */
+
+/**
  * @typedef {Object} VirtualFile
- * @property {string} url
+ * @property {URI} uri
  * @property {string} content
  */
 

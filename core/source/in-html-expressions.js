@@ -3,7 +3,7 @@
  *
  * @import { Options } from "./options.js";
  * @import { VirtualFile } from "./virtual-file.js";
- * @import { UrlCreator } from "./location.js";
+ * @import { UriCreator } from "./location.js";
  * @import { HtmlNodesCollection } from "./collect-html-nodes.js";
  * @import { LocalThis } from "./local-this.js";
  * @import { LifecyclePhaseSubscriber } from "./lifecycle.js";
@@ -12,7 +12,7 @@
 import { isText } from "domhandler";
 import { removeElement } from "domutils";
 
-import { createUrlCreator } from "./location.js";
+import { createUriCreator } from "./location.js";
 import { getLocationOfHtmlNode } from "./html-nodes.js";
 import {
   collectGlobalVariablesForJsRunner,
@@ -71,7 +71,7 @@ export async function evaluateInHtmlExpressions(
   file,
   options,
 ) {
-  const url = createUrlCreator(file, options);
+  const uri = createUriCreator(file, options);
 
   for (const key in nodes) {
     const nodeGroupName = /** @type {keyof typeof nodes} */ (key);
@@ -81,7 +81,7 @@ export async function evaluateInHtmlExpressions(
         await evaluateInHtmlExpressionsOf(
           node,
           localThis,
-          url,
+          uri,
           onAfterRender,
           file,
           options,
@@ -94,7 +94,7 @@ export async function evaluateInHtmlExpressions(
     await evaluateInHtmlExpressionsOf(
       node,
       localThis,
-      url,
+      uri,
       onAfterRender,
       file,
       options,
@@ -106,7 +106,7 @@ export async function evaluateInHtmlExpressions(
     await evaluateInHtmlExpressionsOf(
       markupDefinitionElement,
       localThis,
-      url,
+      uri,
       onAfterRender,
       file,
       options,
@@ -118,7 +118,7 @@ export async function evaluateInHtmlExpressions(
     await evaluateInHtmlExpressionsOf(
       portalElement,
       localThis,
-      url,
+      uri,
       onAfterRender,
       file,
       options,
@@ -153,7 +153,7 @@ export async function evaluateInHtmlExpressions(
 /**
  * @param {Text | Element} node
  * @param {LocalThis} localThis
- * @param {UrlCreator} url
+ * @param {UriCreator} uri
  * @param {LifecyclePhaseSubscriber} onAfterRender
  * @param {VirtualFile} file
  * @param {Options} options
@@ -162,7 +162,7 @@ export async function evaluateInHtmlExpressions(
 async function evaluateInHtmlExpressionsOf(
   node,
   localThis,
-  url,
+  uri,
   onAfterRender,
   file,
   options,
@@ -173,7 +173,7 @@ async function evaluateInHtmlExpressionsOf(
         node.data,
         localThis,
         node,
-        url,
+        uri,
         onAfterRender,
         file,
         options,
@@ -191,7 +191,7 @@ async function evaluateInHtmlExpressionsOf(
         expand,
         localThis,
         node,
-        url,
+        uri,
         onAfterRender,
         file,
         options,
@@ -223,7 +223,7 @@ async function evaluateInHtmlExpressionsOf(
         value,
         localThis,
         node,
-        url,
+        uri,
         onAfterRender,
         file,
         options,
@@ -255,7 +255,7 @@ function assignAttribute(target, attributeName, attributeValue) {
  * @param {string} text
  * @param {LocalThis} localThis
  * @param {AnyNode} node
- * @param {UrlCreator} url
+ * @param {UriCreator} uri
  * @param {LifecyclePhaseSubscriber} onAfterRender
  * @param {VirtualFile} file
  * @param {Options} options
@@ -265,7 +265,7 @@ async function findAndEvaluateInHtmlExpressionsIn(
   text,
   localThis,
   node,
-  url,
+  uri,
   onAfterRender,
   file,
   options,
@@ -287,7 +287,7 @@ async function findAndEvaluateInHtmlExpressionsIn(
         options.properties,
         localThis,
         options.buildStore,
-        url,
+        uri,
         onAfterRender,
         options.dynamicallyImportJsFile,
       );

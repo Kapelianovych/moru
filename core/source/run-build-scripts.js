@@ -8,7 +8,7 @@
  * @import { HtmlBuildScriptElement } from './html-nodes.js';
  * @import { LocalThis } from './local-this.js';
  * @import { LifecyclePhaseSubscriber } from './lifecycle.js';
- * @import { UrlCreator } from "./location.js";
+ * @import { UriCreator } from "./location.js";
  */
 
 import { ancestor } from "acorn-walk";
@@ -16,7 +16,7 @@ import { generate } from "astring";
 import { parse } from "acorn";
 
 import { createEmptyHtmlNodesCollection } from "./collect-html-nodes.js";
-import { createUrlCreator } from "./location.js";
+import { createUriCreator } from "./location.js";
 import {
   collectGlobalVariablesForJsRunner,
   createAsyncStatementsJsRunner,
@@ -80,7 +80,7 @@ export async function runBuildScripts(
   file,
   options,
 ) {
-  const url = createUrlCreator(file, options);
+  const url = createUriCreator(file, options);
 
   for (const buildScriptElement of collection.buildScripts) {
     /**
@@ -121,7 +121,7 @@ export async function runBuildScripts(
 
 /**
  *
- * @param {UrlCreator} url
+ * @param {UriCreator} url
  * @param {string} text
  * @param {HtmlBuildScriptElement} buildScriptElement
  * @param {Document | Element} ast
@@ -231,7 +231,9 @@ function compileAndCollectExportedVariables(
         const source =
           typeof node.source.value === "string"
             ? createJsLiteralAstNode({
-                value: options.resolveUrl(file, node.source.value),
+                value: options.resolveUri(file, node.source.value, {
+                  consumer: "node",
+                }),
               })
             : node.source;
 
@@ -292,7 +294,9 @@ function compileAndCollectExportedVariables(
       const source =
         node.source.type === "Literal" && typeof node.source.value === "string"
           ? createJsLiteralAstNode({
-              value: options.resolveUrl(file, node.source.value),
+              value: options.resolveUri(file, node.source.value, {
+                consumer: "node",
+              }),
             })
           : node.source;
 

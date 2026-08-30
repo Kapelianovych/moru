@@ -1,6 +1,6 @@
 /**
  * @import { IndexHtmlTransform, Plugin } from "vite";
- * @import { Diagnostics, VirtualFile } from "@moru/core";
+ * @import { Diagnostics, VirtualFile, URI, ResolverContext } from "@moru/core";
  *
  * @import  { Environment } from "./environment.js";
  */
@@ -88,7 +88,7 @@ export class Compiler {
          * @type {VirtualFile}
          */
         const virtualFile = {
-          url: context.filename.split(sep).join("/"),
+          uri: context.filename.split(sep).join("/"),
           content: html,
         };
 
@@ -98,7 +98,7 @@ export class Compiler {
           properties: {},
           buildStore: new Map(),
           diagnostics: self.#diagnostics,
-          resolveUrl: self.#resolveUrlAndMarkDependency.bind(
+          resolveUri: self.#resolveUriAndMarkDependency.bind(
             self,
             // @ts-expect-error vite injects this method but does not expose its presense :(
             this.addWatchFile?.bind(this),
@@ -126,11 +126,12 @@ export class Compiler {
   /**
    * @param {undefined | function(string): void} addWatchFile
    * @param {VirtualFile} currentFile
-   * @param {string} relativeUrl
-   * @returns {string}
+   * @param {URI} resolveUri
+   * @param {ResolverContext} context
+   * @returns {URI}
    */
-  #resolveUrlAndMarkDependency(addWatchFile, currentFile, relativeUrl) {
-    const filePath = this.#resolveUrl(currentFile, relativeUrl);
+  #resolveUriAndMarkDependency(addWatchFile, currentFile, resolveUri, context) {
+    let filePath = this.#resolveUriOnFileSystem(currentFile, resolveUri);
 
     // Adding additional files to Vite's watcher is possible only in watch mode.
     if (addWatchFile) {
@@ -143,24 +144,26 @@ export class Compiler {
       }
     }
 
-    return filePath;
+    if (context.consumer === "browser") {
+      // Vite treats absolute URLs as starting from the root option is configuration file.
+      filePath = filePath.replace(this.#environment.viteConfiguration.root, "");
+    }
+
+    return filePath.replace(sep, "/");
   }
 
   /**
    * @param {VirtualFile} currentFile
-   * @param {string} relativeUrl
-   * @returns {string}
+   * @param {URI} resolveUri
+   * @returns {URI}
    */
-  #resolveUrl(currentFile, relativeUrl) {
-    if (
-      NON_RESOLVEABLE_URL_PREFIX.test(relativeUrl) ||
-      relativeUrl === "build"
-    ) {
-      return relativeUrl;
-    } else if (relativeUrl.startsWith(".")) {
-      return resolve(dirname(currentFile.url), relativeUrl).replace(sep, "/");
+  #resolveUriOnFileSystem(currentFile, resolveUri) {
+    if (NON_RESOLVEABLE_URL_PREFIX.test(resolveUri) || resolveUri === "build") {
+      return resolveUri;
+    } else if (resolveUri.startsWith(".")) {
+      return resolve(dirname(currentFile.uri), resolveUri);
     } else {
-      return fileURLToPath(import.meta.resolve(relativeUrl)).replace(sep, "/");
+      return fileURLToPath(import.meta.resolve(resolveUri));
     }
   }
 
