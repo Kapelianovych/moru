@@ -66,6 +66,7 @@ export const HttpMethod = Object.freeze({
   Post: "POST",
   Patch: "PATCH",
   Trace: "TRACE",
+  Query: "QUERY",
   Delete: "DELETE",
   Connect: "CONNECT",
   Options: "OPTIONS",
