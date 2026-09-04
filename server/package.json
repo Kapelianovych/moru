@@ -3,7 +3,8 @@
   "type": "module",
   "version": "0.0.1",
   "exports": {
-    ".": "./source/index.js"
+    ".": "./source/index.js",
+    "./node": "./source/node/index.js"
   },
   "dependencies": {
     "mime-types": "3.0.2"

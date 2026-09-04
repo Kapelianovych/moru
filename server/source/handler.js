@@ -1,18 +1,7 @@
 /**
+ * @import { GuardConstructor } from "./guard.js";
  * @import { InterceptorConstructor } from "./interceptor.js";
  */
-
-import { AsyncLocalStorage } from "node:async_hooks";
-
-/**
- * @typedef {Object} HandlerSession
- * @property {URLPattern} pattern
- */
-
-/**
- * @type {AsyncLocalStorage<HandlerSession>}
- */
-export const handlerSession = new AsyncLocalStorage();
 
 /**
  * @enum {typeof HttpStatus[keyof typeof HttpStatus]}
@@ -83,40 +72,51 @@ export const HttpMethod = Object.freeze({
 });
 
 /**
+ * @template Error
  * @typedef {Object} HandlerOptions
  * @property {HttpMethod} method
+ * @property {GuardConstructor<Error, []>} [guard]
  * @property {string | URLPattern | URLPatternInit} pattern
- * @property {Array<InterceptorConstructor<PossibleResponseValue, PossibleResponseValue>>} [interceptors]
+ * @property {Array<InterceptorConstructor<[]>>} [interceptors]
  */
 
 /**
- * @typedef {typeof SkipHandler | Response} PossibleResponseValue
+ * @typedef {typeof TryNext | Response} SessionResponse
  */
 
-export const SkipHandler = Symbol("handler.skip");
+export const TryNext = Symbol("handler.try-next");
 
 /**
- * @template {PossibleResponseValue} [T=PossibleResponseValue]
  * @typedef {Object} Handler
- * @property {function(): T | Promise<T>} handle
+ * @property {function(): SessionResponse | Promise<SessionResponse>} handle
  */
 
 /**
- * @template {PossibleResponseValue} [T=PossibleResponseValue]
- * @template {Array<any>} [Args=Array<any>]
- * @typedef {new (...args: Args) => Handler<T>} HandlerConstructor
+ * @template {Array<any>} Args
+ * @typedef {new (...args: Args) => Handler} HandlerConstructor
  */
 
 /**
- * @template {PossibleResponseValue} T
- * @param {HandlerOptions} options
+ * @template Error
+ * @typedef {Object} HandlerMetadata
+ * @property {HttpMethod} method
+ * @property {URLPattern} pattern
+ * @property {GuardConstructor<Error, []> | undefined} guard
+ * @property {Array<InterceptorConstructor<[]>> | undefined} interceptors
  */
-export function handler(options) {
+
+/**
+ * @template {Array<any>} Args
+ * @template Error
+ * @param {HandlerOptions<Error>} options
+ */
+export function Handler(options) {
   /**
-   * @param {HandlerConstructor<T>} _
-   * @param {ClassDecoratorContext<HandlerConstructor<T>>} context
+   * @param {HandlerConstructor<Args>} _
+   * @param {ClassDecoratorContext<HandlerConstructor<Args>>} context
    */
   return (_, context) => {
+    context.metadata.guard = options.guard;
     context.metadata.pattern =
       typeof options.pattern === "string"
         ? new URLPattern({ pathname: options.pattern })

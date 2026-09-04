@@ -1,9 +1,10 @@
 /**
+ * @import { Guard } from "./guard.js";
  * @import { Handler } from "./handler.js";
  * @import { Interceptor } from "./interceptor.js";
  */
 
-import { session } from "./session.js";
+import { inferName, resolveSessionContext } from "./session.js";
 
 /**
  * @typedef {Object} ServiceOptions
@@ -16,17 +17,24 @@ import { session } from "./session.js";
  */
 
 /**
- * @template {Array<any>} [Args=Array<any>]
+ * @template {Array<any>} Args
  * @typedef {new (...args: Args) => Service} ServiceConstructor
  */
 
 /**
+ * @typedef {Object} ServiceMetadata
+ * @property {string} key
+ * @property {boolean} singleton
+ */
+
+/**
+ * @template {Array<any>} Args
  * @param {ServiceOptions} [options]
  */
-export function service(options) {
+export function Service(options) {
   /**
-   * @param {ServiceConstructor} target
-   * @param {ClassDecoratorContext<ServiceConstructor>} context
+   * @param {ServiceConstructor<Args>} target
+   * @param {ClassDecoratorContext<ServiceConstructor<Args>>} context
    */
   return (target, context) => {
     const name = target.name.replace(/service$/i, "");
@@ -38,19 +46,23 @@ export function service(options) {
 }
 
 /**
- * @param {undefined} _
- * @param {ClassFieldDecoratorContext<Service | Handler | Interceptor, Service>} context
+ * @typedef {Service | Guard<any> | Handler | Interceptor} InjectableTarget
  */
-export function inject(_, context) {
-  const fieldName = String(context.name);
-  const injectionKey = context.private ? fieldName.slice(1) : fieldName;
 
-  return () => {
-    const store = session.getStore();
-
-    if (store != null) {
-      return store.container.resolve(injectionKey);
-    }
+/**
+ * @param {string} [name]
+ */
+export function Inject(name) {
+  /**
+   * @param {undefined} _
+   * @param {ClassFieldDecoratorContext<InjectableTarget, Service>} context
+   */
+  return (_, context) => {
+    const injectionKey = name ?? inferName(context);
+    return () => {
+      const { container } = resolveSessionContext();
+      return container.resolve(injectionKey);
+    };
   };
 }
 
@@ -73,18 +85,8 @@ export class Container {
    */
   constructor(services) {
     for (const serviceConstructor of services) {
-      this.#services.set(
-        /**
-         * @type {string}
-         */
-        (
-          /**
-           * @type {DecoratorMetadataObject}
-           */
-          (serviceConstructor[Symbol.metadata]).key
-        ),
-        serviceConstructor,
-      );
+      const { key } = this.#extractServiceMetadata(serviceConstructor);
+      this.#services.set(key, serviceConstructor);
     }
   }
 
@@ -94,26 +96,22 @@ export class Container {
    */
   resolve(key) {
     const serviceConstructor = this.#services.get(key);
-    const store = session.getStore();
+    const { sessionId } = resolveSessionContext();
 
     if (serviceConstructor != null) {
-      const isSingleton =
-        /**
-         * @type {DecoratorMetadataObject}
-         */
-        (serviceConstructor[Symbol.metadata]).singleton;
+      const { singleton } = this.#extractServiceMetadata(serviceConstructor);
 
-      let service = isSingleton ? this.#singletons.get(key) : undefined;
+      let service = singleton ? this.#singletons.get(key) : undefined;
 
-      if (service == null && store != null) {
+      if (service == null) {
         service = new serviceConstructor();
 
-        if (isSingleton) {
+        if (singleton) {
           this.#singletons.set(key, service);
         } else {
-          let services = this.#sessionLivedServices.get(store.sessionId);
+          let services = this.#sessionLivedServices.get(sessionId);
           if (services == null) {
-            this.#sessionLivedServices.set(store.sessionId, (services = []));
+            this.#sessionLivedServices.set(sessionId, (services = []));
           }
           services.push(service);
         }
@@ -121,6 +119,18 @@ export class Container {
 
       return service;
     }
+  }
+
+  /**
+   * @param {ServiceConstructor<[]>} serviceConstructor
+   */
+  #extractServiceMetadata(serviceConstructor) {
+    return (
+      /**
+       * @type {ServiceMetadata}
+       */
+      (serviceConstructor[Symbol.metadata])
+    );
   }
 
   /**
@@ -143,7 +153,7 @@ export class Container {
     const sessionServices = this.#sessionLivedServices.get(id);
     if (sessionServices != null) {
       sessionServices.forEach(this.#gracefullyDisposeService);
-      sessionServices.length = 0;
+      this.#sessionLivedServices.delete(id);
     }
   }
 
@@ -152,7 +162,7 @@ export class Container {
    */
   dispose(what) {
     if (what === "all") {
-      this.#sessionLivedServices.keys().forEach((id) => {
+      this.#sessionLivedServices.forEach((_, id) => {
         this.#disposeServicesForSession(id);
       });
       this.#singletons.forEach(this.#gracefullyDisposeService);

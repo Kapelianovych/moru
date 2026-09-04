@@ -1,62 +1,77 @@
 /**
- * @import { Interceptor } from "./interceptor.js";
- * @import { Service, Container } from "./service.js";
- * @import { Handler, PossibleResponseValue } from "./handler.js";
+ * @import { Container, InjectableTarget } from "./service.js";
  */
-
-import { AsyncLocalStorage } from "node:async_hooks";
-
-import { handlerSession } from "./handler.js";
 
 /**
  * @typedef {Object} SessionContext
  * @property {string} sessionId
  * @property {Request} request
  * @property {Container} container
+ * @property {URLPattern} handlerUrlPattern
  * @property {Record<string, any>} cache
  */
 
 /**
- * @type {AsyncLocalStorage<SessionContext>}
+ * @type {SessionContext | undefined}
  */
-export const session = new AsyncLocalStorage();
+let sessionContext;
 
 /**
- * @typedef {Service | Handler<PossibleResponseValue> | Interceptor<PossibleResponseValue, PossibleResponseValue>} TargetContainingInstance
+ * @returns {SessionContext}
  */
+export function resolveSessionContext() {
+  if (sessionContext == null) {
+    throw new Error(
+      "Session context is not initialised or resolving is happening outside application context.",
+    );
+  } else {
+    return sessionContext;
+  }
+}
 
 /**
- * @param {ClassFieldDecoratorContext<TargetContainingInstance>} context
+ * @param {SessionContext} nextContext
+ * @returns {function(): void}
+ */
+export function setSessionContext(nextContext) {
+  let currentContext = sessionContext;
+  sessionContext = nextContext;
+  return () => {
+    sessionContext = currentContext;
+  };
+}
+
+/**
+ * @param {ClassFieldDecoratorContext<InjectableTarget>} context
  * @returns {string}
  */
-function inferName(context) {
+export function inferName(context) {
   const name = String(context.name);
-
   return context.private ? name.slice(1) : name;
 }
 
 /**
  * @template {string | undefined} A
- * @param {undefined} _
- * @param {ClassFieldDecoratorContext<TargetContainingInstance, A>} context
+ * @param {string} [name]
  */
-export function group(_, context) {
+export function Group(name) {
   /**
-   * @param {A} initial
-   * @returns {A}
+   * @param {undefined} _
+   * @param {ClassFieldDecoratorContext<InjectableTarget, A>} context
    */
-  return (initial) => {
-    const store = session.getStore();
-    const handlerStore = handlerSession.getStore();
-
-    if (store != null && handlerStore != null) {
-      const parameterName = inferName(context);
-
+  return (_, context) => {
+    /**
+     * @param {A} initial
+     * @returns {A}
+     */
+    return (initial) => {
+      const { request, handlerUrlPattern } = resolveSessionContext();
+      const parameterName = name ?? inferName(context);
       const result =
         /**
          * @type {URLPatternResult}
          */
-        (handlerStore.pattern.exec(store.request.url));
+        (handlerUrlPattern.exec(request.url));
 
       for (const name in result) {
         if (name === "inputs") {
@@ -82,62 +97,60 @@ export function group(_, context) {
       }
 
       return initial;
-    } else {
-      return initial;
-    }
+    };
   };
 }
 
 /**
  * @template {string | null} A
- * @param {undefined} _
- * @param {ClassFieldDecoratorContext<TargetContainingInstance, A>} context
+ * @param {string} [name]
  */
-export function header(_, context) {
+export function Header(name) {
   /**
-   * @param {A} initial
-   * @return {A}
+   * @param {undefined} _
+   * @param {ClassFieldDecoratorContext<InjectableTarget, A>} context
    */
-  return (initial) => {
-    const store = session.getStore();
-
-    if (store != null) {
-      let headerName = inferName(context);
-
-      headerName = headerName.replaceAll(/[A-Z]/g, (letter) => {
-        return `-${letter.toLowerCase()}`;
-      });
-
+  return (_, context) => {
+    /**
+     * @return {A}
+     */
+    return () => {
+      const { request } = resolveSessionContext();
+      const headerName =
+        name ??
+        inferName(context).replaceAll(/[A-Z]/g, (letter) => {
+          return `-${letter.toLowerCase()}`;
+        });
       return (
         /**
          * @type {A}
          */
-        (store.request.headers.get(headerName))
+        (request.headers.get(headerName))
       );
-    } else {
-      return initial;
-    }
+    };
   };
 }
 
 /**
  * @template A
- * @param {undefined} _
- * @param {ClassFieldDecoratorContext<TargetContainingInstance, Promise<A>>} context
+ * @param {function(Request): Promise<A>} [parse]
  */
-export function body(_, context) {
+export function Body(parse = parseBody) {
   /**
-   * @param {Promise<A>} initial
+   * @param {undefined} _
+   * @param {ClassFieldDecoratorContext<InjectableTarget, Promise<A>>} context
    */
-  return (initial) => {
-    const store = session.getStore();
-
-    if (store != null) {
-      store.cache.requestBody ??= parseBody(store.request);
-      return store.cache.requestBody;
-    } else {
-      return initial;
-    }
+  return (_, context) => {
+    /**
+     * @returns {Promise<A>}
+     */
+    return () => {
+      const { cache, request } = resolveSessionContext();
+      if (!("_requestBody" in cache)) {
+        cache._requestBody = parse(request);
+      }
+      return cache._requestBody;
+    };
   };
 }
 

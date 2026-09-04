@@ -1,34 +1,45 @@
 /**
+ * @import { GuardConstructor } from "./guard.js";
+ * @import { AdapterConstructor } from "./adapter.js";
  * @import { ServiceConstructor } from "./service.js";
  * @import { InterceptorConstructor } from "./interceptor.js";
- * @import { HandlerConstructor, PossibleResponseValue } from "./handler.js";
+ * @import { HandlerConstructor, SessionResponse } from "./handler.js";
  */
 
 /**
- * @template {PossibleResponseValue} T
  * @template {Array<any>} Args
  * @overload
- * @param {HandlerConstructor<T, Args>} constructor
+ * @param {HandlerConstructor<Args>} constructor
  * @param {Args} args
- * @returns {HandlerConstructor<T, []>}
- */
-/**
- * @template {PossibleResponseValue} T
- * @template {PossibleResponseValue} V
+ * @returns {HandlerConstructor<[]>}
+ *
  * @template {Array<any>} Args
  * @overload
- * @param {InterceptorConstructor<T, V, Args>} constructor
+ * @param {InterceptorConstructor<Args>} constructor
  * @param {Args} args
- * @returns {InterceptorConstructor<T, V, []>}
- */
-/**
+ * @returns {InterceptorConstructor<[]>}
+ *
  * @template {Array<any>} Args
  * @overload
  * @param {ServiceConstructor<Args>} constructor
  * @param {Args} args
  * @returns {ServiceConstructor<[]>}
- */
-/**
+ *
+ * @template ApplicationRequest
+ * @template ApplicationResponse
+ * @template {Array<any>} Args
+ * @overload
+ * @param {AdapterConstructor<ApplicationRequest, ApplicationResponse, Args>} constructor
+ * @param {Args} args
+ * @returns {AdapterConstructor<ApplicationRequest, ApplicationResponse, []>}
+ *
+ * @template Error
+ * @template {Array<any>} Args
+ * @overload
+ * @param {GuardConstructor<Error, Args>} constructor
+ * @param {Args} args
+ * @returns {GuardConstructor<Error, []>}
+ *
  * @param {new (...args: Array<any>) => object} constructor
  * @param {Array<any>} args
  * @returns {new () => object}

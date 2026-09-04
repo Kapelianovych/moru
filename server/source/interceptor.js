@@ -1,30 +1,28 @@
 /**
- * @import { PossibleResponseValue } from "./handler.js";
+ * @import { SessionResponse } from "./handler.js";
  */
 
 /**
- * @template {PossibleResponseValue} [T=PossibleResponseValue]
- * @template {PossibleResponseValue} [V=PossibleResponseValue]
  * @typedef {Object} Interceptor
- * @property {function(<R extends T | Promise<T>>() => R): V | Promise<V>} intercept
+ * @property {|
+ *  function(
+ *    function(): SessionResponse | Promise<SessionResponse>
+ *  ): SessionResponse | Promise<SessionResponse>
+ * } intercept
  */
 
 /**
- * @template {PossibleResponseValue} [T=PossibleResponseValue]
- * @template {PossibleResponseValue} [V=PossibleResponseValue]
- * @template {Array<any>} [Args=Array<any>]
- * @typedef {new (...args: Args) => Interceptor<T, V>} InterceptorConstructor
+ * @template {Array<any>} Args
+ * @typedef {new (...args: Args) => Interceptor} InterceptorConstructor
  */
 
 /**
- * @template {PossibleResponseValue} [T=PossibleResponseValue]
- * @template {PossibleResponseValue} [V=PossibleResponseValue]
- * @template {Array<any>} [Args=Array<any>]
+ * @template {Array<any>} Args
  */
-export function interceptor() {
+export function Interceptor() {
   /**
-   * @param {InterceptorConstructor<T, V, Args>} target
-   * @param {ClassDecoratorContext<InterceptorConstructor<T, V, Args>>} context
+   * @param {InterceptorConstructor<Args>} target
+   * @param {ClassDecoratorContext<InterceptorConstructor<Args>>} context
    */
   return (target, context) => {};
 }

@@ -1,5 +1,5 @@
 /**
- * @import { PossibleResponseValue } from "./handler.js";
+ * @import { SessionResponse } from "../handler.js";
  */
 
 import { Readable } from "node:stream";
@@ -8,15 +8,15 @@ import { promises, constants, createReadStream } from "node:fs";
 
 import mime from "mime-types";
 
-import { group } from "./session.js";
-import { handler, HttpMethod, HttpStatus, SkipHandler } from "./handler.js";
+import { Group } from "../session.js";
+import { Handler, HttpMethod, HttpStatus, TryNext } from "../handler.js";
 
-@handler({
+@Handler({
   pattern: "/:slug(.*)",
   method: HttpMethod.Get,
 })
-export class StaticFilesHandler {
-  @group #slug = "";
+export class NodeStaticFilesHandler {
+  @Group() #slug = "";
   /**
    * @type {string}
    */
@@ -47,7 +47,7 @@ export class StaticFilesHandler {
 
   /**
    * @param {string} path
-   * @returns {Promise<PossibleResponseValue>}
+   * @returns {Promise<SessionResponse>}
    */
   async #createResponse(path) {
     if (await this.#exists(path)) {
@@ -58,21 +58,15 @@ export class StaticFilesHandler {
       } else if (stats.isDirectory()) {
         return this.#createResponse(join(path, "index.html"));
       } else {
-        return new Response(
-          /**
-           * @type {ReadableStream}
-           */
-          (Readable.toWeb(createReadStream(path))),
-          {
-            status: HttpStatus.Ok,
-            headers: {
-              "content-type": mime.lookup(path) || "application/octet-stream",
-            },
+        return new Response(Readable.toWeb(createReadStream(path)), {
+          status: HttpStatus.Ok,
+          headers: {
+            "content-type": mime.lookup(path) || "application/octet-stream",
           },
-        );
+        });
       }
     } else {
-      return SkipHandler;
+      return TryNext;
     }
   }
 
