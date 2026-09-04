@@ -31,7 +31,7 @@ export class Bundler {
   generateBundle = (_, bundle) => {
     // We expect these files to be the ones populated by the environment plugin.
     const entryFiles = /** @type {Array<string>} */ (
-      this.#environment.viteConfiguration.build.rollupOptions.input
+      this.#environment.viteConfiguration.build.rolldownOptions.input
     );
 
     for (const file of entryFiles) {
