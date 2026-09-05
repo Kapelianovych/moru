@@ -1,30 +1,11 @@
-import babel from "@rolldown/plugin-babel";
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 
+import vitestDecoratorPlugin from "./vitest.decorator.plugin.js";
+
 export default defineConfig({
   root: "./controller",
-  plugins: [
-    babel({
-      presets: [
-        {
-          preset() {
-            return {
-              plugins: [
-                ["@babel/plugin-proposal-decorators", { version: "2023-11" }],
-              ],
-            };
-          },
-          rolldown: {
-            // Only run this transform if the file contains a decorator.
-            filter: {
-              code: "@",
-            },
-          },
-        },
-      ],
-    }),
-  ],
+  plugins: [vitestDecoratorPlugin],
   test: {
     browser: {
       provider: playwright(),
