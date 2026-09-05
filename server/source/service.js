@@ -8,6 +8,7 @@ import { inferName, resolveSessionContext } from "./session.js";
 
 /**
  * @typedef {Object} ServiceOptions
+ * @property {string} [name]
  * @property {boolean} [singleton]
  */
 
@@ -37,8 +38,11 @@ export function Service(options) {
    * @param {ClassDecoratorContext<ServiceConstructor<Args>>} context
    */
   return (target, context) => {
-    const name = target.name.replace(/service$/i, "");
-    const key = name[0].toLowerCase() + name.slice(1);
+    let key = options?.name;
+    if (key == null) {
+      const name = target.name.replace(/service$/i, "");
+      key = name[0].toLowerCase() + name.slice(1);
+    }
 
     context.metadata.key = key;
     context.metadata.singleton = options?.singleton ?? false;
