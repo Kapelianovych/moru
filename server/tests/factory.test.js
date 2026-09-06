@@ -1,10 +1,6 @@
-/**
- * @import { SessionResponse } from "../source/index.js";
- */
-
 import { describe, expect, it, test } from "vitest";
 
-import { factory, Guard, TryNext } from "../source/index.js";
+import { factory, Guard, TryNextResponse } from "../source/index.js";
 
 describe("factory", () => {
   it("should return a new class", () => {
@@ -48,10 +44,9 @@ describe("factory", () => {
       }
       /**
        * @param {Error} error
-       * @return {SessionResponse}
        */
       catch(error) {
-        return TryNext;
+        return TryNextResponse;
       }
     }
 

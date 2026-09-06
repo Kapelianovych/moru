@@ -1,11 +1,7 @@
 /**
- * @import { SessionResponse } from "./handler.js";
- */
-
-/**
  * @template Error
  * @typedef {Object} Guard
- * @property {function(Error): SessionResponse | Promise<SessionResponse>} catch
+ * @property {function(Error): Response | Promise<Response>} catch
  */
 
 /**

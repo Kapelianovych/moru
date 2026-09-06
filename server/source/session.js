@@ -1,6 +1,11 @@
 /**
- * @import { Container, InjectableTarget } from "./service.js";
+ * @import { Container } from "./container.js";
+ * @import { PipeConstructor } from "./pipe.js";
+ * @import { InjectableTarget } from "./service.js";
  */
+
+import { RequestBodyPipe } from "./request-body-pipe.js";
+import { inferKeyFromProperty } from "./key.js";
 
 /**
  * @typedef {Object} SessionContext
@@ -42,31 +47,30 @@ export function setSessionContext(nextContext) {
 }
 
 /**
- * @param {ClassFieldDecoratorContext<InjectableTarget>} context
- * @returns {string}
+ * @template A
+ * @typedef {Object} GroupOptions
+ * @property {string} [name]
+ * @property {PipeConstructor<string | undefined, A, []>} [pipe]
  */
-export function inferName(context) {
-  const name = String(context.name);
-  return context.private ? name.slice(1) : name;
-}
 
 /**
- * @template {string | undefined} A
- * @param {string} [name]
+ * @template [A=string | undefined]
+ * @param {GroupOptions<A>} [options]
  */
-export function Group(name) {
+export function Group(options) {
   /**
    * @param {undefined} _
    * @param {ClassFieldDecoratorContext<InjectableTarget, A>} context
    */
   return (_, context) => {
+    context.metadata.singleton ??= false;
     /**
      * @param {A} initial
      * @returns {A}
      */
     return (initial) => {
-      const { request, handlerUrlPattern } = resolveSessionContext();
-      const parameterName = name ?? inferName(context);
+      const { request, container, handlerUrlPattern } = resolveSessionContext();
+      const parameterName = options?.name ?? inferKeyFromProperty(context);
       const result =
         /**
          * @type {URLPatternResult}
@@ -74,6 +78,7 @@ export function Group(name) {
         (handlerUrlPattern.exec(request.url));
 
       for (const name in result) {
+        // That property never contains any pattern value.
         if (name === "inputs") {
           continue;
         }
@@ -85,14 +90,19 @@ export function Group(name) {
              */
             (name)
           ].groups;
-
         if (parameterName in groups) {
-          return (
-            /**
-             * @type {A}
-             */
-            (groups[parameterName])
-          );
+          const value = groups[parameterName];
+          if (options?.pipe == null) {
+            return (
+              /**
+               * @type {A}
+               */
+              (value)
+            );
+          } else {
+            const pipe = container.resolve(options.pipe);
+            return pipe.transform(value);
+          }
         }
       }
 
@@ -102,74 +112,70 @@ export function Group(name) {
 }
 
 /**
- * @template {string | null} A
- * @param {string} [name]
+ * @template A
+ * @typedef {Object} HeaderOptions
+ * @property {string} [name]
+ * @property {PipeConstructor<string | null, A, []>} [pipe]
  */
-export function Header(name) {
+
+/**
+ * @template [A=string | null]
+ * @param {HeaderOptions<A>} [options]
+ */
+export function Header(options) {
   /**
    * @param {undefined} _
    * @param {ClassFieldDecoratorContext<InjectableTarget, A>} context
    */
   return (_, context) => {
+    context.metadata.singleton ??= false;
     /**
      * @return {A}
      */
     return () => {
-      const { request } = resolveSessionContext();
+      const { request, container } = resolveSessionContext();
       const headerName =
-        name ??
-        inferName(context).replaceAll(/[A-Z]/g, (letter) => {
+        options?.name ??
+        inferKeyFromProperty(context).replaceAll(/[A-Z]/g, (letter) => {
           return `-${letter.toLowerCase()}`;
         });
-      return (
-        /**
-         * @type {A}
-         */
-        (request.headers.get(headerName))
-      );
+      const value = request.headers.get(headerName);
+      if (options?.pipe == null) {
+        return (
+          /**
+           * @type {A}
+           */
+          (value)
+        );
+      } else {
+        const pipe = container.resolve(options.pipe);
+        return pipe.transform(value);
+      }
     };
   };
 }
 
 /**
  * @template A
- * @param {function(Request): Promise<A>} [parse]
+ * @param {PipeConstructor<Request, Promise<A>, []>} [bodyParser]
  */
-export function Body(parse = parseBody) {
+export function Body(bodyParser = RequestBodyPipe) {
   /**
    * @param {undefined} _
    * @param {ClassFieldDecoratorContext<InjectableTarget, Promise<A>>} context
    */
   return (_, context) => {
+    context.metadata.singleton ??= false;
     /**
      * @returns {Promise<A>}
      */
     return () => {
-      const { cache, request } = resolveSessionContext();
+      const { cache, request, container } = resolveSessionContext();
       if (!("_requestBody" in cache)) {
-        cache._requestBody = parse(request);
+        const parser = container.resolve(bodyParser);
+        cache._requestBody = parser.transform(request);
       }
       return cache._requestBody;
     };
   };
-}
-
-/**
- * @param {Request} request
- */
-function parseBody(request) {
-  const type = request.headers.get("content-type") ?? "text/plain";
-
-  if (type === "application/json") {
-    return request.json();
-  } else if (
-    type === "application/x-www-form-urlencoded" ||
-    type === "multipart/form-data"
-  ) {
-    return request.formData();
-  } else if (type.includes("text/")) {
-    return request.text();
-  } else {
-    return request.arrayBuffer();
-  }
 }

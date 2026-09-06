@@ -1,13 +1,9 @@
 /**
- * @import { SessionResponse } from "./handler.js";
- */
-
-/**
  * @typedef {Object} Interceptor
  * @property {|
  *  function(
- *    function(): SessionResponse | Promise<SessionResponse>
- *  ): SessionResponse | Promise<SessionResponse>
+ *    function(): Response | Promise<Response>
+ *  ): Response | Promise<Response>
  * } intercept
  */
 

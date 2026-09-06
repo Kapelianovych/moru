@@ -10,13 +10,9 @@
  * @returns {new () => object}
  */
 export function factory(constructor, args) {
-  return class {
-    static get [Symbol.metadata]() {
-      return constructor[Symbol.metadata];
-    }
-
+  return class extends constructor {
     constructor() {
-      return new constructor(...args);
+      super(...args);
     }
   };
 }

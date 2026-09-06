@@ -4,13 +4,14 @@
  * @import { ServiceConstructor } from "./service.js";
  * @import { InterceptorConstructor } from "./interceptor.js";
  * @import { Adapter, AdapterConstructor } from "./adapter.js";
+ * @import { ContainerStoredInstanceFactory } from "./container.js";
  * @import { HandlerConstructor, HandlerMetadata } from "./handler.js";
  */
 
-import { Container } from "./service.js";
+import { Container } from "./container.js";
 import { DefaultGuard } from "./default-guard.js";
 import { setSessionContext } from "./session.js";
-import { HttpStatus, TryNext } from "./handler.js";
+import { HttpStatus, TryNextResponse } from "./handler.js";
 
 // @ts-expect-error Not all runtimes support decorators yet.
 // https://babeljs.io/docs/babel-plugin-proposal-decorators#symbolmetadata-notes
@@ -22,10 +23,11 @@ Symbol.metadata ??= Symbol.for("Symbol.metadata");
  * @template Error
  * @typedef {Object} ApplicationOptions
  * @property {GuardConstructor<Error, []>} [guard]
- * @property {AdapterConstructor<ApplicationRequest, ApplicationResponse, []>} adapter
  * @property {Array<ServiceConstructor<[]>>} [services]
  * @property {Array<HandlerConstructor<[]>>} handlers
  * @property {Array<InterceptorConstructor<[]>>} [interceptors]
+ * @property {Array<ContainerStoredInstanceFactory>} [factories]
+ * @property {AdapterConstructor<ApplicationRequest, ApplicationResponse, []>} adapter
  */
 
 /**
@@ -54,7 +56,6 @@ export class Application {
    * @type {Container}
    */
   #container;
-
   /**
    * @param {ApplicationOptions<ApplicationRequest, ApplicationResponse, Error>} options
    */
@@ -62,10 +63,9 @@ export class Application {
     this.#guard = options.guard ?? DefaultGuard;
     this.#adapter = new options.adapter();
     this.#handlers = options.handlers;
-    this.#container = new Container(options.services ?? []);
+    this.#container = new Container(options.factories ?? []);
     this.#interceptors = options.interceptors ?? [];
   }
-
   /**
    * @param {HandlerConstructor<[]>} handlerConstructor
    */
@@ -77,7 +77,6 @@ export class Application {
       (handlerConstructor[Symbol.metadata])
     );
   }
-
   /**
    * @param {HandlerConstructor<[]>} handlerConstructor
    * @param {Request} request
@@ -89,7 +88,6 @@ export class Application {
       handlerMetadata.pattern.test(request.url)
     );
   }
-
   /**
    * @param {HandlerConstructor<[]>} handlerConstructor
    * @param {string} sessionId
@@ -108,7 +106,7 @@ export class Application {
       handlerUrlPattern: handlerMetadata.pattern,
     };
     const run = this.#interceptors
-      .concat(handlerMetadata.interceptors ?? [])
+      .concat(handlerMetadata.interceptors)
       .reduceRight(
         (accumulator, interceptorConstructor) => {
           return () => {
@@ -143,7 +141,6 @@ export class Application {
       );
     }
   }
-
   build() {
     /**
      * @param {ApplicationRequest} request
@@ -164,7 +161,7 @@ export class Application {
             webRequest,
           );
 
-          if (webResponse !== TryNext) {
+          if (webResponse !== TryNextResponse) {
             this.#adapter.respondWith(webResponse, response);
             handled = true;
             break;
@@ -182,7 +179,6 @@ export class Application {
       this.#container.dispose(sessionId);
     };
   }
-
   reset() {
     this.#container.dispose("all");
   }

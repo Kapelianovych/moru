@@ -81,15 +81,11 @@ export const HttpMethod = Object.freeze({
  * @property {Array<InterceptorConstructor<[]>>} [interceptors]
  */
 
-/**
- * @typedef {typeof TryNext | Response} SessionResponse
- */
-
-export const TryNext = Symbol("handler.try-next");
+export const TryNextResponse = new Response();
 
 /**
  * @typedef {Object} Handler
- * @property {function(): SessionResponse | Promise<SessionResponse>} handle
+ * @property {function(): Response | Promise<Response>} handle
  */
 
 /**
@@ -103,7 +99,7 @@ export const TryNext = Symbol("handler.try-next");
  * @property {HttpMethod} method
  * @property {URLPattern} pattern
  * @property {GuardConstructor<Error, []> | undefined} guard
- * @property {Array<InterceptorConstructor<[]>> | undefined} interceptors
+ * @property {Array<InterceptorConstructor<[]>>} interceptors
  */
 
 /**
@@ -125,6 +121,6 @@ export function Handler(options) {
           ? options.pattern
           : new URLPattern(options.pattern);
     context.metadata.method = options.method;
-    context.metadata.interceptors = options.interceptors;
+    context.metadata.interceptors = options.interceptors ?? [];
   };
 }

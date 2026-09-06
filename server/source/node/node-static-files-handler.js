@@ -1,7 +1,3 @@
-/**
- * @import { SessionResponse } from "../handler.js";
- */
-
 import { Readable } from "node:stream";
 import { join, resolve } from "node:path";
 import { promises, constants, createReadStream } from "node:fs";
@@ -9,7 +5,12 @@ import { promises, constants, createReadStream } from "node:fs";
 import mime from "mime-types";
 
 import { Group } from "../session.js";
-import { Handler, HttpMethod, HttpStatus, TryNext } from "../handler.js";
+import {
+  Handler,
+  HttpMethod,
+  HttpStatus,
+  TryNextResponse,
+} from "../handler.js";
 
 @Handler({
   pattern: "/:slug(.*)",
@@ -25,7 +26,6 @@ export class NodeStaticFilesHandler {
    * @type {boolean}
    */
   #followSymlinks;
-
   /**
    * @param {string} [prefix]
    * @param {boolean} [followSymlinks]
@@ -34,7 +34,6 @@ export class NodeStaticFilesHandler {
     this.#prefix = resolve(prefix ?? "");
     this.#followSymlinks = followSymlinks ?? false;
   }
-
   /**
    * @param {string} path
    */
@@ -44,10 +43,9 @@ export class NodeStaticFilesHandler {
       () => false,
     );
   }
-
   /**
    * @param {string} path
-   * @returns {Promise<SessionResponse>}
+   * @returns {Promise<Response>}
    */
   async #createResponse(path) {
     if (await this.#exists(path)) {
@@ -66,10 +64,9 @@ export class NodeStaticFilesHandler {
         });
       }
     } else {
-      return TryNext;
+      return TryNextResponse;
     }
   }
-
   async handle() {
     const path = resolve(this.#prefix, this.#slug);
 
