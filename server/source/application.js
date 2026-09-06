@@ -1,7 +1,6 @@
 /**
  * @import { SessionContext } from "./session.js";
  * @import { GuardConstructor } from "./guard.js";
- * @import { ServiceConstructor } from "./service.js";
  * @import { InterceptorConstructor } from "./interceptor.js";
  * @import { Adapter, AdapterConstructor } from "./adapter.js";
  * @import { ContainerStoredInstanceFactory } from "./container.js";
@@ -23,7 +22,6 @@ Symbol.metadata ??= Symbol.for("Symbol.metadata");
  * @template Error
  * @typedef {Object} ApplicationOptions
  * @property {GuardConstructor<Error, []>} [guard]
- * @property {Array<ServiceConstructor<[]>>} [services]
  * @property {Array<HandlerConstructor<[]>>} handlers
  * @property {Array<InterceptorConstructor<[]>>} [interceptors]
  * @property {Array<ContainerStoredInstanceFactory>} [factories]
