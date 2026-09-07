@@ -1,9 +1,10 @@
 /**
  * @import { Container } from "./container.js";
  * @import { PipeConstructor } from "./pipe.js";
- * @import { InjectableTarget } from "./service.js";
+ * @import { InjectableTarget } from "./container.js";
  */
 
+import { runPipe } from "./pipe.js";
 import { RequestBodyPipe } from "./request-body-pipe.js";
 import { inferKeyFromProperty } from "./key.js";
 
@@ -35,22 +36,24 @@ export function resolveSessionContext() {
 }
 
 /**
- * @param {SessionContext} nextContext
- * @returns {function(): void}
+ * @template A
+ * @param {SessionContext} context
+ * @param {function(): A} fn
+ * @returns {A}
  */
-export function setSessionContext(nextContext) {
+export function runInSessionContext(context, fn) {
   let currentContext = sessionContext;
-  sessionContext = nextContext;
-  return () => {
-    sessionContext = currentContext;
-  };
+  sessionContext = context;
+  const result = fn();
+  sessionContext = currentContext;
+  return result;
 }
 
 /**
  * @template A
  * @typedef {Object} GroupOptions
  * @property {string} [name]
- * @property {PipeConstructor<string | undefined, A, []>} [pipe]
+ * @property {PipeConstructor<any, A, string | undefined, []>} [pipe]
  */
 
 /**
@@ -69,7 +72,7 @@ export function Group(options) {
      * @returns {A}
      */
     return (initial) => {
-      const { request, container, handlerUrlPattern } = resolveSessionContext();
+      const { request, handlerUrlPattern } = resolveSessionContext();
       const parameterName = options?.name ?? inferKeyFromProperty(context);
       const result =
         /**
@@ -100,8 +103,7 @@ export function Group(options) {
               (value)
             );
           } else {
-            const pipe = container.resolve(options.pipe);
-            return pipe.transform(value);
+            return runPipe(value, options.pipe);
           }
         }
       }
@@ -115,7 +117,7 @@ export function Group(options) {
  * @template A
  * @typedef {Object} HeaderOptions
  * @property {string} [name]
- * @property {PipeConstructor<string | null, A, []>} [pipe]
+ * @property {PipeConstructor<any, A, string | null, []>} [pipe]
  */
 
 /**
@@ -133,7 +135,7 @@ export function Header(options) {
      * @return {A}
      */
     return () => {
-      const { request, container } = resolveSessionContext();
+      const { request } = resolveSessionContext();
       const headerName =
         options?.name ??
         inferKeyFromProperty(context).replaceAll(/[A-Z]/g, (letter) => {
@@ -148,8 +150,7 @@ export function Header(options) {
           (value)
         );
       } else {
-        const pipe = container.resolve(options.pipe);
-        return pipe.transform(value);
+        return runPipe(value, options.pipe);
       }
     };
   };
@@ -157,7 +158,7 @@ export function Header(options) {
 
 /**
  * @template A
- * @param {PipeConstructor<Request, Promise<A>, []>} [bodyParser]
+ * @param {PipeConstructor<any, Promise<A>, Request, []>} [bodyParser]
  */
 export function Body(bodyParser = RequestBodyPipe) {
   /**
@@ -170,10 +171,9 @@ export function Body(bodyParser = RequestBodyPipe) {
      * @returns {Promise<A>}
      */
     return () => {
-      const { cache, request, container } = resolveSessionContext();
+      const { cache, request } = resolveSessionContext();
       if (!("_requestBody" in cache)) {
-        const parser = container.resolve(bodyParser);
-        cache._requestBody = parser.transform(request);
+        cache._requestBody = runPipe(request, bodyParser);
       }
       return cache._requestBody;
     };

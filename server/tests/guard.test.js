@@ -5,8 +5,10 @@ import {
   Application,
   Guard,
   Handler,
+  Header,
   HttpMethod,
   Interceptor,
+  Pipe,
 } from "../source/index.js";
 
 describe("guard", () => {
@@ -85,5 +87,50 @@ describe("guard", () => {
     );
 
     expect(fn).toHaveBeenCalledOnce();
+  });
+
+  it("should catch an error thrown by pipe", async () => {
+    const fn = vi.fn();
+    const application = new Application({
+      adapter: TestingAdapter,
+      handlers: [
+        @Handler({
+          pattern: "/",
+          method: HttpMethod.Get,
+          guard:
+            @Guard()
+            class {
+              catch = fn;
+            },
+        })
+        class {
+          @Header({
+            pipe:
+              @Pipe()
+              class {
+                /**
+                 * @param {string} value
+                 */
+                transform(value) {
+                  throw 0;
+                  return value;
+                }
+              },
+          })
+          contentType = "";
+
+          handle() {
+            return new Response();
+          }
+        },
+      ],
+    });
+    const listen = application.build();
+    const _ = await listen(
+      new Request("http://localhost", { method: HttpMethod.Get }),
+      new Response(),
+    );
+
+    expect(fn).toHaveBeenCalledExactlyOnceWith(0);
   });
 });

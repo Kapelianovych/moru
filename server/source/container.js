@@ -1,3 +1,11 @@
+/**
+ * @import { Guard } from "./guard.js";
+ * @import { Handler } from "./handler.js";
+ * @import { Interceptor } from "./interceptor.js";
+ * @import { Pipe, PipeConstructor } from "./pipe.js";
+ * @import { Service, ServiceConstructor } from "./service.js";
+ */
+
 import { resolveSessionContext } from "./session.js";
 
 /**
@@ -150,4 +158,34 @@ export class Container {
       this.#sessionInstances.delete(id);
     }
   }
+}
+
+/**
+ * @typedef {Service | Guard<any> | Handler | Interceptor | Pipe<any, any, any>} InjectableTarget
+ */
+
+/**
+ * @typedef {ServiceConstructor<Array<any>> | PipeConstructor<any, any, any, Array<any>>} Injectable
+ */
+
+/**
+ * @template {Injectable} A
+ * @param {A} constructor
+ */
+export function Inject(constructor) {
+  /**
+   * @param {undefined} _
+   * @param {ClassFieldDecoratorContext<InjectableTarget, InstanceType<A>>} context
+   */
+  return (_, context) => {
+    return () => {
+      const { container } = resolveSessionContext();
+      const { singleton } =
+        container.extractStoredInstanceMetadata(constructor);
+      if (singleton === false) {
+        context.metadata.singleton ??= false;
+      }
+      return container.resolve(constructor);
+    };
+  };
 }

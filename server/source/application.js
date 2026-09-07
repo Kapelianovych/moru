@@ -9,7 +9,7 @@
 
 import { Container } from "./container.js";
 import { DefaultGuard } from "./default-guard.js";
-import { setSessionContext } from "./session.js";
+import { runInSessionContext } from "./session.js";
 import { HttpStatus, TryNextResponse } from "./handler.js";
 
 // @ts-expect-error Not all runtimes support decorators yet.
@@ -108,19 +108,17 @@ export class Application {
       .reduceRight(
         (accumulator, interceptorConstructor) => {
           return () => {
-            const restorePreviousSessionContext =
-              setSessionContext(sessionContext);
-            const interceptor = new interceptorConstructor();
-            restorePreviousSessionContext();
-            return interceptor.intercept(accumulator);
+            return runInSessionContext(
+              sessionContext,
+              () => new interceptorConstructor(),
+            ).intercept(accumulator);
           };
         },
         () => {
-          const restorePreviousSessionContext =
-            setSessionContext(sessionContext);
-          const handler = new handlerConstructor();
-          restorePreviousSessionContext();
-          return handler.handle();
+          return runInSessionContext(
+            sessionContext,
+            () => new handlerConstructor(),
+          ).handle();
         },
       );
 
@@ -128,10 +126,10 @@ export class Application {
       return await run();
     } catch (error) {
       const guardConstructor = handlerMetadata.guard ?? this.#guard;
-      const restorePreviousSessionContext = setSessionContext(sessionContext);
-      const guard = new guardConstructor();
-      restorePreviousSessionContext();
-      return guard.catch(
+      return runInSessionContext(
+        sessionContext,
+        () => new guardConstructor(),
+      ).catch(
         /**
          * @type {Error}
          */

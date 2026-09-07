@@ -1,9 +1,11 @@
 export { Pipe } from "./pipe.js";
 export { Guard } from "./guard.js";
+export { Inject } from "./container.js";
 export { factory } from "./factory.js";
 export { Adapter } from "./adapter.js";
+export { Service } from "./service.js";
 export { Interceptor } from "./interceptor.js";
 export { Application } from "./application.js";
-export { Service, Inject } from "./service.js";
+export { RequestBodyPipe } from "./request-body-pipe.js";
 export { Group, Header, Body } from "./session.js";
 export { Handler, HttpMethod, HttpStatus, TryNextResponse } from "./handler.js";

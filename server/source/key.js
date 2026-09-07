@@ -5,7 +5,11 @@
  */
 export function inferKeyFromClass(constructor, patternToGetRidOf) {
   const name = constructor.name.replace(patternToGetRidOf, "");
-  return name[0].toLowerCase() + name.slice(1);
+  if (name.length === 0) {
+    return name;
+  } else {
+    return name[0].toLowerCase() + name.slice(1);
+  }
 }
 
 /**
