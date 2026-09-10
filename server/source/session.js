@@ -72,13 +72,13 @@ export function Group(options) {
      * @returns {A}
      */
     return (initial) => {
-      const { request, handlerUrlPattern } = resolveSessionContext();
+      const sessionContext = resolveSessionContext();
       const parameterName = options?.name ?? inferKeyFromProperty(context);
       const result =
         /**
          * @type {URLPatternResult}
          */
-        (handlerUrlPattern.exec(request.url));
+        (sessionContext.handlerUrlPattern.exec(sessionContext.request.url));
 
       for (const name in result) {
         // That property never contains any pattern value.
@@ -96,14 +96,19 @@ export function Group(options) {
         if (parameterName in groups) {
           const value = groups[parameterName];
           if (options?.pipe == null) {
+            return value === undefined
+              ? initial
+              : /**
+                 * @type {A}
+                 */
+                (value);
+          } else {
             return (
               /**
                * @type {A}
                */
-              (value)
+              (runPipe(value, options.pipe, sessionContext, false))
             );
-          } else {
-            return runPipe(value, options.pipe);
           }
         }
       }
@@ -135,13 +140,13 @@ export function Header(options) {
      * @return {A}
      */
     return () => {
-      const { request } = resolveSessionContext();
+      const sessionContext = resolveSessionContext();
       const headerName =
         options?.name ??
         inferKeyFromProperty(context).replaceAll(/[A-Z]/g, (letter) => {
           return `-${letter.toLowerCase()}`;
         });
-      const value = request.headers.get(headerName);
+      const value = sessionContext.request.headers.get(headerName);
       if (options?.pipe == null) {
         return (
           /**
@@ -150,7 +155,12 @@ export function Header(options) {
           (value)
         );
       } else {
-        return runPipe(value, options.pipe);
+        return (
+          /**
+           * @type {A}
+           */
+          (runPipe(value, options.pipe, sessionContext, false))
+        );
       }
     };
   };
@@ -171,11 +181,16 @@ export function Body(bodyParser = RequestBodyPipe) {
      * @returns {Promise<A>}
      */
     return () => {
-      const { cache, request } = resolveSessionContext();
-      if (!("_requestBody" in cache)) {
-        cache._requestBody = runPipe(request, bodyParser);
+      const sessionContext = resolveSessionContext();
+      if (!("_requestBody" in sessionContext.cache)) {
+        sessionContext.cache._requestBody = runPipe(
+          sessionContext.request,
+          bodyParser,
+          sessionContext,
+          false,
+        );
       }
-      return cache._requestBody;
+      return sessionContext.cache._requestBody;
     };
   };
 }

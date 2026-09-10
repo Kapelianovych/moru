@@ -4,7 +4,7 @@
  */
 
 import { inferKeyFromClass } from "./key.js";
-import { resolveSessionContext, runInSessionContext } from "./session.js";
+import { runInSessionContext } from "./session.js";
 
 /**
  * @template A
@@ -325,38 +325,21 @@ export function Pipe(options) {
     context.metadata.transform =
       /**
        * @param {A} value
-       * @param {PipeConstructor<any, B | Promise<B>, any, []>} selfConstructor
+       * @param {PipeConstructor<any, B, any, []>} selfConstructor
        * @param {SessionContext} sessionContext
        * @returns {B | Promise<B>}
        */
       (value, selfConstructor, sessionContext) => {
         const pipes = options?.pipes ?? [];
         const result = pipes.reduce(
-          (value, pipeConstructor) => {
-            if (value instanceof Promise) {
-              return value.then((value) =>
-                runInSessionContext(sessionContext, () =>
-                  runPipe(value, pipeConstructor),
-                ),
-              );
-            } else {
-              return runInSessionContext(sessionContext, () =>
-                runPipe(value, pipeConstructor),
-              );
-            }
-          },
+          (value, pipeConstructor) =>
+            runPipe(value, pipeConstructor, sessionContext, false),
           /**
            * @type {any}
            */
           (value),
         );
-        if (result instanceof Promise) {
-          return result.then((value) =>
-            runPipeWith(value, selfConstructor, sessionContext),
-          );
-        } else {
-          return runPipeWith(result, selfConstructor, sessionContext);
-        }
+        return runPipe(result, selfConstructor, sessionContext, true);
       };
   };
 }
@@ -366,28 +349,25 @@ export function Pipe(options) {
  * @template B
  * @param {A} value
  * @param {PipeConstructor<any, B, A, []>} pipeConstructor
- * @returns {B}
- */
-export function runPipe(value, pipeConstructor) {
-  const { transform } =
-    /**
-     * @type {PipeMetadata<A, B>}
-     */
-    (pipeConstructor[Symbol.metadata]);
-  const sessionContext = resolveSessionContext();
-  return transform(value, pipeConstructor, sessionContext);
-}
-
-/**
- * @template A
- * @template B
- * @param {A} value
- * @param {PipeConstructor<A, B, A, []>} pipeConstructor
  * @param {SessionContext} sessionContext
- * @returns {B}
+ * @param {boolean} selfOnly
+ * @returns {B | Promise<B>}
  */
-function runPipeWith(value, pipeConstructor, sessionContext) {
-  return runInSessionContext(sessionContext, () =>
-    sessionContext.container.resolve(pipeConstructor),
-  ).transform(value);
+export function runPipe(value, pipeConstructor, sessionContext, selfOnly) {
+  if (value instanceof Promise) {
+    return value.then((value) =>
+      runPipe(value, pipeConstructor, sessionContext, selfOnly),
+    );
+  } else if (selfOnly) {
+    return runInSessionContext(sessionContext, () =>
+      sessionContext.container.resolve(pipeConstructor),
+    ).transform(value);
+  } else {
+    const { transform } =
+      /**
+       * @type {PipeMetadata<A, B>}
+       */
+      (pipeConstructor[Symbol.metadata]);
+    return transform(value, pipeConstructor, sessionContext);
+  }
 }
