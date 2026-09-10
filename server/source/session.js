@@ -137,9 +137,10 @@ export function Header(options) {
   return (_, context) => {
     context.metadata.singleton ??= false;
     /**
+     * @param {A} initial
      * @return {A}
      */
-    return () => {
+    return (initial) => {
       const sessionContext = resolveSessionContext();
       const headerName =
         options?.name ??
@@ -148,12 +149,16 @@ export function Header(options) {
         });
       const value = sessionContext.request.headers.get(headerName);
       if (options?.pipe == null) {
-        return (
-          /**
-           * @type {A}
-           */
-          (value)
-        );
+        return value == null
+          ? (initial ??
+              /**
+               * @type {A}
+               */
+              (null))
+          : /**
+             * @type {A}
+             */
+            (value);
       } else {
         return (
           /**

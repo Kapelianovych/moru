@@ -12,7 +12,7 @@ export class RequestBodyPipe {
       return request.json();
     } else if (
       type === "application/x-www-form-urlencoded" ||
-      type === "multipart/form-data"
+      type.includes("multipart/form-data")
     ) {
       return request.formData();
     } else if (type.includes("text/")) {
