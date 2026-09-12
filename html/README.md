@@ -7,12 +7,12 @@
 > some concerns, please, write me back or open an issue here. I hope you don't
 > mind if I take the name for my package."
 
-Moru is a small _to HTML_ compiler for building user interfaces.
+Moru is a small _HTML_ compiler for building user interfaces.
 
 ## Installation
 
 ```shell
-npm i @moru/core
+npm i @moru/html
 ```
 
 ## Documentation

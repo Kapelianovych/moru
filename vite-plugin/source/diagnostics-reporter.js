@@ -1,7 +1,7 @@
 /**
  * @import { Logger } from "vite";
  * @import { Colors } from "picocolors/types.js";
- * @import { AnyMessage, Diagnostics } from "@moru/core";
+ * @import { AnyMessage, Diagnostics } from "@moru/html";
  *
  * @import { Environment } from "./environment.js";
  */
@@ -9,7 +9,7 @@
 import { inspect } from "node:util";
 
 import colors from "picocolors";
-import { MessageTag } from "@moru/core";
+import { MessageTag } from "@moru/html";
 
 /**
  * @implements {Diagnostics}
@@ -334,7 +334,7 @@ export class DiagnosticsReporter {
    * @returns {string}
    */
   #createMessage(message, severity) {
-    return (severity("[@moru/core]\n") + message)
+    return (severity("[@moru/html]\n") + message)
       .replaceAll("\n", "\n  ")
       .replaceAll("\\n", "\n");
   }

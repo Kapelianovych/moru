@@ -1,5 +1,5 @@
 /**
- * @import { parseHtml } from '@moru/core';
+ * @import { parseHtml } from '@moru/html';
  */
 
 /**

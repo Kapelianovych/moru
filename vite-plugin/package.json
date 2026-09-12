@@ -9,6 +9,6 @@
   },
   "peerDependencies": {
     "vite": "^8",
-    "@moru/core": "^0"
+    "@moru/html": "^0"
   }
 }

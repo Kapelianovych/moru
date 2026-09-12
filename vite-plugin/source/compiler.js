@@ -1,6 +1,6 @@
 /**
  * @import { IndexHtmlTransform, Plugin } from "vite";
- * @import { Diagnostics, VirtualFile, URI, ResolverContext } from "@moru/core";
+ * @import { Diagnostics, VirtualFile, URI, ResolverContext } from "@moru/html";
  *
  * @import  { Environment } from "./environment.js";
  */
@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { isAbsolute, normalize, sep, resolve, dirname, join } from "node:path";
 
-import { compileHtml, generateHtml, parseHtml } from "@moru/core";
+import { compileHtml, generateHtml, parseHtml } from "@moru/html";
 
 import { DiagnosticsReporter } from "./diagnostics-reporter.js";
 

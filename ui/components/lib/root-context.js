@@ -1,8 +1,8 @@
 /**
- * @import { BuildStore } from "@moru/core";
+ * @import { BuildStore } from "@moru/html";
  */
 
-import { getContext } from "@moru/core/context";
+import { getContext } from "@moru/html/context";
 
 export const ROOT_CONTEXT = Symbol("root context");
 

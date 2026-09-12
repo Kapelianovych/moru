@@ -6,6 +6,6 @@
     "./*.html": "./components/*.html"
   },
   "peerDependencies": {
-    "@moru/core": "^0"
+    "@moru/html": "^0"
   }
 }

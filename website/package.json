@@ -6,6 +6,6 @@
     "@moru/store": "^0"
   },
   "devDependencies": {
-    "@moru/core": "^0"
+    "@moru/html": "^0"
   }
 }
