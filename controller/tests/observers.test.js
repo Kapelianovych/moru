@@ -1,4 +1,4 @@
-import { controller, observe } from "@moru/controller";
+import { Controller, Observe } from "@moru/controller";
 import { vi, describe, expect, test } from "vitest";
 
 import { render } from "./render.js";
@@ -35,9 +35,9 @@ describe("observers", () => {
   test("observe subscribes to subscription function when element is mounted", () => {
     const fn = vi.fn();
 
-    @controller
+    @Controller()
     class ObserverTestElement extends HTMLElement {
-      @observe(fn)
+      @Observe(fn)
       foo() {}
     }
 
@@ -54,12 +54,12 @@ describe("observers", () => {
     const fn = vi.fn();
     const store = new Store();
 
-    @controller
+    @Controller()
     class ObserverTest1Element extends HTMLElement {
       /**
        * @param {number} value
        */
-      @observe((consume) => {
+      @Observe((consume) => {
         return store.subscribe(consume);
       })
       foo(value) {
@@ -80,12 +80,12 @@ describe("observers", () => {
     const fn = vi.fn();
     const store = new Store();
 
-    @controller
+    @Controller()
     class ObserverTest2Element extends HTMLElement {
       /**
        * @param {number} value
        */
-      @observe(store)
+      @Observe(store)
       foo(value) {
         fn(value);
       }
@@ -104,12 +104,12 @@ describe("observers", () => {
     const fn = vi.fn();
     const store = new Store();
 
-    @controller
+    @Controller()
     class ObserverTest2Element extends HTMLElement {
       /**
        * @param {number} value
        */
-      @observe(store)
+      @Observe(store)
       foo(value) {
         fn(value);
       }
@@ -130,12 +130,12 @@ describe("observers", () => {
     const fn = vi.fn();
     const store = new Store();
 
-    @controller
+    @Controller()
     class ObserverTest3Element extends HTMLElement {
       /**
        * @param {number} value
        */
-      @observe(store)
+      @Observe(store)
       foo(value) {
         fn(value);
       }

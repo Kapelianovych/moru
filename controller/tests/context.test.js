@@ -1,22 +1,22 @@
 import { describe, test, expect } from "vitest";
-import { controller, provide, consume } from "@moru/controller";
+import { Controller, Provide, Consume } from "@moru/controller";
 
 import { render } from "./render.js";
 
 describe("context", () => {
   test("provide should pass down value to consume", () => {
-    @controller
+    @Controller()
     class ATestElement extends HTMLElement {
-      @provide
+      @Provide()
       accessor foo = 2;
     }
 
-    @controller
+    @Controller()
     class BTestElement extends HTMLElement {
       /**
        * @type {number}
        */
-      @consume
+      @Consume()
       // @ts-expect-error rule to allow non-initialised fields is not disabled
       accessor foo;
     }
@@ -37,9 +37,9 @@ describe("context", () => {
   });
 
   test("consume called outside of the provider uses the default value", () => {
-    @controller
+    @Controller()
     class CTestElement extends HTMLElement {
-      @consume
+      @Consume()
       accessor foo = 4;
     }
 
@@ -55,18 +55,18 @@ describe("context", () => {
   });
 
   test("changes to the provided value update also the consumer", () => {
-    @controller
+    @Controller()
     class ATest1Element extends HTMLElement {
-      @provide
+      @Provide()
       accessor foo = 2;
     }
 
-    @controller
+    @Controller()
     class BTest1Element extends HTMLElement {
       /**
        * @type {number}
        */
-      @consume
+      @Consume()
       // @ts-expect-error rule to allow non-initialised fields is not disabled
       accessor foo;
     }
@@ -91,5 +91,46 @@ describe("context", () => {
     aTest1Element.foo = 4;
 
     expect(bTest1Element.foo).toBe(4);
+  });
+
+  test("provider and consumer can use explicit key for context", () => {
+    const key = "foobar";
+
+    @Controller()
+    class ATest2Element extends HTMLElement {
+      @Provide(key)
+      accessor foo = 2;
+    }
+
+    @Controller()
+    class BTest2Element extends HTMLElement {
+      /**
+       * @type {number}
+       */
+      @Consume(key)
+      // @ts-expect-error rule to allow non-initialised fields is not disabled
+      accessor foo;
+    }
+
+    const container = render(`
+      <a-test2>
+        <b-test2 />
+      </a-test2>
+    `);
+
+    const aTest2Element =
+      /**
+       * @type {ATest2Element}
+       */
+      (container.querySelector("a-test2"));
+    const bTest2Element =
+      /**
+       * @type {BTest2Element}
+       */
+      (aTest2Element.querySelector("b-test2"));
+
+    aTest2Element.foo = 4;
+
+    expect(bTest2Element.foo).toBe(4);
   });
 });

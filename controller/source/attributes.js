@@ -2,41 +2,48 @@
  * @import { CustomElement, CustomElementClass } from "./controller.js";
  */
 
-import { toKebabCase } from "./to-kebab-case.js";
+import { createName } from "./create-name.js";
 
 /**
  * @template {boolean | string | number | null | undefined} A
- * @param {ClassAccessorDecoratorTarget<CustomElement, A>} target
- * @param {ClassAccessorDecoratorContext<CustomElement, A>} context
- * @returns {ClassAccessorDecoratorResult<CustomElement, A>}
+ * @param {string} [name]
  */
-export function attribute(target, context) {
-  const attributeName = createAttributeName(context.name, context.private);
+export function Attribute(name) {
+  /**
+   * @param {ClassAccessorDecoratorTarget<CustomElement, A>} target
+   * @param {ClassAccessorDecoratorContext<CustomElement, A>} context
+   * @returns {ClassAccessorDecoratorResult<CustomElement, A>}
+   */
+  return (target, context) => {
+    const attributeName = name ?? createName(context.name);
+    const attributes =
+      /**
+       * @type {Map<string, Set<ClassMethodDecoratorContext['access']['get']>>}
+       */
+      (context.metadata.attributes ??= new Map());
 
-  const attributes =
-    /**
-     * @type {Map<string, Set<ClassMethodDecoratorContext['access']['get']>>}
-     */
-    (context.metadata.attributes ??= new Map());
+    attributes.set(attributeName, new Set());
 
-  attributes.set(attributeName, new Set());
-
-  return {
-    get() {
-      return convertAttributeValue(this, attributeName, target.get.call(this));
-    },
-    set(value) {
-      setAttributeValue(this, attributeName, value, target.get.call(this));
-    },
-    init(defaultValue) {
-      if (this.hasAttribute(attributeName)) {
-        return convertAttributeValue(this, attributeName, defaultValue);
-      } else {
-        setAttributeValue(this, attributeName, defaultValue, defaultValue);
-
-        return defaultValue;
-      }
-    },
+    return {
+      get() {
+        return convertAttributeValue(
+          this,
+          attributeName,
+          target.get.call(this),
+        );
+      },
+      set(value) {
+        setAttributeValue(this, attributeName, value, target.get.call(this));
+      },
+      init(defaultValue) {
+        if (this.hasAttribute(attributeName)) {
+          return convertAttributeValue(this, attributeName, defaultValue);
+        } else {
+          setAttributeValue(this, attributeName, defaultValue, defaultValue);
+          return defaultValue;
+        }
+      },
+    };
   };
 }
 
@@ -46,7 +53,6 @@ export function attribute(target, context) {
  */
 export function initialiseObservedAttributes(classConstructor, metadata) {
   const observedAttributes = (classConstructor.observedAttributes ??= []);
-
   /**
    * @type {Map<string, Set<ClassMethodDecoratorContext['access']['get']>> | undefined}
    */
@@ -93,17 +99,4 @@ function setAttributeValue(instance, attribute, value, defaultValue) {
   } else {
     instance.setAttribute(attribute, String(value));
   }
-}
-
-/**
- * @param {string | symbol} name
- * @param {boolean} [isPrivate]
- * @returns {string}
- */
-export function createAttributeName(name, isPrivate) {
-  const rawName = String(name);
-
-  isPrivate ??= rawName.startsWith("#");
-
-  return toKebabCase(isPrivate ? rawName.slice(1) : rawName);
 }

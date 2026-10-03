@@ -1,13 +1,13 @@
-import { attribute, controller } from "@moru/controller";
+import { Attribute, Controller } from "@moru/controller";
 import { describe, expect, test } from "vitest";
 
 import { render } from "./render.js";
 
 describe("attributes", () => {
   test("explicitly defined attribute value should be set to a bound property", () => {
-    @controller
+    @Controller()
     class AttributeTestElement extends HTMLElement {
-      @attribute accessor foo = "1";
+      @Attribute() accessor foo = "1";
     }
 
     const container = render(`
@@ -24,9 +24,9 @@ describe("attributes", () => {
   });
 
   test("default property value should define attribute value if the latter is not defined", () => {
-    @controller
+    @Controller()
     class AttributeTest2Element extends HTMLElement {
-      @attribute accessor foo = "1";
+      @Attribute() accessor foo = "1";
     }
 
     const container = render(`
@@ -43,9 +43,9 @@ describe("attributes", () => {
   });
 
   test("boolean property should add/remove attribute", () => {
-    @controller
+    @Controller()
     class AttributeTest3Element extends HTMLElement {
-      @attribute accessor foo = true;
+      @Attribute() accessor foo = true;
     }
 
     const container = render(`
@@ -67,9 +67,9 @@ describe("attributes", () => {
   });
 
   test("numeric property should convert attribute's value into number", () => {
-    @controller
+    @Controller()
     class AttributeTest4Element extends HTMLElement {
-      @attribute accessor foo = 1;
+      @Attribute() accessor foo = 1;
     }
 
     const container = render(`
@@ -86,9 +86,9 @@ describe("attributes", () => {
   });
 
   test("change of the property should update the attribute value", () => {
-    @controller
+    @Controller()
     class AttributeTest5Element extends HTMLElement {
-      @attribute accessor foo = 1;
+      @Attribute() accessor foo = 1;
     }
 
     const container = render(`
@@ -107,9 +107,9 @@ describe("attributes", () => {
   });
 
   test("change of the attribute should update the property value", () => {
-    @controller
+    @Controller()
     class AttributeTest6Element extends HTMLElement {
-      @attribute accessor foo = 1;
+      @Attribute() accessor foo = 1;
     }
 
     const container = render(`
@@ -128,14 +128,14 @@ describe("attributes", () => {
   });
 
   test("if attribute set to null or undefined, it is removed from a DOM node", () => {
-    @controller
+    @Controller()
     class AttributeTest7Element extends HTMLElement {
-      @attribute accessor foo = null;
-      @attribute accessor bar = undefined;
+      @Attribute() accessor foo = null;
+      @Attribute() accessor bar = undefined;
       /**
        * @type {undefined}
        */
-      @attribute accessor so;
+      @Attribute() accessor so;
     }
 
     const container = render(`
@@ -151,5 +151,25 @@ describe("attributes", () => {
     expect(element.hasAttribute("foo")).toBe(false);
     expect(element.hasAttribute("bar")).toBe(false);
     expect(element.hasAttribute("so")).toBe(false);
+  });
+
+  test("attribute name can be explicitly provided", () => {
+    @Controller()
+    class AttributeTest8Element extends HTMLElement {
+      @Attribute("bar") accessor foo = "1";
+    }
+
+    const container = render(`
+      <attribute-test8 bar="2" />
+    `);
+
+    const element =
+      /**
+       * @type {AttributeTest8Element}
+       */
+      (container.querySelector("attribute-test8"));
+
+    expect(element.foo).toBe("2");
+    expect(element.getAttribute("bar")).toBe("2");
   });
 });

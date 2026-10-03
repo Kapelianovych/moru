@@ -1,4 +1,4 @@
-import { bound } from "@moru/controller";
+import { Bound } from "@moru/controller";
 import { describe, expect, test } from "vitest";
 
 describe("bound", () => {
@@ -6,8 +6,7 @@ describe("bound", () => {
     class A {
       #n = 7;
 
-      @bound
-      foo() {
+      @Bound() foo() {
         return this.#n;
       }
     }

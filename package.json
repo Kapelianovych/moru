@@ -20,10 +20,10 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "8.0.2",
-    "@rolldown/plugin-babel": "0.2.3",
-    "@types/node": "26.1.1",
-    "@vitest/browser-playwright": "5.0.0",
-    "prettier": "3.9.6",
-    "vitest": "5.0.0"
+    "@rolldown/plugin-babel": "0.2.4",
+    "@types/node": "26.6.3",
+    "@vitest/browser-playwright": "5.0.2",
+    "prettier": "3.9.9",
+    "vitest": "5.0.2"
   }
 }

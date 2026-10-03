@@ -2,6 +2,8 @@
  * @import { CustomElement } from "./controller.js";
  */
 
+import { createName } from "./create-name.js";
+
 /**
  * @template A
  * @typedef {Object} EventEmitter
@@ -10,30 +12,35 @@
 
 /**
  * @template A
- * @param {unknown} _
- * @param {ClassFieldDecoratorContext<CustomElement>} context
+ * @param {string} [name]
  */
-export function event(_, context) {
+export function Event(name) {
   /**
-   * @this {CustomElement}
-   * @returns {EventEmitter<A>}
+   * @param {unknown} _
+   * @param {ClassFieldDecoratorContext<CustomElement>} context
    */
-  return function () {
-    const self = this;
-
-    return {
-      /**
-       * @param {A} detail
-       */
-      emit(detail) {
-        self.dispatchEvent(
-          new CustomEvent(String(context.name), {
-            bubbles: true,
-            composed: true,
-            detail,
-          }),
-        );
-      },
+  return (_, context) => {
+    const eventName = name ?? createName(context.name);
+    /**
+     * @this {CustomElement}
+     * @returns {EventEmitter<A>}
+     */
+    return function () {
+      const self = this;
+      return {
+        /**
+         * @param {A} detail
+         */
+        emit(detail) {
+          self.dispatchEvent(
+            new CustomEvent(eventName, {
+              bubbles: true,
+              composed: true,
+              detail,
+            }),
+          );
+        },
+      };
     };
   };
 }
@@ -58,26 +65,32 @@ export function event(_, context) {
 
 /**
  * @template {Event} E
- * @param {unknown} _
- * @param {|
- *   ClassMethodDecoratorContext<CustomElement, EventListenerFunction<E>>
- *   | ClassFieldDecoratorContext<CustomElement, EventListener<E>>
- * } context
+ * @param {string} [name]
  */
-export function listen(_, context) {
-  context.addInitializer(function () {
-    let listener = context.access.get(this);
+export function Listen(name) {
+  /**
+   * @param {unknown} _
+   * @param {|
+   *   ClassMethodDecoratorContext<CustomElement, EventListenerFunction<E>>
+   *   | ClassFieldDecoratorContext<CustomElement, EventListener<E>>
+   * } context
+   */
+  return (_, context) => {
+    const eventName = name ?? createName(context.name);
+    context.addInitializer(function () {
+      let listener = context.access.get(this);
 
-    if (typeof listener === "function") {
-      listener = listener.bind(this);
-    }
+      if (typeof listener === "function") {
+        listener = listener.bind(this);
+      }
 
-    this.addEventListener(
-      String(context.name),
-      /**
-       * @type {EventListenerOrEventListenerObject}
-       */
-      (listener),
-    );
-  });
+      this.addEventListener(
+        eventName,
+        /**
+         * @type {EventListenerOrEventListenerObject}
+         */
+        (listener),
+      );
+    });
+  };
 }

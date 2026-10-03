@@ -1,5 +1,4 @@
 /**
- * @import { Service as _Service } from "./di.js";
  * @import {
  *   Observer as _Observer,
  *   ObserverSubscriber as _ObserverSubscriber,
@@ -68,22 +67,18 @@
  * @typedef {_ObserverSubscriber<A>} ObserverSubscriber
  */
 
-/**
- * @typedef {Omit<_Service, 'constructor'>} Service
- */
-
-export { bound } from "./bound.js";
-export { watch } from "./watch.js";
-export { observe } from "./observers.js";
-export { property } from "./properties.js";
-export { attribute } from "./attributes.js";
-export { controller } from "./controller.js";
-export { event, listen } from "./events.js";
-export { target, targets } from "./targets.js";
-export { inject, service, container, InjectRequestEvent } from "./di.js";
+export { Bound } from "./bound.js";
+export { Watch } from "./watch.js";
+export { Target } from "./targets.js";
+export { Observe } from "./observers.js";
+export { Property } from "./properties.js";
+export { Attribute } from "./attributes.js";
+export { Controller } from "./controller.js";
+export { Event, Listen } from "./events.js";
+export { Inject, Injectable, InjectRequestEvent } from "./container.js";
 export {
-  provide,
-  consume,
+  Provide,
+  Consume,
   createContext,
   ContextRequestEvent,
 } from "./context.js";

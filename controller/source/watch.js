@@ -2,7 +2,7 @@
  * @import { CustomElement } from "./controller.js";
  */
 
-import { createAttributeName } from "./attributes.js";
+import { createName } from "./create-name.js";
 
 /**
  * @callback GetAccessor
@@ -13,9 +13,8 @@ import { createAttributeName } from "./attributes.js";
 /**
  * @param {string | symbol} field
  */
-export function watch(field) {
-  const attributeName = createAttributeName(field);
-
+export function Watch(field) {
+  const attributeName = createName(field);
   /**
    * @param {unknown} _
    * @param {|

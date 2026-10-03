@@ -2,90 +2,101 @@
  * @import { CustomElement } from "./controller.js";
  */
 
+import { createName } from "./create-name.js";
+
 /**
- * @template {Element | undefined} E
- * @overload
- * @param {HTMLElement} controller
- * @param {string} name
- * @param {true} single
- * @returns {E}
- *
- * @template {Element} E
- * @overload
- * @param {HTMLElement} controller
- * @param {string} name
- * @param {false} single
- * @returns {Array<E>}
- *
- * @param {HTMLElement} controller
- * @param {string} name
- * @param {boolean} single
- * @returns {Array<Element> | Element | undefined}
+ * @template {boolean} A
+ * @typedef {Object} TargetOptions
+ * @property {string} [name]
+ * @property {A} [all]
  */
-function findTarget(controller, name, single) {
-  const tag = controller.tagName.toLowerCase();
-  const selector = `[data-target~="${tag}.${name}"]`;
-  /**
-   * @type {Array<Element>}
-   */
-  const targets = [];
-
-  if (controller.shadowRoot) {
-    for (const element of controller.shadowRoot.querySelectorAll(selector)) {
-      // Element is child of the current shadow root and not any nested controller.
-      if (!element.closest(tag)) {
-        if (single) {
-          return element;
-        } else {
-          targets.push(element);
-        }
-      }
-    }
-  }
-
-  for (const element of controller.querySelectorAll(selector)) {
-    if (element.closest(tag) === controller) {
-      if (single) {
-        return element;
-      } else {
-        targets.push(element);
-      }
-    }
-  }
-
-  if (!single) {
-    return targets;
-  }
-}
 
 /**
- * @template {Element | undefined} E
+ * @template E
+ * @callback TargetDecorator
  * @param {ClassAccessorDecoratorTarget<CustomElement, E>} _
  * @param {ClassAccessorDecoratorContext<CustomElement, E>} context
  * @returns {ClassAccessorDecoratorResult<CustomElement, E>}
  */
-export function target(_, context) {
-  const stringifiedName = String(context.name);
-
-  return {
-    get() {
-      return findTarget(this, stringifiedName, true);
-    },
-  };
-}
 
 /**
  * @template {Element} E
- * @param {ClassAccessorDecoratorTarget<CustomElement, Array<E>>} _
- * @param {ClassAccessorDecoratorContext<CustomElement, Array<E>>} context
- * @returns {ClassAccessorDecoratorResult<CustomElement, Array<E>>}
+ * @overload
+ * @param {Required<Omit<TargetOptions<true>, 'name'>> & Pick<TargetOptions<true>, 'name'>} options
+ * @returns {TargetDecorator<Array<E>>}
  */
-export function targets(_, context) {
-  const stringifiedName = String(context.name);
+/**
+ * @template {Element} E
+ * @overload
+ * @param {TargetOptions<false>} [options]
+ * @returns {TargetDecorator<E | undefined>}
+ */
+/**
+ * @template {Element} E
+ * @param {TargetOptions<boolean>} [options]
+ * @returns {TargetDecorator<Array<E> | E | undefined>}
+ */
+export function Target(options) {
+  return (_, context) => {
+    const name = options?.name ?? createName(context.name);
+    return {
+      get() {
+        const tag = this.tagName.toLowerCase();
+        const single =
+          options == null || options.all == null ? true : !options.all;
+        const selector = `[data-target~="${tag}.${name}"]`;
+        /**
+         * @type {Array<E>}
+         */
+        const targets = [];
 
-  return {
-    get() {
-      return findTarget(this, stringifiedName, false);
-    },
+        if (this.shadowRoot != null) {
+          for (const element of this.shadowRoot.querySelectorAll(selector)) {
+            // Element is child of the current shadow root and not any nested controller.
+            if (!element.closest(tag)) {
+              if (single) {
+                return (
+                  /**
+                   * @type {E}
+                   */
+                  (element)
+                );
+              } else {
+                targets.push(
+                  /**
+                   * @type {E}
+                   */
+                  (element),
+                );
+              }
+            }
+          }
+        }
+
+        for (const element of this.querySelectorAll(selector)) {
+          if (element.closest(tag) === this) {
+            if (single) {
+              return (
+                /**
+                 * @type {E}
+                 */
+                (element)
+              );
+            } else {
+              targets.push(
+                /**
+                 * @type {E}
+                 */
+                (element),
+              );
+            }
+          }
+        }
+
+        if (!single) {
+          return targets;
+        }
+      },
+    };
   };
 }

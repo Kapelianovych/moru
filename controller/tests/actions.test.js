@@ -1,5 +1,5 @@
 import { userEvent } from "vitest/browser";
-import { controller } from "@moru/controller";
+import { Controller } from "@moru/controller";
 import { describe, expect, test, vi } from "vitest";
 
 import { render } from "./render.js";
@@ -8,7 +8,7 @@ describe("actions", () => {
   test("action should be bound by the matching controller", async () => {
     const fn = vi.fn();
 
-    @controller
+    @Controller()
     class ForTestElement extends HTMLElement {
       hello() {
         fn();
@@ -35,7 +35,7 @@ describe("actions", () => {
   test("action has to have an access to element's instance", async () => {
     const fn = vi.fn();
 
-    @controller
+    @Controller()
     class ForTest1Element extends HTMLElement {
       #what = "field";
 
@@ -65,7 +65,7 @@ describe("actions", () => {
     const fn = vi.fn();
     const fn2 = vi.fn();
 
-    @controller
+    @Controller()
     class ForTest2Element extends HTMLElement {
       hello() {
         fn();
@@ -101,7 +101,7 @@ describe("actions", () => {
   });
 
   test("action should be bound to the closest matching controller", async () => {
-    @controller
+    @Controller()
     class ForTest3Element extends HTMLElement {
       hello = vi.fn();
     }
@@ -140,7 +140,7 @@ describe("actions", () => {
   test("actions can be defined dynamically", async () => {
     const fn = vi.fn();
 
-    @controller
+    @Controller()
     class ForTest4Element extends HTMLElement {
       hello() {
         fn();
@@ -169,7 +169,7 @@ describe("actions", () => {
   test("actions can be defined on dynamically added elements", async () => {
     const fn = vi.fn();
 
-    @controller
+    @Controller()
     class ForTest5Element extends HTMLElement {
       hello() {
         fn();

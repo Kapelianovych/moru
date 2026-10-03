@@ -2,7 +2,7 @@
  * @import { CustomElement } from "./controller.js";
  */
 
-import { InternalController } from "./controller.js";
+import { InternalController } from "./internal-controller.js";
 
 /**
  * @template A
@@ -28,12 +28,11 @@ import { InternalController } from "./controller.js";
  * @template A
  * @param {Observer<A> | ObserverSubscriber<A>} observer
  */
-export function observe(observer) {
+export function Observe(observer) {
   const subscribe =
     typeof observer === "function"
       ? observer
       : observer.subscribe.bind(observer);
-
   /**
    * @param {ObserverRecord<A>['consume']} consume
    * @param {ClassMethodDecoratorContext<CustomElement, ObserverRecord<A>['consume']>} context

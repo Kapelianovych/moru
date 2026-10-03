@@ -2,7 +2,7 @@
  * @import { EventEmitter } from "@moru/controller";
  */
 
-import { controller, event, listen } from "@moru/controller";
+import { Controller, Event, Listen } from "@moru/controller";
 import { vi, describe, expect, test } from "vitest";
 
 import { render } from "./render.js";
@@ -11,13 +11,13 @@ describe("events", () => {
   test("event should create event emitter with the event name matching the property's name", () => {
     const fn = vi.fn();
 
-    @controller
+    @Controller()
     class EventTestElement extends HTMLElement {
       /**
        * @type {EventEmitter<null>}
        */
       // @ts-expect-error the property is initialised by decorator.
-      @event foo;
+      @Event() foo;
 
       emitEvent() {
         this.foo.emit(null);
@@ -45,22 +45,22 @@ describe("events", () => {
   test("listen should catch event which type is equal to property name", () => {
     const fn = vi.fn();
 
-    @controller
+    @Controller()
     class EventTest1Element extends HTMLElement {
       /**
        * @type {EventEmitter<null>}
        */
       // @ts-expect-error the property is initialised by decorator.
-      @event foo;
+      @Event() foo;
 
       connectedCallback() {
         this.foo.emit(null);
       }
     }
 
-    @controller
+    @Controller()
     class ListenTest1Element extends HTMLElement {
-      @listen foo = fn;
+      @Listen() foo = fn;
     }
 
     render(`
@@ -69,28 +69,28 @@ describe("events", () => {
       </listen-test1>
     `);
 
-    expect(fn).toBeCalled();
+    expect(fn).toHaveBeenCalled();
   });
 
   test("listen can be applied to object with handleEvent method", () => {
     const fn = vi.fn();
 
-    @controller
+    @Controller()
     class EventTest2Element extends HTMLElement {
       /**
        * @type {EventEmitter<null>}
        */
       // @ts-expect-error the property is initialised by decorator.
-      @event foo;
+      @Event() foo;
 
       connectedCallback() {
         this.foo.emit(null);
       }
     }
 
-    @controller
+    @Controller()
     class ListenTest2Element extends HTMLElement {
-      @listen foo = this;
+      @Listen() foo = this;
 
       handleEvent = fn;
     }
@@ -107,24 +107,24 @@ describe("events", () => {
   test("function-listener should pertain it's access to this", () => {
     const fn = vi.fn();
 
-    @controller
+    @Controller()
     class EventTest3Element extends HTMLElement {
       /**
        * @type {EventEmitter<null>}
        */
       // @ts-expect-error the property is initialised by decorator.
-      @event foo;
+      @Event() foo;
 
       connectedCallback() {
         this.foo.emit(null);
       }
     }
 
-    @controller
+    @Controller()
     class ListenTest3Element extends HTMLElement {
       #prop = 3;
 
-      @listen foo() {
+      @Listen() foo() {
         fn(this.#prop);
       }
     }
@@ -142,24 +142,24 @@ describe("events", () => {
   test("object-listener should pertain it's access to this", () => {
     const fn = vi.fn();
 
-    @controller
+    @Controller()
     class EventTest4Element extends HTMLElement {
       /**
        * @type {EventEmitter<null>}
        */
       // @ts-expect-error the property is initialised by decorator.
-      @event foo;
+      @Event() foo;
 
       connectedCallback() {
         this.foo.emit(null);
       }
     }
 
-    @controller
+    @Controller()
     class ListenTest4Element extends HTMLElement {
       #prop = 4;
 
-      @listen foo = this;
+      @Listen() foo = this;
 
       handleEvent() {
         fn(this.#prop);
@@ -170,6 +170,80 @@ describe("events", () => {
       <listen-test4>
         <event-test4 />
       </listen-test4>
+    `);
+
+    expect(fn).toHaveBeenCalledOnce();
+    expect(fn.mock.lastCall?.[0]).toBe(4);
+  });
+
+  test("Event can explicitly accept event name", () => {
+    const fn = vi.fn();
+
+    @Controller()
+    class EventTest5Element extends HTMLElement {
+      /**
+       * @type {EventEmitter<null>}
+       */
+      // @ts-expect-error the property is initialised by decorator.
+      @Event("bar") foo;
+
+      connectedCallback() {
+        this.foo.emit(null);
+      }
+    }
+
+    @Controller()
+    class ListenTest5Element extends HTMLElement {
+      #prop = 4;
+
+      @Listen() bar = this;
+
+      handleEvent() {
+        fn(this.#prop);
+      }
+    }
+
+    render(`
+      <listen-test5>
+        <event-test5 />
+      </listen-test5>
+    `);
+
+    expect(fn).toHaveBeenCalledOnce();
+    expect(fn.mock.lastCall?.[0]).toBe(4);
+  });
+
+  test("Listen can explicitly accept event name", () => {
+    const fn = vi.fn();
+
+    @Controller()
+    class EventTest6Element extends HTMLElement {
+      /**
+       * @type {EventEmitter<null>}
+       */
+      // @ts-expect-error the property is initialised by decorator.
+      @Event("bar") foo;
+
+      connectedCallback() {
+        this.foo.emit(null);
+      }
+    }
+
+    @Controller()
+    class ListenTest6Element extends HTMLElement {
+      #prop = 4;
+
+      @Listen("bar") foo = this;
+
+      handleEvent() {
+        fn(this.#prop);
+      }
+    }
+
+    render(`
+      <listen-test6>
+        <event-test6 />
+      </listen-test6>
     `);
 
     expect(fn).toHaveBeenCalledOnce();

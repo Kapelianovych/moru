@@ -1,23 +1,24 @@
 import { vi, describe, expect, test } from "vitest";
-import { container, controller, inject, service } from "@moru/controller";
+import { Controller, Inject, Injectable } from "@moru/controller";
 
 import { render } from "./render.js";
 
 describe("di", () => {
   test("should inject the service if requester element has container as an ancestor", () => {
-    @service()
+    @Injectable()
     class AService {}
 
-    @controller
-    @container(AService)
+    @Controller({
+      factories: [],
+    })
     class ForFooElement extends HTMLElement {}
 
-    @controller
+    @Controller()
     class ForBarElement extends HTMLElement {
       /**
        * @type {AService}
        */
-      @inject
+      @Inject(AService)
       // @ts-expect-error we are expecting AService instance to be there.
       a;
     }
@@ -38,15 +39,15 @@ describe("di", () => {
   });
 
   test("injecting without parent container does not modify the target property", () => {
-    @service()
+    @Injectable()
     class A1Service {}
 
-    @controller
+    @Controller()
     class ForBar1Element extends HTMLElement {
       /**
        * @type {A1Service}
        */
-      @inject
+      @Inject(A1Service)
       // @ts-expect-error we are expecting A1Service instance to be there.
       a;
     }
@@ -65,25 +66,24 @@ describe("di", () => {
   });
 
   test("by default all services are singletons", () => {
-    @service()
+    @Injectable()
     class AService {}
 
-    @controller
-    @container(AService)
+    @Controller({ factories: [] })
     class ForFoo1Element extends HTMLElement {}
 
-    @controller
+    @Controller()
     class ForBar2Element extends HTMLElement {
       /**
        * @type {AService}
        */
-      @inject
+      @Inject(AService)
       // @ts-expect-error we are expecting AService instance to be there.
       a;
       /**
        * @type {AService}
        */
-      @inject
+      @Inject(AService)
       // @ts-expect-error we are expecting AService instance to be there.
       #a;
 
@@ -108,19 +108,18 @@ describe("di", () => {
   });
 
   test("service can be injected into private property", () => {
-    @service()
+    @Injectable()
     class AService {}
 
-    @controller
-    @container(AService)
+    @Controller({ factories: [] })
     class ForFoo3Element extends HTMLElement {}
 
-    @controller
+    @Controller()
     class ForBar3Element extends HTMLElement {
       /**
        * @type {AService}
        */
-      @inject
+      @Inject(AService)
       // @ts-expect-error we are expecting AService instance to be there.
       #a;
 
@@ -145,25 +144,24 @@ describe("di", () => {
   });
 
   test("services marked as singleton: false must be instantiated on every inject call", () => {
-    @service({ singleton: false })
+    @Injectable({ singleton: false })
     class AService {}
 
-    @controller
-    @container(AService)
+    @Controller({ factories: [] })
     class ForFoo4Element extends HTMLElement {}
 
-    @controller
+    @Controller()
     class ForBar4Element extends HTMLElement {
       /**
        * @type {AService}
        */
-      @inject
+      @Inject(AService)
       // @ts-expect-error we are expecting AService instance to be there.
       a;
       /**
        * @type {AService}
        */
-      @inject
+      @Inject(AService)
       // @ts-expect-error we are expecting AService instance to be there.
       #a;
 
@@ -187,59 +185,24 @@ describe("di", () => {
     expect(forBar4Element.a).not.toBe(forBar4Element.aSecondService);
   });
 
-  test("the initialise method of the service should be called when element is connected to the DOM for the first time", () => {
-    const fn = vi.fn();
-
-    @service()
-    class AService {
-      initialise = fn;
-    }
-
-    @controller
-    @container(AService)
-    class DiContainerElement extends HTMLElement {}
-
-    @controller
-    class DiTestElement extends HTMLElement {
-      /**
-       * @type {AService}
-       */
-      // @ts-expect-error service will be injected at initialisation.
-      @inject a;
-    }
-
-    const containerElement = render("<di-container />");
-
-    expect(fn).not.toHaveBeenCalledOnce();
-
-    const diTestElement = document.createElement("di-test");
-
-    expect(fn).not.toHaveBeenCalledOnce();
-
-    containerElement.firstElementChild?.append(diTestElement);
-
-    expect(fn).toHaveBeenCalledOnce();
-  });
-
   test("the dispose method of non-singleton service should be called when element is deattached from the DOM", () => {
     const fn = vi.fn();
 
-    @service({ singleton: false })
+    @Injectable({ singleton: false })
     class AService {
       dispose = fn;
     }
 
-    @controller
-    @container(AService)
+    @Controller({ factories: [] })
     class DiContainer1Element extends HTMLElement {}
 
-    @controller
+    @Controller()
     class DiTest1Element extends HTMLElement {
       /**
        * @type {AService}
        */
       // @ts-expect-error service will be injected at initialisation.
-      @inject a;
+      @Inject(AService) a;
     }
 
     const containerElement = render("<di-container1 />");
@@ -262,22 +225,21 @@ describe("di", () => {
   test("the dispose method of singleton service should be called when container is deattached from the DOM", () => {
     const fn = vi.fn();
 
-    @service()
+    @Injectable()
     class AService {
       dispose = fn;
     }
 
-    @controller
-    @container(AService)
+    @Controller({ factories: [] })
     class DiContainer2Element extends HTMLElement {}
 
-    @controller
+    @Controller()
     class DiTest2Element extends HTMLElement {
       /**
        * @type {AService}
        */
       // @ts-expect-error service will be injected at initialisation.
-      @inject a;
+      @Inject(AService) a;
     }
 
     const containerElement = render("<di-container2 />");
@@ -301,64 +263,24 @@ describe("di", () => {
     expect(fn).toHaveBeenCalledOnce();
   });
 
-  test("the initialise method of the non-singleton service should be called again when element is reconnected to the DOM", () => {
-    const fn = vi.fn();
-
-    @service({ singleton: false })
-    class AService {
-      initialise = fn;
-    }
-
-    @controller
-    @container(AService)
-    class DiContainer3Element extends HTMLElement {}
-
-    @controller
-    class DiTest3Element extends HTMLElement {
-      /**
-       * @type {AService}
-       */
-      // @ts-expect-error service will be injected at initialisation.
-      @inject a;
-    }
-
-    const containerElement = render(`
-      <di-container3>
-        <di-test3 />
-      </di-container3>
-    `);
-
-    const diTestElement =
-      /**
-       * @type {DiTest3Element}
-       */
-      (containerElement.querySelector("di-test3"));
-
-    containerElement.firstElementChild?.removeChild(diTestElement);
-    containerElement.firstElementChild?.append(diTestElement);
-
-    expect(fn).toHaveBeenCalledTimes(2);
-  });
-
   test("the dispose method of the non-singleton service should be called again when element is deattached again from the DOM", () => {
     const fn = vi.fn();
 
-    @service({ singleton: false })
+    @Injectable({ singleton: false })
     class AService {
       dispose = fn;
     }
 
-    @controller
-    @container(AService)
+    @Controller({ factories: [] })
     class DiContainer4Element extends HTMLElement {}
 
-    @controller
+    @Controller()
     class DiTest4Element extends HTMLElement {
       /**
        * @type {AService}
        */
       // @ts-expect-error service will be injected at initialisation.
-      @inject a;
+      @Inject(AService) a;
     }
 
     const containerElement = render(`
@@ -383,22 +305,21 @@ describe("di", () => {
   test("the dispose method of the singleton service should be called again when the container is deattached again from the DOM", () => {
     const fn = vi.fn();
 
-    @service({ singleton: true })
+    @Injectable({ singleton: true })
     class AService {
       dispose = fn;
     }
 
-    @controller
-    @container(AService)
+    @Controller({ factories: [] })
     class DiContainer5Element extends HTMLElement {}
 
-    @controller
+    @Controller()
     class DiTest5Element extends HTMLElement {
       /**
        * @type {AService}
        */
       // @ts-expect-error service will be injected at initialisation.
-      @inject a;
+      @Inject(AService) a;
     }
 
     const containerElement = render(`
@@ -420,25 +341,27 @@ describe("di", () => {
     expect(fn).toHaveBeenCalledTimes(2);
   });
 
-  test("the initialise method of the singleton service must not be called the second time and onward if a requester is reattached to the DOM", () => {
-    const fn = vi.fn();
-
-    @service({ singleton: true })
-    class AService {
-      initialise = fn;
+  test("subclass of an injectable class can replace it on inject call", () => {
+    @Injectable()
+    class A {
+      foo = 1;
     }
 
-    @controller
-    @container(AService)
+    class B extends A {
+      bar() {
+        return this.foo;
+      }
+    }
+
+    @Controller({ factories: [[A, B]] })
     class DiContainer6Element extends HTMLElement {}
 
-    @controller
+    @Controller()
     class DiTest6Element extends HTMLElement {
       /**
-       * @type {AService}
+       * @type {A | undefined}
        */
-      // @ts-expect-error service will be injected at initialisation.
-      @inject a;
+      @Inject(A) foo;
     }
 
     const containerElement = render(`
@@ -447,15 +370,144 @@ describe("di", () => {
       </di-container6>
     `);
 
+    const diContainerElement =
+      /**
+       * @type {DiContainer6Element}
+       */
+      (containerElement.firstElementChild);
     const diTestElement =
       /**
        * @type {DiTest6Element}
        */
-      (document.querySelector("di-test6"));
+      (diContainerElement.firstElementChild);
 
-    containerElement.firstElementChild?.removeChild(diTestElement);
-    containerElement.firstElementChild?.append(diTestElement);
+    expect(diTestElement.foo).toBeInstanceOf(B);
+  });
 
-    expect(fn).toHaveBeenCalledOnce();
+  test("injectables with same key can be substitutes for each other on inject call", () => {
+    @Injectable({ key: "1" })
+    class A {
+      foo = 1;
+    }
+
+    @Injectable({ key: "1" })
+    class B {
+      foo = 2;
+    }
+
+    @Controller({ factories: [[A, B]] })
+    class DiContainer7Element extends HTMLElement {}
+
+    @Controller()
+    class DiTest7Element extends HTMLElement {
+      /**
+       * @type {A | undefined}
+       */
+      @Inject(A) foo;
+    }
+
+    const containerElement = render(`
+      <di-container7>
+        <di-test7 />
+      </di-container7>
+    `);
+
+    const diContainerElement =
+      /**
+       * @type {DiContainer7Element}
+       */
+      (containerElement.firstElementChild);
+    const diTestElement =
+      /**
+       * @type {DiTest7Element}
+       */
+      (diContainerElement.firstElementChild);
+
+    expect(diTestElement.foo).toBeInstanceOf(B);
+  });
+
+  test("injectables with same key and singleton option can be substitutes for each other on inject call", () => {
+    @Injectable({ key: "1", singleton: false })
+    class A {
+      foo = 1;
+    }
+
+    @Injectable({ key: "1", singleton: false })
+    class B {
+      foo = 2;
+    }
+
+    @Controller({ factories: [[A, B]] })
+    class DiContainer8Element extends HTMLElement {}
+
+    @Controller()
+    class DiTest8Element extends HTMLElement {
+      /**
+       * @type {A | undefined}
+       */
+      @Inject(A) foo;
+    }
+
+    const containerElement = render(`
+      <di-container8>
+        <di-test8 />
+      </di-container8>
+    `);
+
+    const diContainerElement =
+      /**
+       * @type {DiContainer8Element}
+       */
+      (containerElement.firstElementChild);
+    const diTestElement =
+      /**
+       * @type {DiTest8Element}
+       */
+      (diContainerElement.firstElementChild);
+
+    expect(diTestElement.foo).toBeInstanceOf(B);
+  });
+
+  test("injectables with different key or singleton option can not be substitutes for each other on inject call", () => {
+    @Injectable({ key: "1", singleton: false })
+    class A {
+      foo = 1;
+    }
+
+    @Injectable({ key: "2", singleton: false })
+    class B {
+      foo = 2;
+    }
+
+    @Controller({ factories: [[A, B]] })
+    class DiContainer9Element extends HTMLElement {}
+
+    @Controller()
+    class DiTest9Element extends HTMLElement {
+      /**
+       * @type {A | undefined}
+       */
+      @Inject(A) foo;
+    }
+
+    const containerElement = render(`
+      <di-container9>
+        <di-test9 />
+      </di-container9>
+    `);
+
+    const diContainerElement =
+      /**
+       * @type {DiContainer9Element}
+       */
+      (containerElement.firstElementChild);
+    const diTestElement =
+      /**
+       * @type {DiTest9Element}
+       */
+      (diContainerElement.firstElementChild);
+
+    expect(diTestElement.foo).toBeInstanceOf(A);
+    expect(diTestElement.foo).not.toBeInstanceOf(B);
   });
 });

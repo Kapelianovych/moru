@@ -1,17 +1,17 @@
+import { Controller, Target } from "@moru/controller";
 import { describe, expect, test } from "vitest";
-import { controller, target, targets } from "@moru/controller";
 
 import { render } from "./render.js";
 
 describe("targets", () => {
   test("target allows to obtain a reference to the element", () => {
-    @controller
+    @Controller()
     class TargetTestElement extends HTMLElement {
       /**
        * @type {HTMLDivElement}
        */
       // @ts-expect-error property will be dynamically initialised.
-      @target accessor div;
+      @Target() accessor div;
     }
 
     const container = render(`
@@ -30,13 +30,13 @@ describe("targets", () => {
   });
 
   test("target decorator can be applied to the private property", () => {
-    @controller
+    @Controller()
     class TargetTest1Element extends HTMLElement {
       /**
        * @type {HTMLDivElement}
        */
       // @ts-expect-error property will be dynamically initialised.
-      @target accessor #div;
+      @Target() accessor #div;
 
       get div() {
         return this.#div;
@@ -45,7 +45,7 @@ describe("targets", () => {
 
     const container = render(`
       <target-test1>
-        <div data-target="target-test1.#div"></div>
+        <div data-target="target-test1.div"></div>
       </target-test1>
     `);
 
@@ -59,13 +59,13 @@ describe("targets", () => {
   });
 
   test("target always resolve to the element present in DOM", () => {
-    @controller
+    @Controller()
     class TargetTest2Element extends HTMLElement {
       /**
        * @type {HTMLDivElement}
        */
       // @ts-expect-error property will be dynamically initialised.
-      @target accessor div;
+      @Target() accessor div;
     }
 
     const container = render(`
@@ -89,13 +89,13 @@ describe("targets", () => {
   });
 
   test("target finds first element only", () => {
-    @controller
+    @Controller()
     class TargetTest3Element extends HTMLElement {
       /**
        * @type {HTMLDivElement}
        */
       // @ts-expect-error property will be dynamically initialised.
-      @target accessor div;
+      @Target() accessor div;
     }
 
     const container = render(`
@@ -115,13 +115,13 @@ describe("targets", () => {
   });
 
   test("targets find all elements", () => {
-    @controller
+    @Controller()
     class TargetTest4Element extends HTMLElement {
       /**
        * @type {Array<HTMLElement>}
        */
       // @ts-expect-error property will be dynamically initialised.
-      @targets accessor els;
+      @Target({ all: true }) accessor els;
     }
 
     const container = render(`
@@ -144,13 +144,13 @@ describe("targets", () => {
   });
 
   test("when there are not matching elements, targets resolved to the empty array", () => {
-    @controller
+    @Controller()
     class TargetTest5Element extends HTMLElement {
       /**
        * @type {Array<HTMLElement>}
        */
       // @ts-expect-error property will be dynamically initialised.
-      @targets accessor els;
+      @Target({ all: true }) accessor els;
     }
 
     const container = render(`
@@ -164,5 +164,30 @@ describe("targets", () => {
       (container.firstElementChild);
 
     expect(targetTestElement.els).toMatchObject([]);
+  });
+
+  test("explicit name is used to locate target instead of property's name", () => {
+    @Controller()
+    class TargetTest6Element extends HTMLElement {
+      /**
+       * @type {HTMLElement}
+       */
+      // @ts-expect-error property will be dynamically initialised.
+      @Target({ name: "foo" }) accessor els;
+    }
+
+    const container = render(`
+      <target-test6>
+        <div data-target="target-test6.foo"></div>
+      </target-test6>
+    `);
+
+    const targetTestElement =
+      /**
+       * @type {TargetTest6Element}
+       */
+      (container.firstElementChild);
+
+    expect(targetTestElement.els).toBe(targetTestElement.firstElementChild);
   });
 });

@@ -1,5 +1,5 @@
 import { vi, describe, expect, test } from "vitest";
-import { controller, watch, property, attribute } from "@moru/controller";
+import { Controller, Watch, Property, Attribute } from "@moru/controller";
 
 import { render } from "./render.js";
 
@@ -7,11 +7,11 @@ describe("watch", () => {
   test("watch calls the method when attribute has been changed", () => {
     const fn = vi.fn();
 
-    @controller
+    @Controller()
     class WatchTestElement extends HTMLElement {
-      @attribute accessor foo = "";
+      @Attribute() accessor foo = "";
 
-      @watch("foo") on = fn;
+      @Watch("foo") on = fn;
     }
 
     const container = render(`
@@ -28,13 +28,13 @@ describe("watch", () => {
   test("watch can be stacked", () => {
     const fn = vi.fn();
 
-    @controller
+    @Controller()
     class WatchTest1Element extends HTMLElement {
-      @attribute accessor foo = "";
-      @attribute accessor bar = "";
+      @Attribute() accessor foo = "";
+      @Attribute() accessor bar = "";
 
-      @watch("foo")
-      @watch("bar")
+      @Watch("foo")
+      @Watch("bar")
       on = fn;
     }
 
@@ -51,11 +51,11 @@ describe("watch", () => {
   test("watch can track properties", () => {
     const fn = vi.fn();
 
-    @controller
+    @Controller()
     class WatchTest2Element extends HTMLElement {
-      @property accessor foo = 0;
+      @Property() accessor foo = 0;
 
-      @watch("foo") on = fn;
+      @Watch("foo") on = fn;
     }
 
     const container = render(`
@@ -76,13 +76,13 @@ describe("watch", () => {
   test("watch can track private fields", () => {
     const fn = vi.fn();
 
-    @controller
+    @Controller()
     class WatchTest3Element extends HTMLElement {
-      @property accessor #foo = 0;
-      @attribute accessor #bar = "";
+      @Property() accessor #foo = 0;
+      @Attribute() accessor #bar = "";
 
-      @watch("#foo")
-      @watch("#bar")
+      @Watch("#foo")
+      @Watch("#bar")
       on = fn;
 
       /**

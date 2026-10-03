@@ -2,7 +2,7 @@
  * @import { CustomElement } from './controller.js'
  */
 
-import { InternalController } from "./controller.js";
+import { InternalController } from "./internal-controller.js";
 
 /**
  * @template KeyType
@@ -60,7 +60,6 @@ export class ContextRequestEvent extends Event {
    * @type {ContextCallback<ContextType<T>>}
    */
   callback;
-
   /**
    * @param {T} context
    * @param {ContextCallback<ContextType<T>>} callback
@@ -68,7 +67,6 @@ export class ContextRequestEvent extends Event {
    */
   constructor(context, callback, subscribe) {
     super(CONTEXT_REQUEST_EVENT_NAME, { bubbles: true, composed: true });
-
     this.context = context;
     this.callback = callback;
     this.subscribe = subscribe;
@@ -77,60 +75,71 @@ export class ContextRequestEvent extends Event {
 
 /**
  * @template A
- * @param {ClassAccessorDecoratorTarget<CustomElement, A>} target
- * @param {ClassAccessorDecoratorContext<CustomElement, A>} context
- * @returns {ClassAccessorDecoratorResult<CustomElement, A>}
+ * @param {string | symbol} [key]
  */
-export function provide(target, context) {
-  const providers =
-    /**
-     * @type {Map<string | symbol, ClassAccessorDecoratorTarget<CustomElement, A>['get']>}
-     */
-    (context.metadata.providers ??= new Map());
+export function Provide(key) {
+  /**
+   * @param {ClassAccessorDecoratorTarget<CustomElement, A>} target
+   * @param {ClassAccessorDecoratorContext<CustomElement, A>} context
+   * @returns {ClassAccessorDecoratorResult<CustomElement, A>}
+   */
+  return (target, context) => {
+    const provideKey = key ?? context.name;
+    const providers =
+      /**
+       * @type {Map<string | symbol, ClassAccessorDecoratorTarget<CustomElement, A>['get']>}
+       */
+      (context.metadata.providers ??= new Map());
 
-  providers.set(context.name, target.get);
+    providers.set(provideKey, target.get);
 
-  context.addInitializer(function () {
-    const internalController = InternalController.resolve(this);
-    if (internalController.registeredConsumersPerContext == null) {
-      initialiseContextListener(this, providers);
-      internalController.registeredConsumersPerContext = new Map();
-    }
-    internalController.registeredConsumersPerContext.set(
-      context.name,
-      new Set(),
-    );
-  });
-
-  return {
-    set(value) {
-      const currentValue = target.get.call(this);
-
-      if (!Object.is(value, currentValue)) {
-        target.set.call(this, value);
-        const internalController = InternalController.resolve(this);
-        internalController.registeredConsumersPerContext
-          ?.get(context.name)
-          ?.forEach((consume) => {
-            consume(value);
-          });
+    context.addInitializer(function () {
+      const internalController = InternalController.resolve(this);
+      if (internalController.registeredConsumersPerContext == null) {
+        initialiseContextListener(this, providers);
+        internalController.registeredConsumersPerContext = new Map();
       }
-    },
+      internalController.registeredConsumersPerContext.set(
+        provideKey,
+        new Set(),
+      );
+    });
+
+    return {
+      set(value) {
+        const currentValue = target.get.call(this);
+
+        if (!Object.is(value, currentValue)) {
+          target.set.call(this, value);
+          const internalController = InternalController.resolve(this);
+          internalController.registeredConsumersPerContext
+            ?.get(provideKey)
+            ?.forEach((consume) => {
+              consume(value);
+            });
+        }
+      },
+    };
   };
 }
 
 /**
- * @param {unknown} _
- * @param {|
- *  ClassFieldDecoratorContext<CustomElement>
- *  | ClassSetterDecoratorContext<CustomElement>
- *  | ClassAccessorDecoratorContext<CustomElement>
- * } context
+ * @param {string | symbol} [key]
  */
-export function consume(_, context) {
-  context.addInitializer(function () {
-    initialiseConsumer(this, context);
-  });
+export function Consume(key) {
+  /**
+   * @param {unknown} _
+   * @param {|
+   *  ClassFieldDecoratorContext<CustomElement>
+   *  | ClassSetterDecoratorContext<CustomElement>
+   *  | ClassAccessorDecoratorContext<CustomElement>
+   * } context
+   */
+  return (_, context) => {
+    context.addInitializer(function () {
+      initialiseConsumer(this, context, key);
+    });
+  };
 }
 
 /**
@@ -164,7 +173,6 @@ function initialiseContextListener(classInstance, providers) {
           value,
           contextRequestEvent.subscribe ? dispose : undefined,
         );
-
         if (!contextRequestEvent.subscribe) {
           dispose();
         }
@@ -186,16 +194,17 @@ function initialiseContextListener(classInstance, providers) {
  *  | ClassSetterDecoratorContext<CustomElement>
  *  | ClassAccessorDecoratorContext<CustomElement>
  * } context
+ * @param {string | symbol} [key]
  */
-function initialiseConsumer(classInstance, context) {
+function initialiseConsumer(classInstance, context, key) {
+  const consumeKey = key ?? context.name;
   const internalController = InternalController.resolve(classInstance);
   internalController.initialisers.add(() => {
     classInstance.dispatchEvent(
       new ContextRequestEvent(
-        createContext(context.name),
+        createContext(consumeKey),
         (value, unsubscribe) => {
           context.access.set(classInstance, value);
-
           if (unsubscribe) {
             internalController.disposals.add(unsubscribe);
           }
@@ -206,6 +215,6 @@ function initialiseConsumer(classInstance, context) {
   });
   internalController.disposals.add(() => {
     // Initialise consumer again in case node will be reattached to DOM.
-    initialiseConsumer(classInstance, context);
+    initialiseConsumer(classInstance, context, key);
   });
 }

@@ -1,7 +1,17 @@
+/**
+ * @import { InjectableConstructor } from "./container.js";
+ */
+
+import { Container } from "./container.js";
 import { bindActions } from "./actions.js";
 import { toKebabCase } from "./to-kebab-case.js";
 import { callWatchers } from "./watch.js";
+import { InternalController } from "./internal-controller.js";
 import { initialiseObservedAttributes } from "./attributes.js";
+
+// @ts-expect-error Not all runtimes support this symbol yet.
+// https://babeljs.io/docs/babel-plugin-proposal-decorators#symbolmetadata-notes
+Symbol.metadata ??= Symbol.for("Symbol.metadata");
 
 /**
  * @typedef {Object} ElementLifecycleCallbacks
@@ -29,27 +39,39 @@ import { initialiseObservedAttributes } from "./attributes.js";
  */
 
 /**
- * @param {CustomElementClass} classConstructor
- * @param {ClassDecoratorContext<CustomElementClass>} context
+ * @typedef {Object} ControllerOptions
+ * @property {string} [tag]
+ * @property {Array<[InjectableConstructor, InjectableConstructor]>} [factories]
  */
-export function controller(classConstructor, context) {
-  context.addInitializer(function () {
-    initialiseObservedAttributes(classConstructor, context.metadata);
-    initialiseConnectedCallback(classConstructor, context.metadata);
-    initialiseAttributeChangedCallback(classConstructor, context.metadata);
-    initialiseDisconnectedCallback(classConstructor, context.metadata);
 
-    register(classConstructor);
-  });
+/**
+ * @param {ControllerOptions} [options]
+ */
+export function Controller(options) {
+  /**
+   * @param {CustomElementClass} target
+   * @param {ClassDecoratorContext<CustomElementClass>} context
+   */
+  return (target, context) => {
+    context.addInitializer(function () {
+      initialiseObservedAttributes(this, context.metadata);
+      initialiseConnectedCallback(this, context.metadata, options?.factories);
+      initialiseAttributeChangedCallback(this, context.metadata);
+      initialiseDisconnectedCallback(this, context.metadata);
+      register(this, options?.tag);
+    });
+  };
 }
 
 /**
  * @param {CustomElementClass} classConstructor
  * @param {DecoratorMetadataObject} metadata
+ * @param {ControllerOptions['factories'] | undefined} factories
  */
-function initialiseConnectedCallback(classConstructor, metadata) {
+function initialiseConnectedCallback(classConstructor, metadata, factories) {
   const connectedCallback = classConstructor.prototype.connectedCallback;
   classConstructor.prototype.connectedCallback = function () {
+    Container.tryToDefineOnIfMissing(this, factories);
     const internalController = InternalController.resolve(this);
     bindActions(this);
     internalController.initialisers.forEach((initialise) => {
@@ -115,49 +137,14 @@ function initialiseDisconnectedCallback(classConstructor, metadata) {
 
 /**
  * @param {CustomElementClass} classConstructor
+ * @param {string} [tag]
  */
-function register(classConstructor) {
-  const name = toKebabCase(classConstructor.name).replace(/-element$/, "");
-
-  if (!window.customElements.get(name)) {
+function register(classConstructor, tag) {
+  const name =
+    tag ?? toKebabCase(classConstructor.name).replace(/-element$/, "");
+  if (window.customElements.get(name) == null) {
     window.customElements.define(name, classConstructor);
     // @ts-expect-error
     window[classConstructor.name] = window.customElements.get(name);
   }
-}
-
-/**
- * Encapsulates custom properties and logic of every controller.
- */
-export class InternalController {
-  /**
-   * Key for instance of internal controller on `Element` instance.
-   * @readonly
-   */
-  static key = Symbol.for("moru-internal-controller");
-  /**
-   * Resolves (and assigns if absent) an instance of {@link InternalController} to {@link CustomElement}.
-   * @param {CustomElement} on
-   * @returns {InternalController}
-   */
-  static resolve(on) {
-    /**
-     * @type {any}
-     */
-    const instance = on;
-    return (instance[this.key] ??= new this());
-  }
-  connectedCallbackCalled = false;
-  /**
-   * @type {Set<function(CustomElement, DecoratorMetadataObject): void>}
-   */
-  initialisers = new Set();
-  /**
-   * @type {Set<function(CustomElement, DecoratorMetadataObject): void>}
-   */
-  disposals = new Set();
-  /**
-   * @type {Map<string | symbol, Set<function(unknown): void>> | undefined}
-   */
-  registeredConsumersPerContext;
 }
