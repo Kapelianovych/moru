@@ -1,6 +1,6 @@
 import { CustomProperty } from "../constants.js";
 
-const UNIT_VALUE_RE = /((?:\d+)?(?:\.\d+)?)un\b/g;
+const UNIT_VALUE_RE = /(\d+(?:\.\d+)?|\d*\.\d+)un\b/g;
 
 /**
  * @param {string} css
