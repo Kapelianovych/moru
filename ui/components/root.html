@@ -4,7 +4,7 @@
 <import from="./element.html" />
 
 <if condition="{{ parseBooleanProperty(includeGlobalStylesheet, 'true') }}">
-  <only key="{{ url.current }}">
+  <only key="{{ uri.current }}">
     <style portal="{{ context.headPortalName }}">
       html,
       body {
@@ -31,7 +31,7 @@
   </only>
 </if>
 
-<only key="{{ url.current + 'own-style' }}">
+<only key="{{ uri.current + 'own-style' }}">
   <style portal="{{ context.headPortalName }}">
     .{{ Class.Root }} {
       position: relative;

@@ -59,11 +59,15 @@ export function createSlotContentCompilersForComponents(
   /** @type {Map<Element, Record<string, SlotContentCompiler>>} */
   const slotContentCompilersGroupedByComponent = new Map();
 
-  for (const { node, assignedAttributes } of htmlNodesCollection.components) {
+  for (const {
+    node,
+    assignedAttributes,
+    localThis: componentLocalThis,
+  } of htmlNodesCollection.components) {
     const slotContentCompilers = createSlotContentCompilers(
       node,
       assignedAttributes,
-      localThis,
+      { ...localThis, ...componentLocalThis },
       htmlNodesCollection,
       preCompileScope,
       lifecycle,

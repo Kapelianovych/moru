@@ -520,6 +520,88 @@ suite("built-in components", () => {
         match(output, /\s+1 - 0\s+2 - 1\s+3 - 2\s+/);
       },
     );
+
+    test("item and index should be available inside custom tag", async () => {
+      const output = await compile(
+        `
+          <import from="./foo.html" />
+
+          <for each="{{ [1] }}">
+            <foo>{{ item }} - {{ index }}</foo>
+          </for>
+        `,
+        {
+          resolveUri() {
+            return "";
+          },
+          async readFileContent() {
+            return "<p><slot/></p>";
+          },
+        },
+      );
+
+      match(output, /\s*<p>1 - 0<\/p>\s*/);
+    });
+
+    test("item and index should be available inside sibling custom tag", async () => {
+      const output = await compile(
+        `
+          <import from="./foo.html" />
+          <import from="./bar.html" />
+
+          <for each="{{ [1] }}">
+            <foo>
+              {{ item }}
+            </foo>
+            <bar>
+              {{ index }}
+            </bar>
+          </for>
+        `,
+        {
+          resolveUri(_, uri) {
+            return uri;
+          },
+          async readFileContent(uri) {
+            return uri.includes("foo")
+              ? "<p><slot/></p>"
+              : "<div><slot/></div>";
+          },
+        },
+      );
+
+      match(output, /\s*<p>\s*1\s*<\/p>\s*<div>\s*0\s*<\/div>\s*/);
+    });
+
+    test("item and index should be available inside deep custom tag", async () => {
+      const output = await compile(
+        `
+          <import from="./foo.html" />
+          <import from="./bar.html" />
+
+          <for each="{{ [1] }}">
+            <foo>
+              {{ item }}
+              <bar>
+                {{ item }} - {{ index }}
+              </bar>
+            </foo>
+          </for>
+        `,
+        {
+          resolveUri(_, uri) {
+            return uri;
+          },
+          async readFileContent(uri) {
+            return uri.includes("foo")
+              ? "<p><slot/></p>"
+              : "<div><slot/></div>";
+          },
+        },
+      );
+
+      match(output, /\s*<p>\s*1\s*<div>\s*1 - 0\s*<\/div>\s*<\/p>\s*/);
+    });
   });
 
   suite("dynamic", () => {

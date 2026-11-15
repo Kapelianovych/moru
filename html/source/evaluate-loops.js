@@ -97,12 +97,27 @@ async function loopAndEvaluate(
     );
 
     const clonedLoopElement = loopElement.cloneNode(true);
+    const componentsBefore = options.htmlNodesCollection.components.length;
 
     await preCompileScope({
       ...options,
       ast: clonedLoopElement,
       collectedMarkupDefinitions: {},
     });
+
+    // Components collected while this loop iteration was being pre-compiled
+    // should capture the current scope (including the loop's "item" and
+    // "index" variables), so that their slot content can be evaluated later,
+    // after the loop has already rolled those variables out of localThis.
+    for (
+      let index = componentsBefore;
+      index < options.htmlNodesCollection.components.length;
+      index++
+    ) {
+      options.htmlNodesCollection.components[index].localThis = {
+        ...options.localThis,
+      };
+    }
 
     prepend(loopElement, clonedLoopElement);
     replaceElementWithMultiple(clonedLoopElement, clonedLoopElement.children);

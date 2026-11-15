@@ -39,6 +39,8 @@
                     /fo(?:reign)?/.test(kind) ||
                     /as(?:ide)?/.test(kind)
                   ? "aside"
-                  : "div"
+                  : /n(?:av(?:igation)?)?/.test(kind)
+                    ? "nav"
+                    : "div"
       : "div";
 </script>

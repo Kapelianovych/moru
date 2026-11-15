@@ -4,6 +4,7 @@
  * @import { Options } from "./options.js";
  * @import { VirtualFile } from "./virtual-file.js";
  * @import { HtmlVisitor } from "./traverse-html.js";
+ * @import { LocalThis } from "./local-this.js"
  * @import { HtmlBuildScriptElement,
  *   HtmlClientScriptElement,
  *   HtmlElseElement,
@@ -82,6 +83,9 @@ const SUPPORTED_IMPORT_EXTENSIONS = ["svg", "html"];
  * @property {Element} node
  * @property {Record<string, string>} assignedAttributes Variables which are expected to be exported
  *  from a component to be used in passed children.
+ * @property {LocalThis | undefined} localThis Scope captured when a component was
+ *  encountered if it contains temporary bindings which will be removed before component is
+ *  evaluated.
  */
 
 /**
@@ -539,6 +543,7 @@ export function collectHtmlNodes(parent, nodes, file, options) {
               url: nodes.imports[node.tagName],
               node,
               assignedAttributes,
+              localThis: undefined,
             });
 
             // Children are going to be evaluated if component can accept them.
