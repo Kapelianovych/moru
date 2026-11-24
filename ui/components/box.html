@@ -29,18 +29,24 @@
         ? "header"
         : /f(?:ooter)?/.test(kind)
           ? "footer"
-          : /m(?:ain)?/.test(kind)
-            ? "main"
-            : /s(?:ection)?/.test(kind)
-              ? "section"
-              : /b(?:lock)?/.test(kind) || /ar(?:ticle)?/.test(kind)
-                ? "article"
-                : /r(?:edundant)?/.test(kind) ||
-                    /fo(?:reign)?/.test(kind) ||
-                    /as(?:ide)?/.test(kind)
-                  ? "aside"
-                  : /n(?:av(?:igation)?)?/.test(kind)
-                    ? "nav"
-                    : "div"
+          : /o(?:rdered-)?l(?:ist)?/.test(kind)
+            ? "ol"
+            : /u(?:nordered-)?l(?:ist)?/.test(kind)
+              ? "ul"
+              : /l(?:ist-)?i(?:tem)?/.test(kind)
+                ? "li"
+                : /m(?:ain)?/.test(kind)
+                  ? "main"
+                  : /s(?:ection)?/.test(kind)
+                    ? "section"
+                    : /b(?:lock)?/.test(kind) || /ar(?:ticle)?/.test(kind)
+                      ? "article"
+                      : /r(?:edundant)?/.test(kind) ||
+                          /fo(?:reign)?/.test(kind) ||
+                          /as(?:ide)?/.test(kind)
+                        ? "aside"
+                        : /n(?:av(?:igation)?)?/.test(kind)
+                          ? "nav"
+                          : "div"
       : "div";
 </script>

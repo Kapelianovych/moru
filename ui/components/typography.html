@@ -89,6 +89,7 @@
 
   const {
     size,
+    wrap,
     color,
     weight,
     family,
@@ -105,6 +106,7 @@
     ${compileCss(spacing, createSinglePropertyTransformer(CustomProperty.TextSpacing))}
     ${compileCss(realHeightRatio, createSinglePropertyTransformer(CustomProperty.RealTextHeightRatio))}
     ${compileCss(sideOffsetCorrection, createSinglePropertyTransformer(CustomProperty.TextSideOffsetCorrection))}
+    ${compileCss(wrap, createSinglePropertyTransformer("text-wrap"))}
     ${compileCss(color, createSinglePropertyTransformer("color"))}
     ${compileCss(weight, createSinglePropertyTransformer("font-weight"))}
     ${compileCss(family, createSinglePropertyTransformer("font-family"))}

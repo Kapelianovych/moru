@@ -1,10 +1,28 @@
+<import from="@moru/html/only.html" />
 <import from="./element.html" />
+
+<only key="{{ uri.current }}">
+  <style portal="{{ rootContext.headPortalName }}">
+    .{{ Class.Link }} {
+      text-decoration: none;
+    }
+  </style>
+</only>
 
 <element
   expand="{{ other }}"
+  assign:id
   assign:classes="elementClasses"
   assign:rest-props="restProps"
 >
+  <if condition="{{ css.length > 0 }}">
+    <style portal="{{ rootContext.headPortalName }}">
+      .{{ id }} {
+        {{ css }}
+      }
+    </style>
+  </if>
+
   <a
     class="
       {{ elementClasses }}
@@ -20,8 +38,17 @@
 
 <script type="module" build>
   import { Class } from "./lib/constants.js";
+  import { useRootContext } from "./lib/root-context.js";
+  import {
+    compileCss,
+    createSinglePropertyTransformer,
+  } from "./lib/compile-css.js";
 
-  const { class: classes = "", to, ...other } = props;
+  const { class: classes = "", to, decoration, ...other } = props;
 
+  const rootContext = useRootContext(buildStore);
   const url = typeof to === "string" ? to : to.toString();
+  const css = `
+    ${compileCss(decoration, createSinglePropertyTransformer("text-decoration"))}
+  `.trim();
 </script>

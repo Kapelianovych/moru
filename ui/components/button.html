@@ -6,7 +6,6 @@
   <style portal="{{ rootContext.headPortalName }}">
     .{{ Class.Button }} {
       cursor: pointer;
-      padding: 0;
       border: none;
       background-color: transparent;
       /* Do not set color to blue on iOS. */
@@ -41,7 +40,7 @@
   import { Class } from "./lib/constants.js";
   import { useRootContext } from "./lib/root-context.js";
 
-  const { class: classes = "", type, ...other } = props;
+  const { class: classes = "", type = "basic", ...other } = props;
 
   const rootContext = useRootContext(buildStore);
 </script>

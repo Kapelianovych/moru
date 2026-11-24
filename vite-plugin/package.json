@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "exports": "./source/index.js",
   "dependencies": {
-    "glob": "13.0.6",
+    "glob": "14.0.6",
     "picocolors": "1.1.1"
   },
   "peerDependencies": {

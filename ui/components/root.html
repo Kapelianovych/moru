@@ -16,9 +16,15 @@
         min-height: 100%;
       }
 
+      html {
+        text-size-adjust: 100%;
+        -webkit-text-size-adjust: 100%;
+      }
+
       /* Enable keyword animations */
       @media (prefers-reduced-motion: no-preference) {
         html {
+          scroll-behavior: smooth;
           interpolate-size: allow-keywords;
         }
       }
@@ -35,6 +41,11 @@
   <style portal="{{ context.headPortalName }}">
     .{{ Class.Root }} {
       position: relative;
+      /*
+        inline-flex aligns to the text baseline by default, leaving space below for descenders.
+        This removes the baseline gap.
+      */
+      vertical-align: top;
     }
   </style>
 </only>

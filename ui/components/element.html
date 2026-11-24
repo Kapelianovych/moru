@@ -15,6 +15,7 @@
       box-sizing: border-box;
       /* Forbid elements to change parent's element layout. */
       margin: 0;
+      padding: 0;
 
       &[data-debug] {
         border: 2px dashed red;
@@ -44,7 +45,9 @@
     </style>
   </if>
 
-  <if condition="{{ position }}">
+  <if
+    condition="{{ position != null && position.length > 0 && !isStickyPositioned }}"
+  >
     <style portal="{{ rootContext.headPortalName }}">
       .{{ Class.PositionedContainer }}:has(> .{{ id }}) {
         {{ positionedContainerCss }}
@@ -69,13 +72,17 @@
   import { useRootContext } from "./lib/root-context.js";
   import { createDisplayValue } from "./lib/transformers/display.js";
   import { createClipProperties } from "./lib/transformers/clip.js";
+  import { createBorderProperty } from "./lib/transformers/border.js";
   import { Class, CustomProperty } from "./lib/constants.js";
   import { createOpacityProperty } from "./lib/transformers/opacity.js";
-  import { createPositionProperty } from "./lib/transformers/position.js";
   import { createRotationProperty } from "./lib/transformers/rotation.js";
   import { createMovementProperty } from "./lib/transformers/movement.js";
   import { createDirectionProperty } from "./lib/transformers/direction.js";
   import { createAlignmentProperties } from "./lib/transformers/alignment.js";
+  import {
+    isSticky,
+    createPositionProperty,
+  } from "./lib/transformers/position.js";
   import {
     compileCss,
     createSinglePropertyTransformer,
@@ -95,6 +102,7 @@
     spacing,
     clip,
     background,
+    backdrop,
     rounded,
     border,
     shadow,
@@ -110,7 +118,7 @@
   let classes;
   let elementId;
   const rootContext = useRootContext(buildStore);
-
+  const isStickyPositioned = isSticky(position);
   const css = `
     ${compileCss(hidden, createSinglePropertyTransformer("display", createDisplayValue))}
     ${compileCss(vertical, createDirectionProperty)}
@@ -125,17 +133,18 @@
     ${compileCss(spacing, createSinglePropertyTransformer("gap"))}
     ${compileCss(clip, createClipProperties)}
     ${compileCss(background, createSinglePropertyTransformer("background"))}
+    ${compileCss(backdrop, createSinglePropertyTransformer("backdrop-filter"))}
     ${compileCss(rounded, createSinglePropertyTransformer("border-radius"))}
-    ${compileCss(border, createSinglePropertyTransformer("border"))}
+    ${compileCss(border, createBorderProperty)}
     ${compileCss(shadow, createSinglePropertyTransformer("box-shadow"))}
     ${compileCss(opacity, createOpacityProperty)}
     ${compileCss(move, createMovementProperty)}
     ${compileCss(scale, createSinglePropertyTransformer("scale"))}
     ${compileCss(rotate, createRotationProperty)}
+    ${isStickyPositioned ? compileCss(position, createPositionProperty) : ""}
     ${compileCss(style, (css) => css, false)}
   `.trim();
-
   const positionedContainerCss = `
-    ${compileCss(position, createPositionProperty)}
+    ${isStickyPositioned ? "" : compileCss(position, createPositionProperty)}
   `.trim();
 </script>

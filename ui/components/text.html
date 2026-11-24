@@ -32,6 +32,10 @@
           ? "p"
           : /pre(?:formatted)?/.test(kind)
             ? "pre"
-            : "span"
+            : /i(?:mp(?:ortant)?)?/.test(kind)
+              ? "strong"
+              : /s(?:tress)?/.test(kind) || /em(?:phasis)?/.test(kind)
+                ? "em"
+                : "span"
       : "span";
 </script>
